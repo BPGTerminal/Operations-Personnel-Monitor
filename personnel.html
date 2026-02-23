@@ -120,6 +120,10 @@ select option{background:#0f1628;color:#fff;}
     <span id="gps-status">📍 GPS: waiting...</span>
     <span id="last-sync">SYNC: --</span>
   </div>
+  <div style="background:rgba(0,229,255,.04);border-bottom:1px solid var(--border);padding:4px 8px;display:flex;gap:6px;" id="loc-bar">
+    <button onclick="sendLoc(true)" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;padding:6px;cursor:pointer;" id="loc-btn">📍 SEND MY LOCATION</button>
+    <button onclick="checkIn()" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--green);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;padding:6px;cursor:pointer;">✅ RE-CHECK IN</button>
+  </div>
   <div id="msg-list"><div style="padding:24px;text-align:center;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim);">No messages yet.</div></div>
 </div>
 
@@ -304,13 +308,14 @@ function enterApp(){
   document.getElementById('wait-screen').style.display='none';
   document.getElementById('reject-screen').style.display='none';
   document.getElementById('app-screen').style.display='block';
+  document.getElementById('loc-bar').style.display='flex';
   document.getElementById('compose-bar').style.display='block';
   document.getElementById('meet-fab').style.display='flex';
   document.getElementById('app-name').textContent = me.name;
   document.getElementById('app-detail').textContent = me.team + ' · ' + me.post;
   // Check in
   checkIn();
-  // Start GPS
+  // Start GPS (start early so position is ready)
   if(navigator.geolocation){
     navigator.geolocation.watchPosition(pos=>{
       curLat=pos.coords.latitude.toFixed(6);
@@ -330,11 +335,22 @@ async function checkIn(){
   }catch(e){}
 }
 
-async function sendLoc(){
-  if(!curLat||!me) return;
+async function sendLoc(manual){
+  if(!me) return;
+  if(!curLat){
+    if(manual) alert('GPS not ready yet. Please wait a moment and try again, or check that location is enabled in your browser.');
+    return;
+  }
   try{
     await fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'updateLocation',deviceId:me.devId,lat:curLat,lng:curLng})});
-  }catch(e){}
+    await checkIn(); // re-send full check-in so commander map gets fresh data
+    if(manual){
+      const btn=document.getElementById('loc-btn');
+      if(btn){btn.textContent='✓ LOCATION SENT';setTimeout(()=>btn.textContent='📍 SEND MY LOCATION',2000);}
+    }
+  }catch(e){
+    if(manual) alert('Could not send location — check connection.');
+  }
 }
 
 async function fetchUpdates(){
@@ -432,6 +448,13 @@ async function restoreSession(){
 
 // ── INIT ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async function(){
+  // Request GPS early so it's ready when needed
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(pos=>{
+      curLat=pos.coords.latitude.toFixed(6);
+      curLng=pos.coords.longitude.toFixed(6);
+    },{enableHighAccuracy:true},);
+  }
   document.getElementById('l-code').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
   document.getElementById('msg-input').addEventListener('keydown',e=>{ if(e.key==='Enter') sendMsg(); });
   // Load teams first

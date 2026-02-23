@@ -878,6 +878,8 @@ function getTeamColor(teamName){
 }
 
 function updateMarker(p){
+  const lat = parseFloat(p.lat), lng = parseFloat(p.lng);
+  if(!lat || !lng || isNaN(lat) || isNaN(lng)) return; // no GPS yet
   const color = getTeamColor(p.team);
   const initials = p.name.replace(/^(Ofc\.|PO|SPO|Insp\.)\s*/i,'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
   const glowColor = color.replace('#','');
@@ -885,10 +887,10 @@ function updateMarker(p){
   const icon = L.divIcon({html,className:'',iconSize:[18,18],iconAnchor:[9,9]});
 
   if(markers[p.id]){
-    markers[p.id].setLatLng([p.lat,p.lng]);
+    markers[p.id].setLatLng([lat,lng]);
     markers[p.id].setIcon(icon);
   } else {
-    markers[p.id] = L.marker([p.lat,p.lng],{icon})
+    markers[p.id] = L.marker([lat,lng],{icon})
       .addTo(map)
       .bindPopup(`<b>${p.name}</b><br><span style="color:${color}">${p.team||''}</span><br>${p.post||''}<br><small>Last seen: ${p.lastSeen}</small>`);
   }
