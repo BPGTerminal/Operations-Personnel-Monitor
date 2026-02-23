@@ -162,11 +162,12 @@ async function loadSettings(){
 
   // DEFAULT TEAMS — always shown immediately, no waiting
   const DEFAULT_TEAMS = [
-    {name:"PARADE26",code:"PARADE2026",color:"#00e5ff"},
-    {name:"CENTER26",code:"CENTER2026",color:"#00ff88"},
-    {name:"MOBILE26",code:"MOBILE2026",color:"#ff6b35"}
+    {name:"ADMINISTRATIVE UNIT",code:"ADMIN",color:"#00e5ff"},
+    {name:"OPERATIONS UNIT",code:"OPS",color:"#00ff88"},
+    {name:"UTILITY UNIT",code:"UTILITY",color:"#ff6b35"},
+    {name:"SAFETY & SECURITY UNIT",code:"WATCHMAN",color:"#ffd166"}
   ];
-  const DEFAULT_EVENT = "PISTA I ANG KANYOG\'AN 2026";
+  const DEFAULT_EVENT = "TERMINAL OPERATIONS";
 
   // Show defaults immediately
   const cached = getCached();
@@ -218,9 +219,14 @@ async function loadSettings(){
 function parseCSV(text){
   const cfg = {};
   text.trim().split('\n').forEach(line => {
-    const parts = line.split(',');
-    const key = parts[0].replace(/"/g,'').trim();
-    const val = parts.slice(1).join(',').replace(/^"|"$/g,'').trim();
+    // Handle CSV where value may contain commas (e.g. JSON arrays)
+    // Format: Key,"Value" or Key,Value
+    const firstComma = line.indexOf(',');
+    if(firstComma < 0) return;
+    const key = line.substring(0, firstComma).replace(/"/g,'').trim();
+    let val = line.substring(firstComma + 1).trim();
+    // Remove surrounding quotes if present
+    if(val.startsWith('"') && val.endsWith('"')) val = val.slice(1,-1).replace(/""/g,'"');
     if(!key || key==='Key') return;
     cfg[key] = val;
   });
@@ -452,10 +458,11 @@ async function restoreSession(){
 document.addEventListener('DOMContentLoaded', async function(){
   // Request GPS early so it's ready when needed
   if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(pos=>{
-      curLat=pos.coords.latitude.toFixed(6);
-      curLng=pos.coords.longitude.toFixed(6);
-    },{enableHighAccuracy:true},);
+    navigator.geolocation.getCurrentPosition(
+      pos=>{ curLat=pos.coords.latitude.toFixed(6); curLng=pos.coords.longitude.toFixed(6); },
+      err=>{ console.log('[OPM] GPS early request:', err.message); },
+      {enableHighAccuracy:true}
+    );
   }
   document.getElementById('l-code').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
   document.getElementById('msg-input').addEventListener('keydown',e=>{ if(e.key==='Enter') sendMsg(); });
