@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>OPM — Personnel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0a0e1a;--panel:#0f1628;--border:#1e3a5f;--accent:#00e5ff;--green:#00ff88;--red:#ff3b5c;--yellow:#ffdd00;--dim:#4a6080;--text:#c8d8e8;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+#login-screen{width:100%;max-width:520px;padding:24px 20px 40px;display:flex;flex-direction:column;align-items:center;gap:16px;}
+.brand{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent);opacity:.7;letter-spacing:3px;margin-bottom:4px;}
+.opm-badge{background:var(--accent);color:#000;font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:bold;padding:5px 18px;letter-spacing:2px;margin-bottom:6px;}
+.app-title{font-size:28px;font-weight:700;letter-spacing:3px;color:#fff;text-transform:uppercase;text-align:center;}
+.app-sub{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:2px;}
+#event-name-disp{font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--red);letter-spacing:2px;text-align:center;min-height:20px;}
+.field-label{align-self:flex-start;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:2px;margin-bottom:4px;}
+input,select{width:100%;background:rgba(0,0,0,.3);border:1px solid var(--border);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:18px;padding:14px 16px;outline:none;appearance:none;-webkit-appearance:none;}
+input:focus,select:focus{border-color:var(--accent);}
+select option{background:#0f1628;color:#fff;}
+#login-btn{width:100%;background:var(--accent);color:#000;font-family:'Share Tech Mono',monospace;font-size:14px;font-weight:bold;letter-spacing:3px;padding:18px;border:none;cursor:pointer;margin-top:8px;}
+#login-btn:active{opacity:.8;}
+/* WAITING / REJECTED SCREENS */
+#wait-screen,#reject-screen{display:none;width:100%;max-width:520px;padding:40px 20px;flex-direction:column;align-items:center;gap:16px;text-align:center;}
+.wait-icon{font-size:56px;}
+.wait-title{font-family:'Share Tech Mono',monospace;font-size:13px;letter-spacing:2px;}
+.wait-name{font-size:22px;font-weight:700;color:var(--accent);}
+.wait-detail{font-size:14px;color:var(--dim);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.blink{animation:blink 1.5s infinite;}
+#back-btn,#retry-btn{background:transparent;border:1px solid var(--border);color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;padding:8px 20px;cursor:pointer;margin-top:8px;}
+/* MAIN APP */
+#app-screen{display:none;width:100%;max-width:520px;padding:0 0 80px;}
+.app-header{background:var(--panel);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;}
+.app-header-name{font-size:16px;font-weight:700;color:var(--accent);}
+.app-header-detail{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim);}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;animation:blink 2s infinite;}
+#msg-list{padding:8px;display:flex;flex-direction:column;gap:6px;min-height:200px;}
+.msg-item{background:var(--panel);border:1px solid var(--border);padding:8px 10px;}
+.msg-system{border-color:rgba(0,229,255,.2);background:rgba(0,229,255,.04);}
+.msg-broadcast{border-color:rgba(255,170,0,.3);background:rgba(255,170,0,.05);}
+.msg-sender{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:1px;}
+.msg-body{font-size:15px;color:#fff;margin-top:2px;}
+.msg-time{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--dim);margin-top:2px;}
+.compose{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:var(--panel);border-top:1px solid var(--border);padding:8px;}
+.compose-row{display:flex;gap:6px;}
+.compose-row input{flex:1;padding:10px 12px;font-size:16px;}
+.compose-row button{background:var(--accent);color:#000;border:none;font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:bold;padding:0 16px;cursor:pointer;flex-shrink:0;}
+.photo-btn{background:transparent;border:1px solid var(--border);color:var(--dim);font-size:20px;padding:0 12px;cursor:pointer;flex-shrink:0;}
+.photo-btn:active{border-color:var(--accent);color:var(--accent);}
+/* Meet FAB */
+#meet-fab{position:fixed;bottom:72px;right:16px;width:52px;height:52px;border-radius:50%;background:var(--green);color:#000;border:none;font-size:24px;cursor:pointer;box-shadow:0 2px 12px rgba(0,229,255,.4);display:flex;align-items:center;justify-content:center;}
+#meet-fab.active{background:#ff4444;animation:blink .8s infinite;}
+#photo-input{display:none;}
+#status-bar{background:rgba(0,229,255,.05);border-bottom:1px solid var(--border);padding:4px 16px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim);display:flex;justify-content:space-between;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="brand">-=pagong=-</div>
+  <div class="opm-badge">OPM</div>
+  <div class="app-title">Operations Personnel Monitor</div>
+  <div class="app-sub">Personnel Check-In</div>
+  <div id="event-name-disp">Loading...</div>
+
+  <div style="width:100%;display:flex;flex-direction:column;gap:4px;">
+    <div class="field-label">Your Full Name</div>
+    <input type="text" id="l-name" placeholder="e.g. Ofc. Juan Dela Cruz" autocomplete="off"/>
+  </div>
+  <div style="width:100%;display:flex;flex-direction:column;gap:4px;">
+    <div class="field-label">Your Team</div>
+    <select id="l-team"><option value="">— Select your team —</option></select>
+  </div>
+  <div style="width:100%;display:flex;flex-direction:column;gap:4px;">
+    <div class="field-label">Assigned Post / Position</div>
+    <input type="text" id="l-post" placeholder="e.g. North Gate, Main Stage..." autocomplete="off"/>
+  </div>
+  <div style="width:100%;display:flex;flex-direction:column;gap:4px;">
+    <div class="field-label">Team Access Code</div>
+    <input type="password" id="l-code" placeholder="Enter your team's code"/>
+  </div>
+  <button id="login-btn" onclick="doLogin()">REQUEST ACCESS ▶</button>
+</div>
+
+<!-- WAITING SCREEN -->
+<div id="wait-screen" style="display:none;flex-direction:column;align-items:center;gap:16px;padding:60px 24px;text-align:center;width:100%;max-width:520px;">
+  <div style="font-size:64px;" class="blink">⏳</div>
+  <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--yellow);letter-spacing:2px;">AWAITING APPROVAL</div>
+  <div id="wait-name" style="font-size:22px;font-weight:700;color:#fff;"></div>
+  <div id="wait-detail" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim);"></div>
+  <div style="font-size:13px;color:var(--dim);margin-top:8px;">Commander is reviewing your request...<br/>This screen will update automatically.</div>
+  <button id="back-btn" onclick="showLogin()">← BACK TO LOGIN</button>
+</div>
+
+<!-- REJECTED SCREEN -->
+<div id="reject-screen" style="display:none;flex-direction:column;align-items:center;gap:16px;padding:60px 24px;text-align:center;width:100%;max-width:520px;">
+  <div style="font-size:64px;">❌</div>
+  <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--red);letter-spacing:2px;">ACCESS DENIED</div>
+  <div style="font-size:15px;color:var(--dim);">Your request was rejected by the Commander.<br/>Contact your supervisor or try again.</div>
+  <button id="retry-btn" onclick="showLogin()">↩ TRY AGAIN</button>
+</div>
+
+<!-- MAIN APP SCREEN -->
+<div id="app-screen" style="display:none;width:100%;max-width:520px;padding-bottom:80px;">
+  <div class="app-header">
+    <div>
+      <div class="app-header-name" id="app-name">PERSONNEL</div>
+      <div class="app-header-detail" id="app-detail">Loading...</div>
+    </div>
+    <div style="text-align:right;">
+      <span class="status-dot" id="status-dot"></span>
+      <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--green);margin-left:4px;" id="status-txt">ONLINE</span>
+    </div>
+  </div>
+  <div id="status-bar">
+    <span id="gps-status">📍 GPS: waiting...</span>
+    <span id="last-sync">SYNC: --</span>
+  </div>
+  <div id="msg-list"><div style="padding:24px;text-align:center;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim);">No messages yet.</div></div>
+</div>
+
+<!-- COMPOSE (shown in app) -->
+<div class="compose" id="compose-bar" style="display:none;">
+  <div class="compose-row">
+    <button class="photo-btn" onclick="takePhoto()" title="Attach photo">📷</button>
+    <input type="text" id="msg-input" placeholder="Type message..."/>
+    <button onclick="sendMsg()">SEND</button>
+  </div>
+</div>
+<button id="meet-fab" onclick="joinMeet()" style="display:none;" title="Join video call">🎥</button>
+<input type="file" id="photo-input" accept="image/*" capture="environment" onchange="handlePhoto(event)"/>
+
+<script>
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbwPQzBODQphcsr5XGbCnUdi542wxJOtcJPkSpl9FCyERs_8biTtPgOrN4vLGNXv00phjQ/exec";
+// Settings CSV — published from Google Sheets (File > Share > Publish to web > Settings tab > CSV)
+// IMPORTANT: Replace this URL with your own published CSV URL from your Google Sheet
+const SETTINGS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlQs82HFoGocI8HRCWtQoYU7GyqbOgT-08xMv28X8XK81LL2SoGzN2_m8ndx20aiZgigPUf7IVPefq/pub?gid=1673148562&single=true&output=csv";
+
+// ── CONFIG ───────────────────────────────────────────────────
+let me = null, curLat = null, curLng = null;
+let fetchTimer = null, locTimer = null, approvalTimer = null;
+let msgCache = new Set();
+
+function getDeviceId(){
+  let id = localStorage.getItem('opm_device_id');
+  if(!id){ id = 'D_' + Math.random().toString(36).substr(2,8).toUpperCase() + '_' + Date.now().toString(36).toUpperCase(); localStorage.setItem('opm_device_id',id); }
+  return id;
+}
+
+// ── SETTINGS LOAD ────────────────────────────────────────────
+async function loadSettings(){
+  const sel = document.getElementById('l-team');
+  const evd = document.getElementById('event-name-disp');
+  evd.textContent = 'Loading event...';
+
+  // 1. Show cached teams immediately if available
+  const cached = getCached();
+  if(cached.teams && cached.teams.length){
+    populateTeams(cached.teams);
+    if(cached.eventName) evd.textContent = cached.eventName.toUpperCase();
+  }
+
+  // 2. Fetch fresh from published CSV (no CORS issues)
+  if(SETTINGS_CSV_URL && SETTINGS_CSV_URL !== 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRlQs82HFoGocI8HRCWtQoYU7GyqbOgT-08xMv28X8XK81LL2SoGzN2_m8ndx20aiZgigPUf7IVPefq/pub?gid=1673148562&single=true&output=csv'){
+    try{
+      const res = await fetch(SETTINGS_CSV_URL + '&t=' + Date.now(), {cache:'no-store'});
+      const csv = await res.text();
+      const cfg = parseCSV(csv);
+      if(cfg && cfg.teams){
+        let teams = cfg.teams;
+        if(typeof teams === 'string') teams = JSON.parse(teams);
+        if(Array.isArray(teams) && teams.length){
+          saveCache({...cfg, teams});
+          populateTeams(teams);
+          if(cfg.eventName) evd.textContent = cfg.eventName.toUpperCase();
+          console.log('[OPM] Teams loaded from CSV:', teams.map(t=>t.name).join(', '));
+          return;
+        }
+      }
+    }catch(e){ console.warn('[OPM] CSV fetch failed:', e.message); }
+  }
+
+  // 3. Fallback: try Apps Script
+  try{
+    const res = await fetch(SHEET_URL + '?action=getSettings&t=' + Date.now(), {cache:'no-store'});
+    const d = await res.json();
+    if(d.settings && d.settings.teams){
+      let teams = d.settings.teams;
+      if(typeof teams==='string') teams=JSON.parse(teams);
+      if(Array.isArray(teams) && teams.length){
+        saveCache({...d.settings, teams});
+        populateTeams(teams);
+        if(d.settings.eventName) evd.textContent = d.settings.eventName.toUpperCase();
+        console.log('[OPM] Teams loaded from Apps Script:', teams.map(t=>t.name).join(', '));
+        return;
+      }
+    }
+  }catch(e){ console.warn('[OPM] Apps Script fetch failed:', e.message); }
+
+  // 4. Still no teams
+  if(!sel.options.length || sel.options[0].value === ''){
+    evd.style.color = 'var(--red)';
+    evd.textContent = '⚠ Cannot load event — check connection';
+    sel.innerHTML = '<option value="">⚠ No teams loaded — retry page</option>';
+  }
+}
+
+function parseCSV(text){
+  const cfg = {};
+  text.trim().split('\n').forEach(line => {
+    const parts = line.split(',');
+    const key = parts[0].replace(/"/g,'').trim();
+    const val = parts.slice(1).join(',').replace(/^"|"$/g,'').trim();
+    if(!key || key==='Key') return;
+    cfg[key] = val;
+  });
+  return cfg;
+}
+
+function populateTeams(teams){
+  const sel = document.getElementById('l-team');
+  sel.innerHTML = '<option value="">— Select your team —</option>';
+  (teams||[]).forEach(t=>{
+    const o = document.createElement('option');
+    o.value = t.name; o.textContent = t.name; sel.appendChild(o);
+  });
+}
+
+function getCached(){ try{return JSON.parse(localStorage.getItem('opm_config')||'{}');}catch(e){return {};} }
+function saveCache(cfg){ localStorage.setItem('opm_config', JSON.stringify(cfg)); }
+
+// ── LOGIN ─────────────────────────────────────────────────────
+async function doLogin(){
+  const name = document.getElementById('l-name').value.trim();
+  const team = document.getElementById('l-team').value;
+  const post = document.getElementById('l-post').value.trim();
+  const code = document.getElementById('l-code').value.trim();
+  if(!name||!team||!post||!code){ alert('Please fill in all fields.'); return; }
+
+  const cfg = getCached();
+  const teams = Array.isArray(cfg.teams) ? cfg.teams : [];
+  const teamObj = teams.find(t=>t.name===team);
+  if(teamObj && teamObj.code && teamObj.code.toUpperCase() !== code.toUpperCase()){
+    alert('Wrong access code for ' + team + '.'); return;
+  }
+
+  const btn = document.getElementById('login-btn');
+  btn.textContent = '⏳ REQUESTING...'; btn.disabled = true;
+  try{
+    const devId = getDeviceId();
+    const res = await fetch(SHEET_URL, {method:'POST', body:JSON.stringify({action:'requestApproval',deviceId:devId,name,team,post})});
+    const d = await res.json();
+    me = {devId, name, team, post, color: teamObj?.color||'#00e5ff'};
+    localStorage.setItem('opm_pending', JSON.stringify({...me, requested:Date.now()}));
+    if(d.status==='APPROVED'){ enterApp(); }
+    else if(d.status==='REJECTED'){ showRejected(); }
+    else { showWaiting(); }
+  }catch(e){
+    alert('Cannot reach server. Check your internet connection.\n'+e.message);
+  }
+  btn.textContent = 'REQUEST ACCESS ▶'; btn.disabled = false;
+}
+
+function showWaiting(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('wait-screen').style.display='flex';
+  document.getElementById('wait-name').textContent = me.name;
+  document.getElementById('wait-detail').textContent = me.team + ' · ' + me.post;
+  approvalTimer = setInterval(pollApproval, 5000);
+}
+
+function showRejected(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('wait-screen').style.display='none';
+  document.getElementById('reject-screen').style.display='flex';
+  if(approvalTimer){ clearInterval(approvalTimer); approvalTimer=null; }
+}
+
+function showLogin(){
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('wait-screen').style.display='none';
+  document.getElementById('reject-screen').style.display='none';
+  if(approvalTimer){ clearInterval(approvalTimer); approvalTimer=null; }
+}
+
+async function pollApproval(){
+  if(!me) return;
+  try{
+    const res = await fetch(SHEET_URL, {method:'POST', body:JSON.stringify({action:'checkApproval',deviceId:me.devId})});
+    const d = await res.json();
+    if(d.status==='APPROVED') enterApp();
+    else if(d.status==='REJECTED') showRejected();
+  }catch(e){}
+}
+
+// ── APP ───────────────────────────────────────────────────────
+function enterApp(){
+  if(approvalTimer){clearInterval(approvalTimer);approvalTimer=null;}
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('wait-screen').style.display='none';
+  document.getElementById('reject-screen').style.display='none';
+  document.getElementById('app-screen').style.display='block';
+  document.getElementById('compose-bar').style.display='block';
+  document.getElementById('meet-fab').style.display='flex';
+  document.getElementById('app-name').textContent = me.name;
+  document.getElementById('app-detail').textContent = me.team + ' · ' + me.post;
+  // Check in
+  checkIn();
+  // Start GPS
+  if(navigator.geolocation){
+    navigator.geolocation.watchPosition(pos=>{
+      curLat=pos.coords.latitude.toFixed(6);
+      curLng=pos.coords.longitude.toFixed(6);
+      document.getElementById('gps-status').textContent = '📍 '+curLat+', '+curLng;
+    },{enableHighAccuracy:true,maximumAge:10000});
+    locTimer = setInterval(sendLoc, 15000);
+  }
+  // Start polling
+  fetchUpdates();
+  fetchTimer = setInterval(fetchUpdates, 7000);
+}
+
+async function checkIn(){
+  try{
+    await fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'checkIn',deviceId:me.devId,name:me.name,team:me.team,post:me.post,lat:curLat||'',lng:curLng||''})});
+  }catch(e){}
+}
+
+async function sendLoc(){
+  if(!curLat||!me) return;
+  try{
+    await fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'updateLocation',deviceId:me.devId,lat:curLat,lng:curLng})});
+  }catch(e){}
+}
+
+async function fetchUpdates(){
+  try{
+    const res = await fetch(SHEET_URL+'?action=getMessages&t='+Date.now(),{cache:'no-store'});
+    const d = await res.json();
+    document.getElementById('last-sync').textContent = 'SYNC: '+new Date().toLocaleTimeString('en-US',{hour12:false});
+    if(d.messages) renderMessages(d.messages);
+  }catch(e){
+    document.getElementById('status-txt').textContent='OFFLINE';
+    document.getElementById('status-dot').style.background='var(--red)';
+  }
+}
+
+function renderMessages(msgs){
+  const list = document.getElementById('msg-list');
+  let html = '';
+  if(!msgs.length){ list.innerHTML='<div style="padding:24px;text-align:center;font-family:\'Share Tech Mono\',monospace;font-size:10px;color:var(--dim);">No messages yet.</div>'; return; }
+  msgs.slice().reverse().forEach(m=>{
+    const cls = m.type==='broadcast'?'msg-broadcast':m.type==='system'?'msg-system':'';
+    html += `<div class="msg-item ${cls}">
+      <div class="msg-sender">${m.sender||''}${m.post?' · '+m.post:''}</div>
+      <div class="msg-body">${m.body||''}</div>
+      ${m.photoUrl?`<img src="${m.photoUrl}" style="max-width:100%;margin-top:6px;" onclick="window.open('${m.photoUrl}')"/>`:'' }
+      <div class="msg-time">${m.time?new Date(m.time).toLocaleTimeString('en-US',{hour12:false}):''}</div>
+    </div>`;
+  });
+  list.innerHTML = html;
+  // Check for Meet link
+  msgs.forEach(m=>{ if(m.type==='meet_broadcast'||m.body?.includes('meet.google.com')){ activateMeetFab(m.body); }});
+}
+
+async function sendMsg(){
+  const inp = document.getElementById('msg-input');
+  const body = inp.value.trim();
+  if(!body||!me) return;
+  inp.value='';
+  try{
+    await fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'sendMessage',sender:me.name,team:me.team,post:me.post,body,type:'chat'})});
+    fetchUpdates();
+  }catch(e){ inp.value=body; alert('Send failed — check connection.'); }
+}
+
+function takePhoto(){ document.getElementById('photo-input').click(); }
+
+async function handlePhoto(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async function(ev){
+    // Compress
+    const img = new Image();
+    img.onload = async function(){
+      const canvas = document.createElement('canvas');
+      const MAX=800, scale=Math.min(MAX/img.width,MAX/img.height,1);
+      canvas.width=img.width*scale; canvas.height=img.height*scale;
+      canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg',0.65);
+      try{
+        const ur = await fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'uploadPhoto',sender:me.name,photoData:dataUrl})});
+        const ud = await ur.json();
+        await fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'sendMessage',sender:me.name,team:me.team,post:me.post,body:'📸 Photo report',type:'photo',photoUrl:ud.photoUrl,photoLat:curLat||'',photoLng:curLng||''})});
+        fetchUpdates();
+      }catch(err){ alert('Photo upload failed.'); }
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value='';
+}
+
+function activateMeetFab(url){
+  const fab = document.getElementById('meet-fab');
+  fab.classList.add('active');
+  fab.onclick = ()=>window.open(url,'_blank');
+  fab.textContent='📞';
+}
+
+function joinMeet(){ /* default — no active call */ alert('No video call active. Wait for Commander to start a call.'); }
+
+// ── RESTORE SESSION ───────────────────────────────────────────
+async function restoreSession(){
+  const pending = JSON.parse(localStorage.getItem('opm_pending')||'null');
+  if(!pending) return false;
+  // Check if approval changed
+  me = pending;
+  try{
+    const res = await fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'checkApproval',deviceId:me.devId})});
+    const d = await res.json();
+    if(d.status==='APPROVED'){ enterApp(); return true; }
+    if(d.status==='REJECTED'){ localStorage.removeItem('opm_pending'); showRejected(); return true; }
+    if(d.status==='PENDING'){ showWaiting(); return true; }
+  }catch(e){}
+  return false;
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async function(){
+  document.getElementById('l-code').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+  document.getElementById('msg-input').addEventListener('keydown',e=>{ if(e.key==='Enter') sendMsg(); });
+  // Load teams first
+  await loadSettings();
+  // Try restore session
+  const restored = await restoreSession();
+});
+</script>
+</body>
+</html>
