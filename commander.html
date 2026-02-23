@@ -833,6 +833,7 @@ function updatePersonnel(list){
   // Sanitize — Sheet sometimes returns strings
   list = list.map(p=>({
     ...p,
+    id: p.id || p.deviceId, // normalize — Apps Script returns deviceId
     lat: parseFloat(p.lat)||0,
     lng: parseFloat(p.lng)||0,
     online: p.online===true || p.online==='TRUE' || p.online==='true'
