@@ -159,59 +159,61 @@ function getDeviceId(){
 async function loadSettings(){
   const sel = document.getElementById('l-team');
   const evd = document.getElementById('event-name-disp');
-  evd.textContent = 'Loading event...';
 
-  // 1. Show cached teams immediately if available
+  // DEFAULT TEAMS — always shown immediately, no waiting
+  const DEFAULT_TEAMS = [
+    {name:"PARADE26",code:"PARADE2026",color:"#00e5ff"},
+    {name:"CENTER26",code:"CENTER2026",color:"#00ff88"},
+    {name:"MOBILE26",code:"MOBILE2026",color:"#ff6b35"}
+  ];
+  const DEFAULT_EVENT = "PISTA I ANG KANYOG\'AN 2026";
+
+  // Show defaults immediately
   const cached = getCached();
   if(cached.teams && cached.teams.length){
     populateTeams(cached.teams);
-    if(cached.eventName) evd.textContent = cached.eventName.toUpperCase();
+    evd.textContent = (cached.eventName||DEFAULT_EVENT).toUpperCase();
+  } else {
+    populateTeams(DEFAULT_TEAMS);
+    evd.textContent = DEFAULT_EVENT;
   }
 
-  // 2. Fetch fresh from published CSV (no CORS issues)
-  if(SETTINGS_CSV_URL && SETTINGS_CSV_URL !== 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRlQs82HFoGocI8HRCWtQoYU7GyqbOgT-08xMv28X8XK81LL2SoGzN2_m8ndx20aiZgigPUf7IVPefq/pub?gid=1673148562&single=true&output=csv'){
+  // Try CSV in background to get live settings
+  if(SETTINGS_CSV_URL && !SETTINGS_CSV_URL.includes('PASTE')){
     try{
       const res = await fetch(SETTINGS_CSV_URL + '&t=' + Date.now(), {cache:'no-store'});
       const csv = await res.text();
       const cfg = parseCSV(csv);
       if(cfg && cfg.teams){
-        let teams = cfg.teams;
-        if(typeof teams === 'string') teams = JSON.parse(teams);
+        let teams = typeof cfg.teams==='string' ? JSON.parse(cfg.teams) : cfg.teams;
         if(Array.isArray(teams) && teams.length){
           saveCache({...cfg, teams});
           populateTeams(teams);
           if(cfg.eventName) evd.textContent = cfg.eventName.toUpperCase();
-          console.log('[OPM] Teams loaded from CSV:', teams.map(t=>t.name).join(', '));
+          console.log('[OPM] Teams from CSV:', teams.map(t=>t.name).join(', '));
           return;
         }
       }
-    }catch(e){ console.warn('[OPM] CSV fetch failed:', e.message); }
+    }catch(e){ console.warn('[OPM] CSV failed:', e.message); }
   }
 
-  // 3. Fallback: try Apps Script
+  // Try Apps Script fallback
   try{
     const res = await fetch(SHEET_URL + '?action=getSettings&t=' + Date.now(), {cache:'no-store'});
     const d = await res.json();
-    if(d.settings && d.settings.teams){
-      let teams = d.settings.teams;
+    if(d.settings){
+      let teams = d.settings.teams||[];
       if(typeof teams==='string') teams=JSON.parse(teams);
       if(Array.isArray(teams) && teams.length){
         saveCache({...d.settings, teams});
         populateTeams(teams);
         if(d.settings.eventName) evd.textContent = d.settings.eventName.toUpperCase();
-        console.log('[OPM] Teams loaded from Apps Script:', teams.map(t=>t.name).join(', '));
-        return;
+        console.log('[OPM] Teams from Apps Script:', teams.map(t=>t.name).join(', '));
       }
     }
-  }catch(e){ console.warn('[OPM] Apps Script fetch failed:', e.message); }
-
-  // 4. Still no teams
-  if(!sel.options.length || sel.options[0].value === ''){
-    evd.style.color = 'var(--red)';
-    evd.textContent = '⚠ Cannot load event — check connection';
-    sel.innerHTML = '<option value="">⚠ No teams loaded — retry page</option>';
-  }
+  }catch(e){ console.warn('[OPM] Apps Script failed:', e.message); }
 }
+
 
 function parseCSV(text){
   const cfg = {};
