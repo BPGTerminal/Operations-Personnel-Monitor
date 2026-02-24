@@ -66,6 +66,10 @@ input[type=color]{width:44px;height:36px;border:1px solid var(--border);backgrou
 .pf-copy{font-size:9px;color:#1e3a5f;font-family:'Share Tech Mono',monospace;text-align:right;}
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-thumb{background:var(--border);}
+  .dmode-btn{background:transparent;border:1px solid var(--border);color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;padding:4px 8px;cursor:pointer;transition:all .2s;}
+  .dmode-btn.active{background:rgba(0,229,255,.15);border-color:var(--accent);color:var(--accent);}
+  #cfg-date-single,#cfg-date-from,#cfg-date-to{background:var(--surface);border:1px solid var(--border);color:#fff;font-family:'Share Tech Mono',monospace;font-size:11px;padding:6px;width:100%;}
+  #date-range-wrap{display:flex;gap:6px;align-items:center;}
 </style>
 </head>
 <body>
@@ -107,7 +111,24 @@ input[type=color]{width:44px;height:36px;border:1px solid var(--border);backgrou
     <div class="sec-body">
       <div class="row2">
         <div class="field"><label>EVENT NAME</label><input type="text" id="cfg-event" placeholder="e.g. Pista i ang Kanyog'an"/></div>
-        <div class="field"><label>EVENT DATE</label><input type="text" id="cfg-date" placeholder="e.g. 08-23 March 2026"/></div>
+        <div class="field"><label>EVENT DATE</label>
+<div style="display:flex;flex-direction:column;gap:6px;">
+  <div style="display:flex;gap:6px;">
+    <button type="button" onclick="setDateMode('today')" id="dmode-today" class="dmode-btn active">TODAY</button>
+    <button type="button" onclick="setDateMode('single')" id="dmode-single" class="dmode-btn">SINGLE DATE</button>
+    <button type="button" onclick="setDateMode('range')" id="dmode-range" class="dmode-btn">DATE RANGE</button>
+    <button type="button" onclick="setDateMode('custom')" id="dmode-custom" class="dmode-btn">CUSTOM TEXT</button>
+  </div>
+  <div id="date-today" style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent);padding:6px 0;"></div>
+  <div id="date-single-wrap" style="display:none;"><input type="date" id="cfg-date-single" onchange="syncDateField()"/></div>
+  <div id="date-range-wrap" style="display:none;display:flex;gap:6px;align-items:center;">
+    <input type="date" id="cfg-date-from" onchange="syncDateField()"/>
+    <span style="color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:10px;">TO</span>
+    <input type="date" id="cfg-date-to" onchange="syncDateField()"/>
+  </div>
+  <div id="date-custom-wrap" style="display:none;"><input type="text" id="cfg-date-custom" placeholder="e.g. 08-23 March 2026" onchange="syncDateField()"/></div>
+  <input type="hidden" id="cfg-date"/>
+</div></div>
       </div>
       <div class="row2">
         <div class="field"><label>COMMANDER NAME / CALLSIGN</label><input type="text" id="cfg-commander" placeholder="e.g. PAGONG"/></div>
@@ -262,6 +283,7 @@ window.addEventListener('load', ()=>{
 function loadForm(cfg) {
   document.getElementById('cfg-event').value     = cfg.eventName || '';
   document.getElementById('cfg-date').value      = cfg.eventDate || '';
+  initDateWidget(cfg.eventDate || '');
   document.getElementById('cfg-commander').value = cfg.commander || '';
   document.getElementById('cfg-unit').value      = cfg.unit || '';
   document.getElementById('cfg-location').value  = cfg.location || '';
@@ -463,6 +485,72 @@ document.addEventListener('click', function(e){
   const ps = document.getElementById('place-search');
   if(pr && !pr.contains(e.target) && e.target !== ps) pr.style.display = 'none';
 });
+
+// ── DATE MODE ─────────────────────────────────────────────
+let currentDateMode = 'today';
+
+function setDateMode(mode){
+  currentDateMode = mode;
+  ['today','single','range','custom'].forEach(m=>{
+    document.getElementById('dmode-'+m).classList.toggle('active', m===mode);
+    const wrap = document.getElementById('date-'+m+'-wrap');
+    if(wrap) wrap.style.display = m===mode ? (m==='range'?'flex':'block') : 'none';
+  });
+  document.getElementById('date-today').style.display = mode==='today' ? 'block' : 'none';
+  syncDateField();
+}
+
+function syncDateField(){
+  const today = new Date();
+  const fmt = d => d.toLocaleDateString('en-PH',{day:'2-digit',month:'long',year:'numeric'});
+  let val = '';
+  if(currentDateMode==='today'){
+    val = fmt(today);
+    document.getElementById('date-today').textContent = '📅 ' + val;
+  } else if(currentDateMode==='single'){
+    const d = document.getElementById('cfg-date-single').value;
+    val = d ? fmt(new Date(d+'T00:00:00')) : '';
+  } else if(currentDateMode==='range'){
+    const f = document.getElementById('cfg-date-from').value;
+    const t = document.getElementById('cfg-date-to').value;
+    if(f && t){
+      const df = new Date(f+'T00:00:00'), dt = new Date(t+'T00:00:00');
+      // Same month/year? Shorten: "08-23 March 2026"
+      if(df.getMonth()===dt.getMonth() && df.getFullYear()===dt.getFullYear()){
+        val = df.getDate()+'-'+dt.getDate()+' '+df.toLocaleDateString('en-PH',{month:'long',year:'numeric'});
+      } else {
+        val = fmt(df) + ' to ' + fmt(dt);
+      }
+    } else if(f){ val = fmt(new Date(f+'T00:00:00')) + ' onwards'; }
+  } else if(currentDateMode==='custom'){
+    val = document.getElementById('cfg-date-custom').value;
+  }
+  document.getElementById('cfg-date').value = val;
+}
+
+function initDateWidget(savedDate){
+  // Try to detect mode from saved value
+  if(!savedDate){
+    setDateMode('today');
+    return;
+  }
+  // Check if it looks like today
+  const today = new Date().toLocaleDateString('en-PH',{day:'2-digit',month:'long',year:'numeric'});
+  if(savedDate === today){ setDateMode('today'); return; }
+  // Check if it has a range pattern (digit-digit month year)
+  if(/^\d+-\d+\s+\w+/.test(savedDate)){
+    document.getElementById('cfg-date-custom').value = savedDate;
+    setDateMode('custom'); return;
+  }
+  // Default: custom text
+  document.getElementById('cfg-date-custom').value = savedDate;
+  setDateMode('custom');
+}
+
+// Auto-init date widget showing today on page load
+(function(){ 
+  try { setDateMode('today'); } catch(e){}
+})();
 </script>
 </body>
 </html>
