@@ -461,7 +461,7 @@
 // ============================================================
 const HARDCODED_URL = "https://script.google.com/macros/s/AKfycbzOTd5PXXeZo95mQBdMz157rBj5WC8S1CuEpM4aFDf4QdutRQZ1FSghk6ihft38WTo1/exec";
 
-async function loadConfig(){
+function loadConfig(){
   try {
     const s = localStorage.getItem('tms_config');
     const cfg = s ? JSON.parse(s) : null;
@@ -488,9 +488,10 @@ async function loadConfig(){
 async function refreshConfigFromSheet() {
   try {
     const url = CFG.sheetUrl || HARDCODED_URL;
-    const res = await fetch(url + '?action=getSettings');
+    const res = await fetch(url + '?action=getSettings&t=' + Date.now(), {redirect:'follow', cache:'no-store'});
     const data = await res.json();
     const cfg = data.settings;
+    console.log('[OPM] Settings from sheet:', JSON.stringify(cfg).substring(0,200));
     if (!cfg) return;
     // Update cache
     let freshTeams = cfg.teams;
