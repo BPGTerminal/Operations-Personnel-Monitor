@@ -461,7 +461,7 @@
 // ============================================================
 const HARDCODED_URL = "https://script.google.com/macros/s/AKfycbzOTd5PXXeZo95mQBdMz157rBj5WC8S1CuEpM4aFDf4QdutRQZ1FSghk6ihft38WTo1/exec";
 
-function loadConfig(){
+async function loadConfig(){
   try {
     const s = localStorage.getItem('tms_config');
     const cfg = s ? JSON.parse(s) : null;
@@ -476,9 +476,10 @@ function loadConfig(){
     lat: 8.7891, lng: 117.8370,
     sheetUrl: HARDCODED_URL,
     teams: [
-      {name:'PARADE TEAM',       code:'PARADE26', color:'#00e5ff'},
-      {name:'EVENT CENTER TEAM', code:'CENTER26', color:'#00ff88'},
-      {name:'MOBILE TEAM',       code:'MOBILE26', color:'#ff6b35'}
+      {name:'ADMINISTRATIVE UNIT',  code:'ADMIN',    color:'#00e5ff'},
+      {name:'OPERATIONS UNIT',      code:'OPS',      color:'#00ff88'},
+      {name:'UTILITY UNIT',         code:'UTILITY',  color:'#ff6b35'},
+      {name:'SAFETY & SECURITY UNIT',code:'WATCHMAN',color:'#ffd166'}
     ]
   };
 }
@@ -492,8 +493,10 @@ async function refreshConfigFromSheet() {
     const cfg = data.settings;
     if (!cfg) return;
     // Update cache
+    let freshTeams = cfg.teams;
+    if(typeof freshTeams === 'string'){ try{ freshTeams = JSON.parse(freshTeams); }catch(e){ freshTeams = null; } }
     const merged = {...CFG, ...cfg, sheetUrl: url};
-    if (Array.isArray(cfg.teams)) merged.teams = cfg.teams;
+    if(Array.isArray(freshTeams) && freshTeams.length) merged.teams = freshTeams;
     localStorage.setItem('tms_config', JSON.stringify(merged));
     // Update visible elements
     const title = `${merged.eventName||'OPM'} <span>// ${merged.commander||'PAGONG'}</span>`;
@@ -532,6 +535,14 @@ function init(){
   setInterval(checkEventVersion, 30000); // detect server clears every 30s
   fetchPendingApprovals();
   setInterval(fetchPendingApprovals, 8000);
+  // Clear any stale old-format team config on load
+  try {
+    const stored = JSON.parse(localStorage.getItem('tms_config')||'{}');
+    const oldTeamNames = ['PARADE TEAM','EVENT CENTER TEAM','MOBILE TEAM'];
+    if(stored.teams && stored.teams.length && oldTeamNames.includes(stored.teams[0].name)){
+      localStorage.removeItem('tms_config'); console.log('[OPM] Cleared stale team config');
+    }
+  } catch(e){}
   // Pull fresh settings from Sheet every 30s so admin changes reflect
   refreshConfigFromSheet();
   setInterval(refreshConfigFromSheet, 30000);
@@ -1092,13 +1103,13 @@ function toggleMapMax(){
 (function footerCycle(){
   const footer = document.getElementById('pagong-footer');
   if(!footer) return;
-  function hide(){
+  async function hide(){
     footer.style.transition = 'opacity 1s';
     footer.style.opacity = '0';
     footer.style.pointerEvents = 'none';
     setTimeout(show, 5 * 60 * 1000); // reappear after 5 min
   }
-  function show(){
+  async function show(){
     footer.style.transition = 'opacity 1s';
     footer.style.opacity = '1';
     footer.style.pointerEvents = '';
@@ -1199,7 +1210,7 @@ function applyLayout(){
 // ============================================================
 let pendingApprovals = {};
 
-function toggleApprovalPanel(){
+async function toggleApprovalPanel(){
   const p = document.getElementById('approval-panel');
   p.style.display = p.style.display === 'none' ? 'block' : 'none';
 }
@@ -1268,6 +1279,7 @@ async function fetchPendingApprovals(){
             '<button class="ap-approve" onclick="handleApproval(\'' + req.deviceId + '\',\'approve\',this)">&#x2713; APPROVE</button>' +
             '<button class="ap-reject"  onclick="handleApproval(\'' + req.deviceId + '\',\'reject\',this)">&#x2715; REJECT</button>' +
           '</div>';
+        pendingApprovals[req.deviceId] = req; // store so handleApproval can access name
         list.appendChild(item);
       });
     } else {
@@ -1285,7 +1297,7 @@ async function handleApproval(deviceId, action, btn){
   try{
     await fetch(SHEET_URL, {
       method:'POST',
-      body: JSON.stringify({ action: action==='approve' ? 'approveUser' : 'rejectUser', deviceId })
+      body: JSON.stringify({ action: action==='approve' ? 'approveUser' : 'rejectUser', deviceId, name: (pendingApprovals[deviceId]||{}).name||'' })
     });
     delete pendingApprovals[deviceId];
     setTimeout(fetchPendingApprovals, 800);
