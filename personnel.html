@@ -84,6 +84,9 @@ select option{background:#0f1628;color:#fff;}
     <input type="password" id="l-code" placeholder="Enter your team's code"/>
   </div>
   <button id="login-btn" onclick="doLogin()">REQUEST ACCESS ▶</button>
+  <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim);text-align:center;margin-top:8px;letter-spacing:1px;">
+    DEVICE ID: <span id="device-id-disp" style="color:var(--accent);"></span>
+  </div>
 </div>
 
 <!-- WAITING SCREEN -->
@@ -154,8 +157,14 @@ let fetchTimer = null, locTimer = null, approvalTimer = null;
 let msgCache = new Set();
 
 function getDeviceId(){
-  let id = localStorage.getItem('opm_device_id');
-  if(!id){ id = 'D_' + Math.random().toString(36).substr(2,8).toUpperCase() + '_' + Date.now().toString(36).toUpperCase(); localStorage.setItem('opm_device_id',id); }
+  // Try localStorage first, then sessionStorage backup
+  let id = localStorage.getItem('opm_device_id') || sessionStorage.getItem('opm_device_id');
+  if(!id){
+    id = 'D_' + Math.random().toString(36).substr(2,8).toUpperCase() + '_' + Date.now().toString(36).toUpperCase();
+  }
+  // Always write to both storages to keep in sync
+  try { localStorage.setItem('opm_device_id', id); } catch(e){}
+  try { sessionStorage.setItem('opm_device_id', id); } catch(e){}
   return id;
 }
 
@@ -268,6 +277,19 @@ async function doLogin(){
   btn.textContent = '⏳ REQUESTING...'; btn.disabled = true;
   try{
     const devId = getDeviceId();
+
+    // Check if this device is already registered and approved
+    const checkRes = await fetch(SHEET_URL, {method:'POST', body:JSON.stringify({action:'checkApproval',deviceId:devId})});
+    const checkData = await checkRes.json();
+    if(checkData.status === 'APPROVED'){
+      // Already approved — just update name/team/post and go straight in
+      me = {devId, name, team, post, color: teamObj?.color||'#00e5ff'};
+      localStorage.setItem('opm_pending', JSON.stringify({...me, requested:Date.now()}));
+      await fetch(SHEET_URL, {method:'POST', body:JSON.stringify({action:'checkIn',deviceId:devId,name,team,post,lat:'',lng:''})});
+      enterApp();
+      return;
+    }
+
     const res = await fetch(SHEET_URL, {method:'POST', body:JSON.stringify({action:'requestApproval',deviceId:devId,name,team,post})});
     const d = await res.json();
     me = {devId, name, team, post, color: teamObj?.color||'#00e5ff'};
@@ -398,16 +420,25 @@ function renderMessages(msgs){
   if(!msgs.length){ list.innerHTML='<div style="padding:24px;text-align:center;font-family:\'Share Tech Mono\',monospace;font-size:10px;color:var(--dim);">No messages yet.</div>'; return; }
   msgs.slice().reverse().forEach(m=>{
     const cls = m.type==='broadcast'?'msg-broadcast':m.type==='system'?'msg-system':'';
+    // Extract meet URL if present
+    let bodyHtml = (m.body||'').replace(/(https:\/\/meet\.google\.com\/[\w-]+)/g,
+      url => `</div><a href="${url}" target="_blank" rel="noopener" style="display:block;margin-top:6px;background:rgba(0,200,100,.15);border:1px solid #00c864;color:#00ff88;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;padding:8px 12px;text-decoration:none;text-align:center;">▶ JOIN VIDEO CALL</a><div style="display:none;">`
+    );
     html += `<div class="msg-item ${cls}">
       <div class="msg-sender">${m.sender||''}${m.post?' · '+m.post:''}</div>
-      <div class="msg-body">${m.body||''}</div>
+      <div class="msg-body">${bodyHtml}</div>
       ${m.photoUrl?`<img src="${m.photoUrl}" style="max-width:100%;margin-top:6px;" onclick="window.open('${m.photoUrl}')"/>`:'' }
       <div class="msg-time">${m.time?new Date(m.time).toLocaleTimeString('en-US',{hour12:false}):''}</div>
     </div>`;
   });
   list.innerHTML = html;
   // Check for Meet link
-  msgs.forEach(m=>{ if(m.type==='meet_broadcast'||m.body?.includes('meet.google.com')){ activateMeetFab(m.body); }});
+  msgs.forEach(m=>{
+    if(m.type==='meet_broadcast'||m.body?.includes('meet.google.com')){
+      const urlMatch = (m.body||'').match(/(https:\/\/meet\.google\.com\/[\w-]+)/);
+      if(urlMatch) activateMeetFab(urlMatch[1]);
+    }
+  });
 }
 
 async function sendMsg(){
@@ -475,6 +506,10 @@ async function restoreSession(){
 
 // ── INIT ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async function(){
+  // Show device ID
+  const devId = getDeviceId();
+  const disp = document.getElementById('device-id-disp');
+  if(disp) disp.textContent = devId.slice(-8); // show last 8 chars only
   // Request GPS early so it's ready when needed
   if(navigator.geolocation){
     navigator.geolocation.getCurrentPosition(
@@ -493,6 +528,11 @@ document.addEventListener('DOMContentLoaded', async function(){
 </script>
 
   <div style="font-size:9px;color:#2a4060;letter-spacing:1px;margin-top:2px;">© 2026 · OPM · OPERATIONS PERSONNEL MONITOR</div>
+</div>
+<div style="text-align:center;padding:16px 0 80px;font-family:'Share Tech Mono',monospace;">
+  <div style="font-size:9px;color:#00e5ff;letter-spacing:2px;opacity:0.8;text-shadow:0 0 8px #00e5ff,0 0 16px #00e5ff66;">-=pagong=-</div>
+  <div style="font-size:8px;color:#7ecfff;opacity:0.75;margin-top:4px;letter-spacing:0.8px;text-shadow:0 0 6px #00e5ff66;">JOEY SABENACIO HEREDERO &nbsp;·&nbsp; © 2026</div>
+  <div style="font-size:8px;color:#4a7090;opacity:0.6;margin-top:2px;letter-spacing:0.5px;">OPM · OPERATIONS PERSONNEL MONITOR</div>
 </div>
 </body>
 </html>
