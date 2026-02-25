@@ -118,9 +118,10 @@ select option{background:#0f1628;color:#fff;}
         <div class="app-header-detail" id="app-detail">Loading...</div>
       </div>
     </div>
-    <div style="text-align:right;">
+    <div style="text-align:right;display:flex;align-items:center;gap:8px;">
       <span class="status-dot" id="status-dot"></span>
-      <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--green);margin-left:4px;" id="status-txt">ONLINE</span>
+      <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--green);" id="status-txt">ONLINE</span>
+      <button onclick="doLogout()" title="Log out" style="background:transparent;border:1px solid #ff444466;color:#ff6666;font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;padding:3px 6px;cursor:pointer;line-height:1;">⏏ OUT</button>
     </div>
   </div>
   <div id="status-bar">
@@ -336,6 +337,25 @@ async function pollApproval(){
 }
 
 // ── APP ───────────────────────────────────────────────────────
+function doLogout(){
+  if(!confirm('Log out and return to login screen?')) return;
+  // Mark offline on server
+  if(me){
+    fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'markOneOffline',deviceId:me.devId})}).catch(()=>{});
+  }
+  // Stop timers
+  if(fetchTimer){ clearInterval(fetchTimer); fetchTimer=null; }
+  if(locTimer){ clearInterval(locTimer); locTimer=null; }
+  // Clear session (keep device ID and opm_pending so they can log back in faster)
+  me = null;
+  // Hide app, show login
+  document.getElementById('app-screen').style.display='none';
+  document.getElementById('loc-bar').style.display='none';
+  document.getElementById('compose-bar').style.display='none';
+  document.getElementById('meet-fab').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+}
+
 function enterApp(){
   if(approvalTimer){clearInterval(approvalTimer);approvalTimer=null;}
   document.getElementById('login-screen').style.display='none';
