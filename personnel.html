@@ -282,7 +282,7 @@ async function doLogin(){
     const checkRes = await fetch(SHEET_URL, {method:'POST', body:JSON.stringify({action:'checkApproval',deviceId:devId})});
     const checkData = await checkRes.json();
     if(checkData.status === 'APPROVED'){
-      // Already approved — just update name/team/post and go straight in
+      // Already approved — update callsign/team/post and go straight in (no re-approval needed)
       me = {devId, name, team, post, color: teamObj?.color||'#00e5ff'};
       localStorage.setItem('opm_pending', JSON.stringify({...me, requested:Date.now()}));
       await fetch(SHEET_URL, {method:'POST', body:JSON.stringify({action:'checkIn',deviceId:devId,name,team,post,lat:'',lng:''})});
@@ -492,16 +492,31 @@ function joinMeet(){ /* default — no active call */ alert('No video call activ
 async function restoreSession(){
   const pending = JSON.parse(localStorage.getItem('opm_pending')||'null');
   if(!pending) return false;
-  // Check if approval changed
+  // Pre-fill the login form with saved details so user can review/change
+  try{
+    if(pending.name) document.getElementById('l-name').value = pending.name;
+    if(pending.post) document.getElementById('l-post').value = pending.post;
+    // Try to select saved team
+    const sel = document.getElementById('l-team');
+    if(pending.team){
+      for(let o of sel.options){ if(o.value===pending.team){ o.selected=true; break; } }
+    }
+    // Show a notice that they can change their callsign
+    const evd = document.getElementById('event-name-disp');
+    if(evd && pending.name){
+      evd.innerHTML += '<div style="font-size:9px;color:var(--green);margin-top:4px;letter-spacing:1px;">↩ RETURNING: ' + pending.name + ' — edit to change callsign</div>';
+    }
+  }catch(e){}
+  // Check approval status silently
   me = pending;
   try{
     const res = await fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'checkApproval',deviceId:me.devId})});
     const d = await res.json();
-    if(d.status==='APPROVED'){ enterApp(); return true; }
     if(d.status==='REJECTED'){ localStorage.removeItem('opm_pending'); showRejected(); return true; }
     if(d.status==='PENDING'){ showWaiting(); return true; }
+    // APPROVED — stay on login so user can confirm/change name, don't auto-enter
   }catch(e){}
-  return false;
+  return false; // stay on login screen
 }
 
 // ── INIT ──────────────────────────────────────────────────────
