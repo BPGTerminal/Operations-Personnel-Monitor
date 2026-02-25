@@ -2,6 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
+  <!-- PWA: installable as home screen app -->
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#00e5ff"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="OPM"/>
+  <link rel="apple-touch-icon" href="icon-192.png"/>
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
 <title>OPM — Personnel</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -594,5 +603,14 @@ document.addEventListener('DOMContentLoaded', async function(){
   <div style="font-size:8px;color:#7ecfff;opacity:0.75;margin-top:4px;letter-spacing:0.8px;text-shadow:0 0 6px #00e5ff66;">JOEY SABENACIO HEREDERO &nbsp;·&nbsp; © 2026</div>
   <div style="font-size:8px;color:#4a7090;opacity:0.6;margin-top:2px;letter-spacing:0.5px;">OPM · OPERATIONS PERSONNEL MONITOR</div>
 </div>
+  <script>
+    if('serviceWorker' in navigator){
+      window.addEventListener('load', ()=>{
+        navigator.serviceWorker.register('./sw.js')
+          .then(r => console.log('[OPM] SW registered:', r.scope))
+          .catch(e => console.log('[OPM] SW failed:', e));
+      });
+    }
+  </script>
 </body>
 </html>
