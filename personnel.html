@@ -267,15 +267,40 @@ async function doLogin(){
   const code = document.getElementById('l-code').value.trim();
   if(!name||!team||!post||!code){ alert('Please fill in all fields.'); return; }
 
-  const cfg = getCached();
-  const teams = Array.isArray(cfg.teams) ? cfg.teams : [];
-  const teamObj = teams.find(t=>t.name===team);
-  if(teamObj && teamObj.code && teamObj.code.toUpperCase() !== code.toUpperCase()){
-    alert('Wrong access code for ' + team + '.'); return;
+  const btn = document.getElementById('login-btn');
+  btn.textContent = '⏳ CHECKING...'; btn.disabled = true;
+
+  // Always fetch fresh settings to get latest access codes (admin may have changed them)
+  let teamObj = null;
+  try{
+    const sr = await fetch(SETTINGS_CSV_URL + '&t=' + Date.now(), {cache:'no-store'});
+    const csv = await sr.text();
+    const freshCfg = parseCSV(csv);
+    let freshTeams = freshCfg.teams ? JSON.parse(freshCfg.teams) : null;
+    if(!freshTeams){
+      const cr = await fetch(SHEET_URL+'?action=getSettings&t='+Date.now(),{cache:'no-store'});
+      const cd = await cr.json();
+      freshTeams = cd.settings?.teams;
+      if(typeof freshTeams==='string') freshTeams=JSON.parse(freshTeams);
+    }
+    if(Array.isArray(freshTeams)){
+      saveCache({...getCached(), teams: freshTeams});
+      populateTeams(freshTeams);
+      teamObj = freshTeams.find(t=>t.name===team);
+    }
+  }catch(e){
+    // Fall back to cached
+    const cfg = getCached();
+    const teams = Array.isArray(cfg.teams) ? cfg.teams : [];
+    teamObj = teams.find(t=>t.name===team);
   }
 
-  const btn = document.getElementById('login-btn');
-  btn.textContent = '⏳ REQUESTING...'; btn.disabled = true;
+  if(teamObj && teamObj.code && teamObj.code.toUpperCase() !== code.toUpperCase()){
+    alert('Wrong access code for ' + team + '.\nIf the code was recently changed, it is now updated. Please try the new code.');
+    btn.textContent = 'REQUEST ACCESS ▶'; btn.disabled = false; return;
+  }
+
+  btn.textContent = '⏳ REQUESTING...';
   try{
     const devId = getDeviceId();
 

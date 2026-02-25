@@ -858,6 +858,7 @@ function updatePersonnel(list){
   list = list.map(p=>({
     ...p,
     id: p.id || p.deviceId, // normalize — Apps Script returns deviceId
+    team: normalizeTeamName(p.team), // map old/partial names to current team names
     lat: parseFloat(p.lat)||0,
     lng: parseFloat(p.lng)||0,
     online: p.online===true || p.online==='TRUE' || p.online==='true'
@@ -897,15 +898,55 @@ function updatePersonnel(list){
   renderPersonnelList();
 }
 
+// Resolve a stored team name to the canonical CFG team name
+function resolveTeam(teamName){
+  if(!teamName) return '';
+  // Exact match
+  let t = CFG.teams.find(t=>t.name===teamName);
+  if(t) return t.name;
+  // Fuzzy: keyword overlap
+  const upper = teamName.toUpperCase();
+  t = CFG.teams.find(t=>{
+    const cn = t.name.toUpperCase();
+    return cn.includes(upper) || upper.includes(cn) ||
+           t.name.toUpperCase().split(' ').some(w=>w.length>3 && upper.includes(w));
+  });
+  return t ? t.name : teamName; // return canonical name or original if no match
+}
+
 function getTeamColor(teamName){
-  const t = CFG.teams.find(t=>t.name===teamName);
+  if(!teamName) return '#888';
+  // Exact match first
+  let t = CFG.teams.find(t=>t.name===teamName);
+  if(t) return t.color;
+  // Fuzzy: check if any significant word from stored team name appears in CFG team names
+  const upper = teamName.toUpperCase();
+  t = CFG.teams.find(t=>{
+    const cn = t.name.toUpperCase();
+    return cn.includes(upper) || upper.includes(cn) ||
+           t.name.toUpperCase().split(' ').some(w=>w.length>3 && upper.includes(w));
+  });
   return t ? t.color : '#888';
+}
+
+function normalizeTeamName(teamName){
+  if(!teamName) return teamName;
+  // Try to map old/partial team names to current CFG team names
+  const exact = CFG.teams.find(t=>t.name===teamName);
+  if(exact) return teamName;
+  const upper = teamName.toUpperCase();
+  const fuzzy = CFG.teams.find(t=>{
+    const cn = t.name.toUpperCase();
+    return cn.includes(upper) || upper.includes(cn) ||
+           t.name.toUpperCase().split(' ').some(w=>w.length>3 && upper.includes(w));
+  });
+  return fuzzy ? fuzzy.name : teamName;
 }
 
 function updateMarker(p){
   const lat = parseFloat(p.lat), lng = parseFloat(p.lng);
   if(!lat || !lng || isNaN(lat) || isNaN(lng)) return; // no GPS yet
-  const color = getTeamColor(p.team);
+  const color = getTeamColor(p.team); // getTeamColor already does fuzzy match
   const initials = p.name.replace(/^(Ofc\.|PO|SPO|Insp\.)\s*/i,'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
   const glowColor = color.replace('#','');
   const html = `<div class="p-marker" style="background:${color};box-shadow:0 0 8px ${color}80;">${initials}</div>`;
@@ -928,7 +969,7 @@ function removeMarker(id){
 function renderPersonnelList(){
   const container = document.getElementById('personnel-list');
   const list = Object.values(personnelData);
-  const filtered = selectedTeamFilter==='ALL' ? list : list.filter(p=>p.team===selectedTeamFilter);
+  const filtered = selectedTeamFilter==='ALL' ? list : list.filter(p=>resolveTeam(p.team)===selectedTeamFilter);
 
   if(filtered.length===0){
     container.innerHTML='<div class="empty">No personnel in this team yet.</div>';
@@ -941,6 +982,7 @@ function renderPersonnelList(){
 
   filtered.forEach(p=>{
     const color = getTeamColor(p.team);
+    const canonicalTeam = resolveTeam(p.team);
     const card = document.createElement('div');
     card.className=`p-card ${p.online?'online':''} ${selectedTarget===p.id?'selected':''}`;
     card.style.borderLeftColor = p.online ? color : 'var(--dim)';
@@ -954,7 +996,7 @@ function renderPersonnelList(){
         <span class="pc-time">${p.lastSeen||'—'}</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;margin-top:1px;">
-        <span class="pc-team" style="color:${color};font-size:10px;">${p.team||''}</span>
+        <span class="pc-team" style="color:${color};font-size:10px;">${canonicalTeam||p.team||''}</span>
         <span class="pc-post" style="font-size:10px;">· ${p.post||'?'}</span>
         <span class="pc-status ${p.online?'on':'off'}" style="margin-left:auto;">${p.online?'● ONLINE':'○ OFF'}</span>
       </div>
@@ -1156,8 +1198,9 @@ async function checkEventVersion(){
 }
 
 function clearLocalCache(){
-  // Wipe ONLY comms log — keep tms_config (has sheetUrl, lat/lng, teams)
+  // Wipe ONLY event data — keep tms_config (has sheetUrl, lat/lng, teams)
   logEntries = [];
+  messageCache = new Set(); // reset so fresh messages show after clear
   localStorage.removeItem('parade_log_session');
   personnelData = {};
   markers && Object.values(markers).forEach(m=>{ try{ map.removeLayer(m); }catch(e){} });
@@ -1242,6 +1285,8 @@ async function confirmClearEvent(){
   const btn = event.target;
   btn.textContent = '⏳ CLEARING...';
   btn.disabled = true;
+  // Clear UI immediately regardless of server response
+  clearLocalCache();
   try{
     const r = await fetch(SHEET_URL, {
       method:'POST',
@@ -1249,7 +1294,7 @@ async function confirmClearEvent(){
     });
     const d = await r.json();
     if(d.status === 'cleared'){
-      clearLocalCache();
+      clearLocalCache(); // run again to be sure
       btn.textContent = '✓ CLEARED';
       btn.style.color = '#00ff88';
       btn.style.borderColor = '#00ff88';
