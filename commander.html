@@ -323,9 +323,50 @@
     box-shadow:0 0 6px rgba(255,255,255,.25) !important;
   }
 
-</style>
+
+  /* ── COMMANDER PASSWORD GATE ─────────────────────────── */
+  #cmd-gate{
+    position:fixed;inset:0;background:#0a0e1a;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:99999;gap:16px;
+  }
+  #cmd-gate .gate-logo{font-family:'Share Tech Mono',monospace;font-size:11px;color:#00e5ff;letter-spacing:3px;opacity:.7;text-shadow:0 0 10px #00e5ff;}
+  #cmd-gate .gate-badge{background:#00e5ff;color:#000;font-family:'Share Tech Mono',monospace;font-size:18px;font-weight:bold;padding:6px 20px;letter-spacing:3px;}
+  #cmd-gate .gate-title{font-family:'Share Tech Mono',monospace;font-size:11px;color:#fff;letter-spacing:2px;opacity:.6;margin-top:4px;}
+  #cmd-gate input{
+    background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.3);
+    color:#fff;font-family:'Share Tech Mono',monospace;font-size:16px;
+    letter-spacing:4px;padding:12px 20px;text-align:center;width:260px;
+    outline:none;margin-top:8px;
+  }
+  #cmd-gate input:focus{border-color:#00e5ff;box-shadow:0 0 12px rgba(0,229,255,.3);}
+  #cmd-gate .gate-btn{
+    background:rgba(0,229,255,.15);border:1px solid #00e5ff;
+    color:#00e5ff;font-family:'Share Tech Mono',monospace;font-size:11px;
+    letter-spacing:2px;padding:10px 32px;cursor:pointer;width:260px;
+    transition:all .2s;margin-top:4px;
+  }
+  #cmd-gate .gate-btn:hover{background:rgba(0,229,255,.3);}
+  #cmd-gate .gate-err{font-family:'Share Tech Mono',monospace;font-size:10px;color:#ff3b5c;letter-spacing:1px;height:16px;}
+  #cmd-gate .gate-hint{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(0,229,255,.35);letter-spacing:1px;margin-top:8px;}
+
+  </style>
 </head>
 <body>
+
+<!-- COMMANDER PASSWORD GATE -->
+<div id="cmd-gate">
+  <div class="gate-logo">-=pagong=-</div>
+  <div class="gate-badge">OPM</div>
+  <div class="gate-title">COMMANDER ACCESS</div>
+  <div style="width:260px;height:1px;background:rgba(0,229,255,.2);margin:8px 0;"></div>
+  <input type="password" id="gate-pw" placeholder="• • • • • • • •"
+         maxlength="32" onkeydown="if(event.key==='Enter')gateUnlock()"/>
+  <div class="gate-err" id="gate-err"></div>
+  <button class="gate-btn" onclick="gateUnlock()">UNLOCK ▶</button>
+  <div class="gate-hint">RESTRICTED ACCESS — AUTHORIZED PERSONNEL ONLY</div>
+</div>
+
 
 <header>
   <div class="hdr-left">
@@ -1559,7 +1600,49 @@ async function handleApproval(deviceId, action, btn){
     floatEl.style.maxHeight='none';
   };
 
-  document.addEventListener('DOMContentLoaded', init);
+  
+// ── COMMANDER GATE ────────────────────────────────────────
+const GATE_KEY = 'opm_cmd_unlocked';
+
+function gateUnlock(){
+  const pw   = document.getElementById('gate-pw').value;
+  const err  = document.getElementById('gate-err');
+  const cfg  = loadConfig();
+  // Password comes from Admin settings (cfg.commanderPw), fallback = 'PAGONG'
+  const correct = (cfg.commanderPw || 'PAGONG').toUpperCase();
+
+  if(pw.toUpperCase() === correct){
+    // Store unlock in sessionStorage (clears when tab/browser closes)
+    sessionStorage.setItem(GATE_KEY, '1');
+    document.getElementById('cmd-gate').style.display = 'none';
+    document.getElementById('gate-pw').value = '';
+    err.textContent = '';
+    // Now run the actual init
+    init();
+  } else {
+    err.textContent = '✗ INCORRECT PASSWORD';
+    document.getElementById('gate-pw').value = '';
+    document.getElementById('gate-pw').focus();
+    // Brief shake animation
+    const input = document.getElementById('gate-pw');
+    input.style.borderColor = '#ff3b5c';
+    input.style.boxShadow = '0 0 12px rgba(255,59,92,.4)';
+    setTimeout(()=>{ input.style.borderColor=''; input.style.boxShadow=''; }, 1500);
+  }
+}
+
+function checkGate(){
+  // If already unlocked this session, go straight to init
+  if(sessionStorage.getItem(GATE_KEY) === '1'){
+    document.getElementById('cmd-gate').style.display = 'none';
+    init();
+    return;
+  }
+  // Show gate, focus password field
+  document.getElementById('gate-pw').focus();
+}
+
+document.addEventListener('DOMContentLoaded', checkGate);
 })();
 
 </script>
