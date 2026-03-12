@@ -324,48 +324,93 @@
   }
 
 
-  /* ── COMMANDER PASSWORD GATE ─────────────────────────── */
-  #cmd-gate{
-    position:fixed;inset:0;background:#0a0e1a;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    z-index:99999;gap:16px;
-  }
-  #cmd-gate .gate-logo{font-family:'Share Tech Mono',monospace;font-size:11px;color:#00e5ff;letter-spacing:3px;opacity:.7;text-shadow:0 0 10px #00e5ff;}
-  #cmd-gate .gate-badge{background:#00e5ff;color:#000;font-family:'Share Tech Mono',monospace;font-size:18px;font-weight:bold;padding:6px 20px;letter-spacing:3px;}
-  #cmd-gate .gate-title{font-family:'Share Tech Mono',monospace;font-size:11px;color:#fff;letter-spacing:2px;opacity:.6;margin-top:4px;}
-  #cmd-gate input{
-    background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.3);
-    color:#fff;font-family:'Share Tech Mono',monospace;font-size:16px;
-    letter-spacing:4px;padding:12px 20px;text-align:center;width:260px;
-    outline:none;margin-top:8px;
-  }
-  #cmd-gate input:focus{border-color:#00e5ff;box-shadow:0 0 12px rgba(0,229,255,.3);}
-  #cmd-gate .gate-btn{
-    background:rgba(0,229,255,.15);border:1px solid #00e5ff;
-    color:#00e5ff;font-family:'Share Tech Mono',monospace;font-size:11px;
-    letter-spacing:2px;padding:10px 32px;cursor:pointer;width:260px;
-    transition:all .2s;margin-top:4px;
-  }
-  #cmd-gate .gate-btn:hover{background:rgba(0,229,255,.3);}
-  #cmd-gate .gate-err{font-family:'Share Tech Mono',monospace;font-size:10px;color:#ff3b5c;letter-spacing:1px;height:16px;}
-  #cmd-gate .gate-hint{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(0,229,255,.35);letter-spacing:1px;margin-top:8px;}
-
   </style>
 </head>
 <body>
 
-<!-- COMMANDER PASSWORD GATE -->
-<div id="cmd-gate">
-  <div class="gate-logo">-=pagong=-</div>
-  <div class="gate-badge">OPM</div>
-  <div class="gate-title">COMMANDER ACCESS</div>
-  <div style="width:260px;height:1px;background:rgba(0,229,255,.2);margin:8px 0;"></div>
-  <input type="password" id="gate-pw" placeholder="• • • • • • • •"
-         maxlength="32" onkeydown="if(event.key==='Enter')gateUnlock()"/>
-  <div class="gate-err" id="gate-err"></div>
-  <button class="gate-btn" onclick="gateUnlock()">UNLOCK ▶</button>
-  <div class="gate-hint">RESTRICTED ACCESS — AUTHORIZED PERSONNEL ONLY</div>
+<!-- ══ OPM COMMANDER GATE — self-contained, global scope ══ -->
+<style>
+#opm-gate{
+  position:fixed;inset:0;background:#0a0e1a;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:999999;gap:10px;font-family:'Share Tech Mono',monospace;
+}
+#opm-gate img{width:100px;height:100px;border-radius:50%;margin-bottom:6px;box-shadow:0 0 24px rgba(0,229,255,.4);}
+#opm-gate .g-sub{font-size:10px;color:#00e5ff;letter-spacing:3px;opacity:.6;}
+#opm-gate .g-badge{background:#00e5ff;color:#000;font-size:18px;font-weight:bold;padding:5px 22px;letter-spacing:4px;}
+#opm-gate .g-title{font-size:10px;color:#fff;letter-spacing:2px;opacity:.5;margin-bottom:6px;}
+#opm-gate .g-line{width:260px;height:1px;background:rgba(0,229,255,.2);margin:4px 0;}
+#opm-gate input{
+  background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.3);
+  color:#fff;font-size:16px;letter-spacing:5px;padding:12px 20px;
+  text-align:center;width:220px;outline:none;font-family:'Share Tech Mono',monospace;
+}
+#opm-gate input:focus{border-color:#00e5ff;box-shadow:0 0 12px rgba(0,229,255,.25);}
+#opm-gate .g-btn{
+  background:rgba(0,229,255,.12);border:1px solid #00e5ff;color:#00e5ff;
+  font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;
+  padding:10px 0;width:260px;cursor:pointer;margin-top:4px;
+}
+#opm-gate .g-btn:hover{background:rgba(0,229,255,.28);}
+#opm-gate .g-err{font-size:10px;color:#ff3b5c;letter-spacing:1px;height:14px;}
+#opm-gate .g-hint{font-size:9px;color:rgba(0,229,255,.3);letter-spacing:1px;margin-top:6px;}
+</style>
+
+<div id="opm-gate">
+  <img src="data:image/png;base64,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" alt="OPM"/>
+  <div class="g-sub">-=pagong=-</div>
+  <div class="g-badge">OPM</div>
+  <div class="g-title">COMMANDER ACCESS</div>
+  <div class="g-line"></div>
+  <input type="password" id="g-pw" placeholder="PASSWORD" maxlength="32"
+         onkeydown="if(event.key==='Enter')opmGateUnlock()"/>
+  <div class="g-err" id="g-err"></div>
+  <button class="g-btn" onclick="opmGateUnlock()">UNLOCK ▶</button>
+  <div class="g-hint">RESTRICTED — AUTHORIZED PERSONNEL ONLY</div>
 </div>
+
+<script>
+// Gate runs immediately — no dependencies, no async, global scope
+(function(){
+  // If already unlocked this browser session, hide gate right away
+  if(sessionStorage.getItem('opm_gate')==='1'){
+    document.getElementById('opm-gate').style.display='none';
+    return;
+  }
+  // Focus the password field once fonts load
+  window.addEventListener('load',function(){
+    var f=document.getElementById('g-pw');
+    if(f) f.focus();
+  });
+})();
+
+function opmGateUnlock(){
+  var pw  = (document.getElementById('g-pw').value||'').trim().toUpperCase();
+  var err = document.getElementById('g-err');
+  if(!pw){ err.textContent='ENTER PASSWORD'; return; }
+
+  // Get correct password from localStorage (saved by admin page), default PAGONG
+  var correct = 'PAGONG';
+  try{
+    var cfg = JSON.parse(localStorage.getItem('tms_config')||'{}');
+    if(cfg && cfg.commanderPw) correct = String(cfg.commanderPw).toUpperCase();
+  }catch(e){}
+
+  if(pw === correct){
+    sessionStorage.setItem('opm_gate','1');
+    document.getElementById('opm-gate').style.display='none';
+  } else {
+    err.textContent='✗ INCORRECT PASSWORD';
+    document.getElementById('g-pw').value='';
+    document.getElementById('g-pw').focus();
+    var inp = document.getElementById('g-pw');
+    inp.style.borderColor='#ff3b5c';
+    setTimeout(function(){ inp.style.borderColor=''; err.textContent=''; }, 1500);
+  }
+}
+</script>
+<!-- ══ END GATE ══ -->
+
 
 
 <header>
@@ -1601,51 +1646,6 @@ async function handleApproval(deviceId, action, btn){
   };
 
   
-// ── COMMANDER GATE ────────────────────────────────────────
-const GATE_KEY = 'opm_cmd_unlocked';
-
-function gateUnlock(){
-  const pw  = (document.getElementById('gate-pw').value||'').trim();
-  const err = document.getElementById('gate-err');
-  if(!pw){ err.textContent='✗ ENTER PASSWORD'; return; }
-
-  // Read password from localStorage directly (set by admin page)
-  // Default is PAGONG if nothing saved yet
-  let correct = 'PAGONG';
-  try{
-    const stored = JSON.parse(localStorage.getItem('tms_config')||'{}');
-    if(stored.commanderPw) correct = stored.commanderPw;
-  }catch(e){}
-
-  if(pw.toUpperCase() === correct.toUpperCase()){
-    sessionStorage.setItem(GATE_KEY, '1');
-    document.getElementById('cmd-gate').style.display = 'none';
-    document.getElementById('gate-pw').value = '';
-    err.textContent = '';
-    init();
-  } else {
-    err.textContent = '✗ INCORRECT PASSWORD';
-    document.getElementById('gate-pw').value = '';
-    document.getElementById('gate-pw').focus();
-    const input = document.getElementById('gate-pw');
-    input.style.borderColor = '#ff3b5c';
-    input.style.boxShadow = '0 0 12px rgba(255,59,92,.4)';
-    setTimeout(()=>{ input.style.borderColor=''; input.style.boxShadow=''; }, 1500);
-  }
-}
-
-function checkGate(){
-  // If already unlocked this session, go straight to init
-  if(sessionStorage.getItem(GATE_KEY) === '1'){
-    document.getElementById('cmd-gate').style.display = 'none';
-    init();
-    return;
-  }
-  // Show gate, focus password field
-  document.getElementById('gate-pw').focus();
-}
-
-document.addEventListener('DOMContentLoaded', checkGate);
 })();
 
 </script>
