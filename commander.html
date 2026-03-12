@@ -1605,25 +1605,28 @@ async function handleApproval(deviceId, action, btn){
 const GATE_KEY = 'opm_cmd_unlocked';
 
 function gateUnlock(){
-  const pw   = document.getElementById('gate-pw').value;
-  const err  = document.getElementById('gate-err');
-  const cfg  = loadConfig();
-  // Password comes from Admin settings (cfg.commanderPw), fallback = 'PAGONG'
-  const correct = (cfg.commanderPw || 'PAGONG').toUpperCase();
+  const pw  = (document.getElementById('gate-pw').value||'').trim();
+  const err = document.getElementById('gate-err');
+  if(!pw){ err.textContent='✗ ENTER PASSWORD'; return; }
 
-  if(pw.toUpperCase() === correct){
-    // Store unlock in sessionStorage (clears when tab/browser closes)
+  // Read password from localStorage directly (set by admin page)
+  // Default is PAGONG if nothing saved yet
+  let correct = 'PAGONG';
+  try{
+    const stored = JSON.parse(localStorage.getItem('tms_config')||'{}');
+    if(stored.commanderPw) correct = stored.commanderPw;
+  }catch(e){}
+
+  if(pw.toUpperCase() === correct.toUpperCase()){
     sessionStorage.setItem(GATE_KEY, '1');
     document.getElementById('cmd-gate').style.display = 'none';
     document.getElementById('gate-pw').value = '';
     err.textContent = '';
-    // Now run the actual init
     init();
   } else {
     err.textContent = '✗ INCORRECT PASSWORD';
     document.getElementById('gate-pw').value = '';
     document.getElementById('gate-pw').focus();
-    // Brief shake animation
     const input = document.getElementById('gate-pw');
     input.style.borderColor = '#ff3b5c';
     input.style.boxShadow = '0 0 12px rgba(255,59,92,.4)';
