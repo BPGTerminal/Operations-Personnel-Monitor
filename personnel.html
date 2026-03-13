@@ -156,10 +156,10 @@ select option{background:#0f1628;color:#fff;}
 <input type="file" id="photo-input" accept="image/*" capture="environment" onchange="handlePhoto(event)"/>
 
 <script>
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbzOTd5PXXeZo95mQBdMz157rBj5WC8S1CuEpM4aFDf4QdutRQZ1FSghk6ihft38WTo1/exec";
-// Settings CSV — published from Google Sheets (File > Share > Publish to web > Settings tab > CSV)
-// IMPORTANT: Replace this URL with your own published CSV URL from your Google Sheet
-const SETTINGS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlQs82HFoGocI8HRCWtQoYU7GyqbOgT-08xMv28X8XK81LL2SoGzN2_m8ndx20aiZgigPUf7IVPefq/pub?gid=1673148562&single=true&output=csv";
+// ── URLs: read from setup wizard (tms_config in localStorage) ──
+function _getCfg(){ try{ return JSON.parse(localStorage.getItem('tms_config')||'{}'); }catch(e){ return {}; } }
+const SHEET_URL         = _getCfg().sheetUrl        || '';
+const SETTINGS_CSV_URL  = _getCfg().settingsCsvUrl  || '';
 
 // ── CONFIG ───────────────────────────────────────────────────
 let me = null, curLat = null, curLng = null;
@@ -203,9 +203,10 @@ async function loadSettings(){
   }
 
   // Try CSV in background to get live settings
-  if(SETTINGS_CSV_URL && !SETTINGS_CSV_URL.includes('PASTE')){
+  const _csvUrl = _getCfg().settingsCsvUrl || '';
+  if(_csvUrl && _csvUrl.includes('docs.google.com')){
     try{
-      const res = await fetch(SETTINGS_CSV_URL + '&t=' + Date.now(), {cache:'no-store'});
+      const res = await fetch(_csvUrl + '&t=' + Date.now(), {cache:'no-store'});
       const csv = await res.text();
       const cfg = parseCSV(csv);
       if(cfg && cfg.teams){
@@ -282,7 +283,7 @@ async function doLogin(){
   // Always fetch fresh settings to get latest access codes (admin may have changed them)
   let teamObj = null;
   try{
-    const sr = await fetch(SETTINGS_CSV_URL + '&t=' + Date.now(), {cache:'no-store'});
+    const sr = await fetch((_getCfg().settingsCsvUrl||'') + '&t=' + Date.now(), {cache:'no-store'});
     const csv = await sr.text();
     const freshCfg = parseCSV(csv);
     let freshTeams = freshCfg.teams ? JSON.parse(freshCfg.teams) : null;

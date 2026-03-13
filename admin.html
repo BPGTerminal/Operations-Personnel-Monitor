@@ -285,8 +285,15 @@ async function unlock() {
 
 document.getElementById('gate-pw').addEventListener('keydown', e=>{ if(e.key==='Enter') unlock(); });
 window.addEventListener('load', ()=>{
-  const saved = localStorage.getItem('tms_sheet_url');
-  if (saved) document.getElementById('gate-url').value = saved;
+  // Pre-fill URL from tms_config (set by setup wizard) OR legacy key
+  try {
+    const cfg = JSON.parse(localStorage.getItem('tms_config')||'{}');
+    const url = cfg.sheetUrl || localStorage.getItem('tms_sheet_url') || '';
+    if (url) document.getElementById('gate-url').value = url;
+  } catch(e) {
+    const saved = localStorage.getItem('tms_sheet_url');
+    if (saved) document.getElementById('gate-url').value = saved;
+  }
 });
 
 function loadForm(cfg) {

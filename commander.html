@@ -474,35 +474,20 @@
 // CONFIG — loads from localStorage cache (populated by Admin)
 // Falls back to hardcoded defaults if nothing saved yet
 // ============================================================
-const HARDCODED_URL = "https://script.google.com/macros/s/AKfycbzOTd5PXXeZo95mQBdMz157rBj5WC8S1CuEpM4aFDf4QdutRQZ1FSghk6ihft38WTo1/exec";
-
 function loadConfig(){
   try {
     const s = localStorage.getItem('tms_config');
     const cfg = s ? JSON.parse(s) : null;
     if (cfg && cfg.sheetUrl) return cfg;
   } catch(e){}
-  // Return hardcoded defaults
-  return {
-    eventName: "Pista i ang Kanyog'an",
-    eventDate: '08-23 March 2026',
-    commander: 'PAGONG',
-    unit: 'OPERATIONS PERSONNEL MONITOR TEAM',
-    lat: 8.7891, lng: 117.8370,
-    sheetUrl: HARDCODED_URL,
-    teams: [
-      {name:'ADMINISTRATIVE UNIT',  code:'ADMIN',    color:'#00e5ff'},
-      {name:'OPERATIONS UNIT',      code:'OPS',      color:'#00ff88'},
-      {name:'UTILITY UNIT',         code:'UTILITY',  color:'#ff6b35'},
-      {name:'SAFETY & SECURITY UNIT',code:'WATCHMAN',color:'#ffd166'}
-    ]
-  };
+  // No config yet — setup wizard will handle it
+  return { sheetUrl:'', settingsCsvUrl:'', teams:[] };
 }
 
 // Fetch fresh settings from Sheet and refresh page config
 async function refreshConfigFromSheet() {
   try {
-    const url = CFG.sheetUrl || HARDCODED_URL;
+    const url = CFG.sheetUrl || (function(){ try{ return JSON.parse(localStorage.getItem("tms_config")||"{}").sheetUrl||""; }catch(e){ return ""; } })();
     const res = await fetch(url + '?action=getSettings&t=' + Date.now(), {redirect:'follow', cache:'no-store'});
     const data = await res.json();
     const cfg = data.settings;
