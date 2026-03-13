@@ -144,10 +144,6 @@ input[type=color]{width:44px;height:36px;border:1px solid var(--border);backgrou
         <div class="field"><label>UNIT / EOC NAME</label><input type="text" id="cfg-unit" placeholder="e.g. TRAFFIC MANAGEMENT TEAM"/></div>
       </div>
       <div class="row2">
-        <div class="field"><label>COMMANDER PASSWORD <span style="color:#ff9900;font-size:9px;">(locks commander dashboard)</span></label><input type="text" id="cfg-cmd-pw" placeholder="e.g. PAGONG" autocomplete="off"/></div>
-        <div class="field"><label style="opacity:.4;">— leave blank to keep current —</label><div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(0,229,255,.4);padding:8px 0;">Password is case-insensitive. Default: PAGONG</div></div>
-      </div>
-      <div class="row2">
         <div class="field"><label>LOCATION / MUNICIPALITY</label><input type="text" id="cfg-location" placeholder="e.g. Brooke's Point, Palawan"/></div>
       </div>
     </div>
@@ -298,7 +294,6 @@ function loadForm(cfg) {
   document.getElementById('cfg-date').value      = cfg.eventDate || '';
   initDateWidget(cfg.eventDate || '');
   document.getElementById('cfg-commander').value = cfg.commander || '';
-  document.getElementById('cfg-cmd-pw').value = cfg.commanderPw || '';
   document.getElementById('cfg-unit').value      = cfg.unit || '';
   document.getElementById('cfg-location').value  = cfg.location || '';
   document.getElementById('cfg-lat').value       = cfg.lat || '';
@@ -370,7 +365,6 @@ async function saveAll() {
     eventName: document.getElementById('cfg-event').value.trim(),
     eventDate:  document.getElementById('cfg-date').value.trim(),
     commander:  document.getElementById('cfg-commander').value.trim() || 'PAGONG',
-    commanderPw: document.getElementById('cfg-cmd-pw').value.trim() || undefined,
     unit:       document.getElementById('cfg-unit').value.trim(),
     location:   document.getElementById('cfg-location').value.trim(),
     lat:        document.getElementById('cfg-lat').value.trim(),
