@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-title" content="OPM"/>
   <link rel="apple-touch-icon" href="icon-192.png"/>
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="screen-orientation" content="any">
 <title>OPM — Operations Personnel Monitor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -324,9 +324,61 @@
     box-shadow:0 0 6px rgba(255,255,255,.25) !important;
   }
 
+
+/* ══ COMMANDER PASSWORD GATE ══════════════════════════════ */
+#opm-gate {
+  position: fixed; inset: 0; z-index: 999999;
+  background: #0a0e1a;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-family: 'Share Tech Mono', monospace;
+  padding: 24px;
+}
+#opm-gate .g-logo  { width: 80px; height: 80px; border-radius: 50%; margin-bottom: 8px; box-shadow: 0 0 24px rgba(0,229,255,.4); }
+#opm-gate .g-brand { font-size: 28px; font-weight: bold; color: #00e5ff; letter-spacing: 4px; margin-bottom: 2px; }
+#opm-gate .g-sub   { font-size: 9px; color: rgba(0,229,255,.45); letter-spacing: 3px; margin-bottom: 28px; }
+#opm-gate .g-card  { background: rgba(0,229,255,.05); border: 1px solid rgba(0,229,255,.2); border-radius: 4px; padding: 24px; width: 100%; max-width: 360px; }
+#opm-gate .g-label { font-size: 9px; color: #00e5ff; letter-spacing: 2px; margin-bottom: 6px; display: block; }
+#opm-gate .g-input {
+  width: 100%; box-sizing: border-box;
+  background: rgba(0,229,255,.07); border: 1px solid rgba(0,229,255,.25);
+  color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 18px;
+  padding: 12px 14px; outline: none; border-radius: 2px;
+  letter-spacing: 4px; text-align: center; margin-bottom: 10px;
+}
+#opm-gate .g-input:focus { border-color: #00e5ff; box-shadow: 0 0 12px rgba(0,229,255,.2); }
+#opm-gate .g-btn {
+  width: 100%; background: rgba(0,229,255,.15); border: 1px solid #00e5ff;
+  color: #00e5ff; font-family: 'Share Tech Mono', monospace;
+  font-size: 12px; letter-spacing: 2px; padding: 14px;
+  cursor: pointer; border-radius: 2px; transition: background .2s;
+}
+#opm-gate .g-btn:hover { background: rgba(0,229,255,.3); }
+#opm-gate .g-err  { font-size: 10px; color: #ff3b5c; letter-spacing: 1px; min-height: 16px; text-align: center; margin-top: 8px; }
+#opm-gate .g-hint { font-size: 9px; color: rgba(255,255,255,.2); text-align: center; margin-top: 10px; letter-spacing: 1px; }
+
 </style>
 </head>
 <body>
+
+<!-- ══ COMMANDER PASSWORD GATE ══ -->
+<div id="opm-gate">
+  <img class="g-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAAVDUlEQVR4nO2de5QU1Z3Hv1XVr+l56CCy4IxKAhgmMuAg4XWOShBP2OMmC2wY0WETXxtP4ibqohjXZzTBExaMB1dCBAUVF3LQA+Yk7kZZiRuDAYRhRBheIlEG8YEDM0NPv6pq/2i6p6enq7oet6rvrbqfcziH6dt1q/re7/f+fvfWS4jWXKCCw/EpYrkPgMMpJ9wAHF/DDcDxNdwAHF/DDcDxNdwAHF/DDcDxNYFyH4CXibV3bCNVV7ShbhKpujh9CPxEmD1Iitwq3BzW4QYwCQ2CLwU3hHG4AUrAguBLwQ2hDTdAEUiJnqTwaDwmL8ANcBY7AiunqFg9blrwtQGsiIcF0Xj1dzmBLw1gRiBeEIbffq8ZfGUAo0Lwsgh4G/THFwYw0ul+6fB8eLt43AC8g43h53bypAH83KF28GO7ecoApTrQa53nJH5pS88YQK/DvNJZ5cDr7cq8AfwyUpUTL7cx0wbw+uhEG15sbyYN4MWOYAkvtT9zd4R5qfFZRa+dWbt6lqkIoNW4XPjlg/U+YcIAfNSnG5b7h3oDsD7C+AkW+4rqOQCLDepntPqF5nkBtQbg4mcT1kxAZQpUrLG48NmDhX6kLgKw0GgcYxTrN9oiAVUG4OL3HrSbgBoDcPF7F5pNQIUBuPi9D60mKLsBuPj9A40mKKsBuPj9B20mKJsBuPj9C00mKIsBuPg5tJjAdQNw8XOy0GACV88EkxB/rL1jQ962c0kcl9PE2jtarG4bbah7ieSxOIHdPinnoFhWA5j5kfmNXAhNRrAjdqPQYgqSfWJHG3Zw7RVJ5V7ucgojgq9uarIs2O7W1gH1F+6TFkOQJNbesc0NE7gSAeyGOL2RJq8+16KAnujtiN0oxUyRxS0zONEn5UiFHI8AXpr0FhO+G4Ivtc98Q2SPkcWoEG2om1SoF6cjgetviWRR/IXCL4fo9cg/nqwZWDVCMRM4iaMpEMnRvxyTYNqFr0dhmuSEEZzqEzezBsciAMupD8vCz5I9ZhYjgpupkGMRwKllLSfPA3hB+Fo4GRGc6hM3lkYdMQCLo3+++L0k/ELyjUB7NHBDR8QNwJr4/SL8QlgxgtN6cvxaIC5+Osn/vW6cvbaK0/ohagCWzvb6WfxZWDFBISR1RjQFKtf1HGbgwi8O7SmRU9oiFgFYGP25+LVhLRqQ0ptjcwDaRn8u/tLQbAKn9ETEALSnPlz8xmHJBCSiQNmfCuE0XPzmodkEpLFtAJpHfy5+69BqAtJRwLMRgIvfPrSagCS2DMDCyg8Xvz1YaD87OiQaAWhJf7KjFQudxwLZdqQlClBxKQStoz8XvzPQZoJCrOqRWASgYfSntXO8Bg3tTN2ZYJrgo78zeLFdLRmAxqVPnvq4A02pEIklUU9EAC5+d6HJBHbxhAE4HKuYNgBt6Q8f/csDLVHAbhrEIwDH1zBtAD76lxdaooAdTBmAtvSHwwHspUHMRgA++tMB61GAWQNwOCRg0gB89KcLlqOAYQPw/J9DM1bnAa4/Ht0uJEZ/ubER6enTIY8bB+Wii6BWVwOCAKGnB+KxY5D27EFgyxZI775L7sA9TnVT00vdra0tsfaOFhofq6IFcwawgzxmDBILF0JubCxartbWQq6thdzYiOQNN0A8fBiRJUsgbTN+bkWNRtHzl78Y+7KiQEgmga4uiCdPQujogHTwIKS2NkitrUAqZaians2boZ53nma5eOgQKpubdeuIvfCCZrtkqW5qMnQ8LOEbAyTnz0firrsA0fi0Rxk5ErEVKxBavRrhp54CVMLPERZFqJEIEIlAHjIEaGhAesYMAIDQ04Pg73+P0Jo1ED791NZulFGjoA4eDOGLL4qWq9XVkC+91NY+WMWQGmi5+cVq+pO86SYkFiwwJf4B2y9caGlbq6hVVUjOm4eeV19Fas4c2/Wlp0zRLJMnTrTcNvnQNhk2oltLv5qlCXB66lQkfvxj2/Uk581DatYs+wdklnAY8QcfRGquvcfuy1OnapalJ0+2VTctWNElk8ugRlEjEcQffBAQBCL1JRYs0M21nST+059CHj/e8vbpSZM020H2iAGs4GkDpK6/HurQoZrl4rFjqLj3XlRNn46qadNQceedEA8f1vy+WlWF5K23OnGopRFFW5FMra2FPHr0gM+V+noo9fV2joxpmDGA6fxfkpBs0U5FxePHEb3xRgRefx1CZyeE06cReOstRG++WdcEqVmzMsumFqmcPRvVTU2ZfxMmoGraNERbWhBeuhTi0aO628qXXVZypUZ3+yLzgGKf2YG2eUApmDGAWdJTpuimK+ElSyCcPDngc6G7G5HHH9fcTo1Ecis1tpFlCKdPQ9q3D6G1a1HZ3IzAli36m5hIV4RTp/r9XWwiXJj/F27jdbxrgOnTNcvEjg5doUm7dkHau9dS3bZIpRB59FEI8bj2vidMMFydtHNnv7/lceOgRqN9H4hiZgVIZxuvU9IArF4CIU/SPsxSo2yp78iXXw4EnDmFIpw6pStCvTlNIQPqCQYh5xlIbmyEWlXVf5tduwzXTyNmL4nwZARQa2uhXHCBZrnU1layDr3vqBUVUEaMsHRsRhCPHNHe9znnGK+nowPCiRP9PsvP+QekU4mEbuTzIkwYwOwEWP7a13TL9Sa5ue8cOmRrH7aIxTSLCkfsUgQKokD+PKBwTiC9957hyy/0YGkizIQBzKJeeKFOoQrx2LGSdQinT0M4fVqz3NGlw/w8vQChp8dUVYVpkHLxxVCGDYNaWQl5zJh+ZYVm8QOevBZIGTZMs0zo6gLSaUP1CJ2dmimHqpNi2UX56lc1y/RMWYxi8wl5yhQInZ2AJPX/LuP5vxW8GQEGDdIsEzo7DddTbJk0t4/aWlPHZBT13HMzk2wNCnP6UogffQTh88/7fZaeOnXgkmgqlUmBfIY3DVBTo1km6OTXA77b22tpH5YJBhF/6KHMFaIaBCzco1CY2sgTJw44ASbt3QskEqbrZh1PpkAIh7XLzEzykknNIj2RGkaSoEajUOrrIY8fj9R3vwtl+HD9TUzcm5DbZudOpGbOzP2tVlcPOJvtt/X/LJ40gKq3Rm/GAHrftXge4MzGjZa2AzKrNFbSFCN3tvkx/wc8mgLpQuqmFkJXmBpGVRFetszSpuLRo7rzGcgypN27rR0X43jSAILeKk8oZLyiYFC7jMB6uRnCixfbSlP0tpX27zc1N/ISnjSA7mROT9SF6JhFcGvCmEwismgRQuvX26pGb43fr/k/4NE5gNDVpVmm6pxkGvDdigrtfZhcjzeLcOYMAq+9htDq1RA/+cR2fboRwKf5P+BVA+is9ZtZv9e7nNrM+QRNFAVIpSB0d0M4eTLzSJZDhyC2tSGwa5fuKpRZxCNHMif2Cn+/omSeQOFTPGkAvRFTranJrOAYOBusZxbB4qhcOXt2yRtfHEFVUeXUZdwM48k5gPDxxzqFgqHreNSaGt0rL41cT8ShH08aQDpwQLdcGTmyZB3KJZfY2geHDZgwQPZRe92trYYurxW+/BLi8eOa5fK4cSXrkMeO1a4/Hjd0SbVfyfYTC49IZMIAVtC7ZCA9bVrJ7fVue5R27jR8RSmHbkoagMS7WMuB3i2NSn29rgnkpibdRwUG3nzTzqFxHMTsLbyejQCBrVt1T/8n7r676DKnWl2N+H33aVecSCCweTOJQ+RQgGcNAFlGaN06zWKlrg6xNWuQvuYaqOeeC7WmBumrrkLsueegjBqluV1w0ybdE20ctmDmPEC0oe6lWHtHS3dra4vRe4OD69Yh2dwMdciQouVKfT16Fy82fAzCmTMIr1xp+Pt+hKUJMODlCIDMzS+Rxx4jdgVoeOlS/asqOczhaQMAQODttxFevtx2PcENGxC0cS0/h04sGYCVlaAsoVWrEH7yycy1N1a2f/FF3cclcujAii4NGYCWp8GZPSGWT+j55xG98UZIe/YY3kY8cgQVt9+O8BNPkH87jAehLf83oltmJsEkkPbsQfR734M8dizSV18NeezYzEvyzt7gnntJ3vvvZ16St2OHaeELsZjr79KqIvWwXgDSvn2efBeYFr4yQBar99ZyvAdzk2A7aRDHOWhLf4xi2ACsXhLB8QdWn2LOXAQAeBSgDVZHf4BRA3A4pGDWADwK0AHLoz9g0gB8HsChETtvMWI2AgA8CpQb1kd/gHEDcDh2MW0A2tIgHgXKAy2jv92XOPIIwPE1njAAjwLuQsvoTwJLBqAtDQK4CdyCJvGTeIe1JyJAIdwEzuDFdiVmAJqiAMdZaGhnUnqzbABabpIphKdCzkBT6lMMq3okmgLREAUAbgLS0CZ+kjqzZQBao0A+3AT2YKH97OjQk5NgoP9oxUIn0kh+u9Ey+pPGtgFoXBLNwk1gHVrFT2LpMx/PRoAs3ATmoVX8TkDEADRHAYCbwAw0i5/06A84GAG4CdiDJfGTgpgBWFgR4ibQhmbxF4OU3oRozQXEHnlWzKW0GiPW3pHrcKNPm/YiLAjfSV0RTYFoFXsxeDRgQ/zFIKkzx1eBaJsL5ONnE7Aifqf1QzQFyuJkyIq1d2zIq3MuiTrP1uuLlMgJ4TvYJ46n1I4YACC/ZJXfyIWQavR8EwDeMkJhhCMhfqf7xIllz0JcezhurL1jG+1zhKwoskbIioZlIzghfDdwK3V2LAIA5EKY3kiTVy+x0Ju3X2YjgtPCd7JP3FxNdDQCRBvqJtE8CS4FixGB1RFfDyczB9ffD8BCKlSIlhEAOsxQbAWLVeG7PWA6mgJlIRHS3JgEmzgWzSVTNwyht2TrpvBJ90k5TqS6EgGKpUIsRoIs+SIrNEMxcdoxhZHzE6yO9vmU6yoCVyJAFhLLWk6tOZNCLzqQgjbBk+gTN5Y8i1FWAwBsXT5hFTumoE3sTlBOXbhqAMC/JuAUp9x6cP2OsGI/juWlUo51yi1+oEy3RHITcGgQP1DGe4K5CfwLLeIHynxTPDeB/6BJ/AAFT4XgJvAPtIkfoMAAADeBH6BR/AAlBgC4CbwMreIHKDIAwE3gRWgWP0CZAQDnTaBEK9C7vR2JW24jVSVHA9rFD1BoAEDbBCSMIMZ6UTGxAWLru0j96K7c5/G1G9G7rR3pugvs7oIp0t+YTLxOrb6iTfwApQYAtBuLVDQI7tqJ4PJf5f6OzJ+NikkNkG+4Cb3b9yPxoztI7IYaErfd3u/v+C+Wonf7PqjJONH9aPUPjeIHynAtkFncaNDEHfdA+OhDhDa+nPssfWE9Uq+8gdD82ZAO7kfi2fWQ/u9/oX75OaQ//gFiMkVq946RuvIqpJf8BoCK4D9dg8DHx3Jl8uDzIH1xkuj+WBM/wIABAP1Rn1Tjpi6fgPSv1wIf/w3heddCTKX7lfe+vhXiR0ch/WETUrf9BNLvXkZo+ZMkdm0ZJRyEPGMmpP37kVi7EZErL4OQSqP3nfcBKYDAv34fwe19TacGJAhpmfhxuNE/TsGEAbK4McIo4RASr/wROH8oQv9yPaT3dkMeNhSp5S8iMvua3Pd6325DxVXjAVlGYtlKKGPGAqEwxPd2I/yTW4F0Wmcv5lBFAUpdHcQTJyCcNWZ6xkyk/v1nCP56GZT6CyFf/32Em6+FePTIgO2Tc+dBvvth4PMTqPiHbxI7LoDNUT8fpgwAuDvaqMEAhFQaiZUvQdy9E8Gnn8h8Hokg/sY7qLiiacA2yXsfhjr66wjfdF3us8TyNVAax0E8dADi7p1Qq6oRWvQQAEC5dCySjy6GWnMOgs+tQGDd87nt4hteg7inDcqEiRA+OQ5l+AhUfGsqAKD3f95G6MF7IO14J7OPVf8FccdfEfzNssxxzJ0H+Z5HAADB+d9B4OBBkk3D9KifD7WTYC30Gpf0OYPsaKvUXwR8ejz3ufL1xtz/VUlCenYzknOaIZ9Xi9Avf9avPLF8NYTOLxGZMRnB+/8N6TnXQejpztRTV4fE6t8iuOQXiLTMQnrOdUje/1jf/s/0QL14OCLfuRrh2/4ZCIchXzk9U5ZIQDi4N/fdwM/vh/ztObm/xXe3oWLiaFRMHM3FrwNzBgAyjay3SkTSCPL55wOhEOSWW6BWVUEZOgyphx9HYNXTAIDEpjcgf+taiOEI0j+4A73b90P424e57ZUJkxF8ZCGERALiJ8chHmgHursAAOkf3IHA+hcgvfNnCJ99itDNzZCvyEtRYjGI27bm/pSeWQZlQuZnCx9+AHnGzFyZUFkNdcjfQa2sBAAEPuw7BlLota1en9CM649FIYnec4eyn9vtlPT9P0fgtVchvrIO8df+DPTGIP1pM4LPr4IaiUCtPQ+Rb2dG5QCApBQAqqsBZFIlxGK5SAIAatcpCGcNoA4eDPG3fSmPEI8DlVV9f39wAIhGc3+LW9+C/MAiAEBw9QoknlkLccdfIX32GVK3/BCIx6F+ZSSE99vs/OQBlBpQWBR+FqYNAPQ1vp4R7HSQOvISiCufhnT0Q1Rc2T/nF+JxSH/ajN6teyD996tAtArylCsQWJ8RtZBOA5EwlKHDIJ74JFPfN6ZCePP1THlPD9S//0dg39lURhABQeirf+97UK/qm3hLxz5GqiGTXoltuxB45j+Remo1koMGIXTXbUiHQpAbx0EkaAAvpTvFYN4AWZyKBtKvFkHcv1ezPPTAAqhQoVx0MYTOTigrXoB4+GzOnU5D2vQykitfgvS7V6B+ZSQQDAI9PZm6n30aybWbILbtgrh3DxLL1/Tbl3D0CJTmoX1/p2VATkENhyAkkgg+uxzBZ5dnCkUBqQUPQPziC7M/sSheHvXzYW4VyAhG5gBudqA8aBCU4cMhnepC4oWXEb7l+sxcAIAyZhyS9z0CNRJBYNMGBF98LredKgqAKEBIK0XrVaNRpB56HGrNOVDGT4C0ZTNC991p+Thpazc38KQBstDQoclbf4jgy+shnOqEPGIkkqvWo+KbE4jVr4wYlTk73XnKch00tFO58EwKVIxS84P8Mqc6WOzqRmLtRqi1gyB89imC//Eo2fo/OGR5Wz8LP4unI0AhRpdHvdzpvA364ysDZDFznsALQvDb7zWDLw2QxcoJMxYE4tXf5QS+NkA+ds4el1M8rB43LXADFIHUpRQkBUbjMXkBboASeOGmfC56bbgBTMKCIbjgjcMNYBMaDMEFbx1uAAchaQ4ucmfgBuD4GiZviOFwSMENwPE13AAcX8MNwPE13AAcX8MNwPE1/w+WSq4kbPxGvQAAAABJRU5ErkJggg==" alt="OPM"/>
+  <div class="g-brand">OPM</div>
+  <div class="g-sub">COMMANDER ACCESS</div>
+  <div class="g-card">
+    <label class="g-label">COMMANDER PASSWORD</label>
+    <input class="g-input" id="g-pw" type="password"
+           placeholder="••••••"
+           autocomplete="off" autocorrect="off" autocapitalize="off"
+           onkeydown="if(event.key==='Enter') opmGateUnlock()"/>
+    <button class="g-btn" onclick="opmGateUnlock()">UNLOCK COMMANDER ▶</button>
+    <div class="g-err" id="g-err"></div>
+    <div class="g-hint">Default: PAGONG — change in Admin settings</div>
+  </div>
+</div>
+<!-- ══ END GATE ══ -->
+
 
 <header>
   <div class="hdr-left">
@@ -533,8 +585,13 @@ let messageCache = new Set();
 // INIT
 // ============================================================
 async function init(){
+  // Don't run if gate is still showing
+  if (window._gateBlocking) return;
+  // Unlock screen orientation
+  try { if(screen.orientation?.unlock) screen.orientation.unlock(); } catch(e){}
+  try { if(screen.orientation?.lock) screen.orientation.lock('any').catch(()=>{}); } catch(e){}
 
-  // Unlock screen orientation — allow landscape on tablets
+  // Unlock screen orientation — allow landscape on tablets — allow landscape on tablets
   try {
     if (screen.orientation && screen.orientation.unlock) {
       screen.orientation.unlock();
@@ -1594,6 +1651,72 @@ async function handleApproval(deviceId, action, btn){
       });
     }
   </script>
+
+<script>
+// ══ COMMANDER GATE — global scope ══════════════════════════
+(function(){
+  // Check session — stays unlocked until tab is closed
+  if (sessionStorage.getItem('opm_gate') === '1') {
+    var g = document.getElementById('opm-gate');
+    if (g) g.style.display = 'none';
+    return;
+  }
+  // Show gate on load
+  window.addEventListener('DOMContentLoaded', function(){
+    var g = document.getElementById('opm-gate');
+    if (g) g.style.display = 'flex';
+    // Block main init until unlocked
+    window._gateBlocking = true;
+    // Focus password field
+    setTimeout(function(){
+      var pw = document.getElementById('g-pw');
+      if (pw) pw.focus();
+    }, 100);
+  });
+})();
+
+function opmGateUnlock() {
+  var pw  = (document.getElementById('g-pw').value || '').trim().toUpperCase();
+  var err = document.getElementById('g-err');
+  err.textContent = '';
+
+  // Get password from config (set in Admin), default PAGONG
+  var storedPw = 'PAGONG';
+  try {
+    var cfg = JSON.parse(localStorage.getItem('tms_config') || '{}');
+    if (cfg.commanderPw) storedPw = cfg.commanderPw.toString().toUpperCase().trim();
+  } catch(e) {}
+
+  if (!pw) { err.textContent = '✗ Enter your password.'; return; }
+
+  if (pw === storedPw) {
+    sessionStorage.setItem('opm_gate', '1');
+    var g = document.getElementById('opm-gate');
+    if (g) {
+      g.style.opacity = '0';
+      g.style.transition = 'opacity 0.3s';
+      setTimeout(function(){ g.style.display = 'none'; }, 300);
+    }
+    // Start main app if blocked
+    window._gateBlocking = false;
+    if (typeof init === 'function') init();
+  } else {
+    err.textContent = '✗ Wrong password. Try again.';
+    document.getElementById('g-pw').value = '';
+    document.getElementById('g-pw').focus();
+    // Shake animation
+    var card = document.querySelector('#opm-gate .g-card');
+    if (card) {
+      card.style.animation = 'none';
+      card.style.transform = 'translateX(-8px)';
+      setTimeout(function(){ card.style.transform = 'translateX(8px)'; }, 80);
+      setTimeout(function(){ card.style.transform = 'translateX(-5px)'; }, 160);
+      setTimeout(function(){ card.style.transform = 'translateX(0)'; }, 240);
+    }
+  }
+}
+</script>
+
 </body>
 
 <!-- ============================================================
