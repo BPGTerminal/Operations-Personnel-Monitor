@@ -13,6 +13,7 @@
   <link rel="apple-touch-icon" href="icon-192.png"/>
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="screen-orientation" content="any">
 <title>OPM — Operations Personnel Monitor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
@@ -532,6 +533,14 @@ let messageCache = new Set();
 // INIT
 // ============================================================
 async function init(){
+
+  // Unlock screen orientation — allow landscape on tablets
+  try {
+    if (screen.orientation && screen.orientation.unlock) {
+      screen.orientation.unlock();
+    }
+  } catch(e) {}
+
   updateHeader();
   initMap();
   startClock();
