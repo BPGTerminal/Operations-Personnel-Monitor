@@ -187,6 +187,27 @@ input[type=color]{width:44px;height:36px;border:1px solid var(--border);backgrou
   </div>
 
   <div class="section">
+    <div class="sec-head">📡 LOCATION AUTO-SEND INTERVAL</div>
+    <div class="sec-body">
+      <div class="field">
+        <label>HOW OFTEN PERSONNEL SEND THEIR GPS LOCATION</label>
+        <select id="cfg-loc-interval" style="width:100%;background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.25);color:#fff;font-family:'Share Tech Mono',monospace;font-size:12px;padding:10px 12px;outline:none;border-radius:2px;">
+          <option value="15">Every 15 seconds (high accuracy, uses more battery)</option>
+          <option value="30">Every 30 seconds</option>
+          <option value="60" selected>Every 1 minute (default)</option>
+          <option value="120">Every 2 minutes</option>
+          <option value="300">Every 5 minutes (battery saver)</option>
+          <option value="600">Every 10 minutes (minimal battery use)</option>
+        </select>
+        <div style="font-size:11px;color:var(--dim);font-family:'Share Tech Mono',monospace;margin-top:6px;">
+          Shorter intervals = more accurate map, more battery drain on personnel phones.<br>
+          Change takes effect when personnel next log in or refresh their app.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
     <div class="sec-head">
       👥 TEAMS / SECTORS
       <span style="color:var(--dim);font-size:9px;font-family:'Share Tech Mono',monospace;">MAX 7 — ICS SPAN OF CONTROL</span>
@@ -304,6 +325,7 @@ function loadForm(cfg) {
   document.getElementById('cfg-unit').value      = cfg.unit || '';
   document.getElementById('cfg-location').value  = cfg.location || '';
   document.getElementById('cfg-lat').value       = cfg.lat || '';
+  if(cfg.locInterval) document.getElementById('cfg-loc-interval').value = cfg.locInterval;
   document.getElementById('cfg-lng').value       = cfg.lng || '';
   teams = Array.isArray(cfg.teams) ? JSON.parse(JSON.stringify(cfg.teams)) : [
     {name:'PARADE TEAM',code:'PARADE26',color:'#00e5ff'},
@@ -375,6 +397,7 @@ async function saveAll() {
     unit:       document.getElementById('cfg-unit').value.trim(),
     location:   document.getElementById('cfg-location').value.trim(),
     lat:        document.getElementById('cfg-lat').value.trim(),
+    locInterval: document.getElementById('cfg-loc-interval').value,
     lng:        document.getElementById('cfg-lng').value.trim(),
     teams:      collectTeams(),
     adminPass:  newPass || currentPass

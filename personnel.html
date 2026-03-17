@@ -411,7 +411,10 @@ function enterApp(){
       curLng=pos.coords.longitude.toFixed(6);
       document.getElementById('gps-status').textContent = '📍 '+curLat+', '+curLng;
     },{enableHighAccuracy:true,maximumAge:10000});
-    locTimer = setInterval(sendLoc, 15000);
+    // Auto-send interval — set by commander in Admin (locInterval in seconds, default 60)
+    const _locCfg = (function(){ try{ return JSON.parse(localStorage.getItem('tms_config')||'{}'); }catch(e){ return {}; } })();
+    const _locIntervalMs = (parseInt(_locCfg.locInterval)||60) * 1000;
+    locTimer = setInterval(sendLoc, _locIntervalMs);
   }
   // Start polling
   fetchUpdates();
