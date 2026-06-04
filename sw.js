@@ -68,8 +68,7 @@ self.addEventListener('fetch', e => {
         const clone = res.clone();
         caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
         return res;
-      );
+      });
     })
   );
 });
-
