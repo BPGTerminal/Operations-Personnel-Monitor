@@ -1,5 +1,5 @@
 // OPM Service Worker - enables offline capability and install prompt
-const CACHE_NAME = 'opm-v6';
+const CACHE_NAME = 'opm-v7';
 const STATIC_ASSETS = [
   './personnel.html',
   './commander.html',
@@ -32,7 +32,11 @@ self.addEventListener('activate', e => {
     ).then(() => self.clients.claim())
   );
 });
+self.addEventListener('fetch', e => {
+  // SAFETY BYPASS: Stop caching POST data submissions!
+  if (e.request.method !== 'GET') return;
 
+  const url = new URL(e.request.url);
 // Fetch: network first, fall back to cache for HTML pages
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
