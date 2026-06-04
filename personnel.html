@@ -158,8 +158,8 @@ select option{background:#0f1628;color:#fff;}
 <script>
 // ── URLs: read from setup wizard (tms_config in localStorage) ──
 function _getCfg(){ try{ return JSON.parse(localStorage.getItem('tms_config')||'{}'); }catch(e){ return {}; } }
-const SHEET_URL         = _getCfg().sheetUrl        || '';
-const SETTINGS_CSV_URL  = _getCfg().settingsCsvUrl  || '';
+const SHEET_URL         = 'https://script.google.com/macros/s/AKfycbzOTd5PXXeZo95mQBdMz157rBj5WC8S1CuEpM4aFDf4QdutRQZ1FSghk6ihft38WTo1/exec';
+const SETTINGS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTqFz75drwN-5zu3k5e_C1oerhC4RT5SkOMjL_Al-ApkLbVvDTh15Of0RX5w6jfCTi8sU-pcrgppONV/pub?output=csv';
 
 // ── CONFIG ───────────────────────────────────────────────────
 let me = null, curLat = null, curLng = null;
@@ -203,7 +203,7 @@ async function loadSettings(){
   }
 
   // Try CSV in background to get live settings
-  const _csvUrl = _getCfg().settingsCsvUrl || '';
+  const _csvUrl = SETTINGS_CSV_URL;
   if(_csvUrl && _csvUrl.includes('docs.google.com')){
     try{
       const res = await fetch(_csvUrl + '&t=' + Date.now(), {cache:'no-store'});
