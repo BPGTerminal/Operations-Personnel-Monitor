@@ -224,7 +224,13 @@ async function loadSettings(){
 
   // Try Apps Script fallback
   try{
-    const res = await fetch(SHEET_URL + '?action=getSettings&t=' + Date.now(), {cache:'no-store'});
+ const res = await fetch(SHEET_URL + '?action=getSettings&t=' + Date.now(), {cache: 'no-store'});
+    
+    // Safety Check: Make sure we got real data back, not an HTML page!
+    const contentType = res.headers.get("content-type");
+    if (!res.ok || (contentType && !contentType.includes("application/json"))) {
+      throw new TypeError("Service Worker returned HTML instead of JSON data!");
+
     const d = await res.json();
     if(d.settings){
       let teams = d.settings.teams||[];
