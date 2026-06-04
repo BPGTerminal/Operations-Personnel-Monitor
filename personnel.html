@@ -614,11 +614,43 @@ document.addEventListener('DOMContentLoaded', async function(){
   <div style="font-size:8px;color:#4a7090;opacity:0.6;margin-top:2px;letter-spacing:0.5px;">OPM · OPERATIONS PERSONNEL MONITOR</div>
 </div>
   <script>
+    // ── FORCE CLEAR OLD SERVICE WORKER CACHES ──────────────────
+    // Runs every time the page loads — nukes any old cached HTML
     if('serviceWorker' in navigator){
-      window.addEventListener('load', ()=>{
+      window.addEventListener('load', async () => {
+        // 1. Unregister ALL old service workers except the current one
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for(const reg of regs){
+          const swUrl = reg.active?.scriptURL || reg.installing?.scriptURL || '';
+          if(!swUrl.includes('sw.js')){
+            await reg.unregister();
+            console.log('[OPM] Unregistered old SW:', swUrl);
+          }
+        }
+
+        // 2. Delete ALL old caches (opm-v1, opm-v2, parade-tms, etc.)
+        const keys = await caches.keys();
+        for(const key of keys){
+          if(key !== 'opm-v3'){
+            await caches.delete(key);
+            console.log('[OPM] Deleted old cache:', key);
+          }
+        }
+
+        // 3. Register the new SW
         navigator.serviceWorker.register('./sw.js')
-          .then(r => console.log('[OPM] SW registered:', r.scope))
+          .then(r => {
+            console.log('[OPM] SW registered:', r.scope);
+            // Force the new SW to activate immediately
+            if(r.waiting) r.waiting.postMessage({type:'SKIP_WAITING'});
+          })
           .catch(e => console.log('[OPM] SW failed:', e));
+      });
+
+      // 4. When SW updates, reload the page to get fresh HTML
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        console.log('[OPM] New SW activated — reloading for fresh content');
+        window.location.reload();
       });
     }
   </script>

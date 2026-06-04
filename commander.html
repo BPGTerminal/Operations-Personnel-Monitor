@@ -1643,10 +1643,24 @@ async function handleApproval(deviceId, action, btn){
 
   <script>
     if('serviceWorker' in navigator){
-      window.addEventListener('load', ()=>{
+      window.addEventListener('load', async () => {
+        // Nuke all old caches on every load
+        const keys = await caches.keys();
+        for(const key of keys){
+          if(key !== 'opm-v3'){
+            await caches.delete(key);
+            console.log('[OPM] Deleted old cache:', key);
+          }
+        }
         navigator.serviceWorker.register('./sw.js')
-          .then(r => console.log('[OPM] SW registered:', r.scope))
+          .then(r => {
+            if(r.waiting) r.waiting.postMessage({type:'SKIP_WAITING'});
+            console.log('[OPM] SW registered:', r.scope);
+          })
           .catch(e => console.log('[OPM] SW failed:', e));
+      });
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload();
       });
     }
   </script>
