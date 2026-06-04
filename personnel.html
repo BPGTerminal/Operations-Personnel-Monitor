@@ -202,7 +202,7 @@ async function loadSettings(){
     evd.textContent = DEFAULT_EVENT;
   }
 
-  // Try CSV in background to get live settings
+  // Try CSV in background to get live settings.
   const _csvUrl = SETTINGS_CSV_URL;
   if(_csvUrl && _csvUrl.includes('docs.google.com')){
     try{
