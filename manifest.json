@@ -30,7 +30,7 @@
     {
       "name": "Personnel Check-In",
       "short_name": "Check-In",
-      "url": "./personnel.html",
+      "url": "./personnel.html?v=1.0.1",
       "icons": [
         {
           "src": "icon-192.png",
@@ -41,7 +41,7 @@
     {
       "name": "Commander Dashboard",
       "short_name": "Commander",
-      "url": "./commander.html",
+      "url": "./commander.html?v=1.0.1",
       "icons": [
         {
           "src": "icon-192.png",
