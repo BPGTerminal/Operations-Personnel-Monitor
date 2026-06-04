@@ -223,27 +223,27 @@ async function loadSettings(){
   }
 
   // Try Apps Script fallback
-  try{
- const res = await fetch(SHEET_URL + '?action=getSettings&t=' + Date.now(), {cache: 'no-store'});
-    
-    // Safety Check: Make sure we got real data back, not an HTML page!
-    const contentType = res.headers.get("content-type");
-    if (!res.ok || (contentType && !contentType.includes("application/json"))) {
-      throw new TypeError("Service Worker returned HTML instead of JSON data!");
-
-    const d = await res.json();
-    if(d.settings){
-      let teams = d.settings.teams||[];
-      if(typeof teams==='string') teams=JSON.parse(teams);
-      if(Array.isArray(teams) && teams.length){
-        saveCache({...d.settings, teams});
-        populateTeams(teams);
-        if(d.settings.eventName) evd.textContent = d.settings.eventName.toUpperCase();
-        console.log('[OPM] Teams from Apps Script:', teams.map(t=>t.name).join(', '));
+  try {
+      const res = await fetch(SHEET_URL + '?action=getSettings&t=' + Date.now(), {cache: 'no-store'});
+      const contentType = res.headers.get("content-type");
+      if (!res.ok || (contentType && !contentType.includes("application/json"))) {
+        throw new TypeError("Service Worker returned HTML instead of JSON data!");
       }
+
+      const d = await res.json();
+      if(d.settings){
+        let teams = d.settings.teams||[];
+        if(typeof teams==='string') teams=JSON.parse(teams);
+        if(Array.isArray(teams) && teams.length){
+          saveCache({...d.settings, teams});
+          populateTeams(teams);
+          if(d.settings.eventName) evd.textContent = d.settings.eventName.toUpperCase();
+          console.log('[OPM] Teams from Apps Script:', teams.map(t=>t.name).join(', '));
+        }
+      }
+    } catch(err) {
+      console.error('Error loading data:', err);
     }
-  }catch(e){ console.warn('[OPM] Apps Script failed:', e.message); }
-}
 
 
 function parseCSV(text){
