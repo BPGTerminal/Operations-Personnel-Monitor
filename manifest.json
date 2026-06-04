@@ -2,7 +2,7 @@
   "name": "OPM - Operations Personnel Monitor",
   "short_name": "OPM",
   "description": "EOC field personnel tracking and communications system",
-  "start_url": "./personnel.html?v=1.0.1",
+  "start_url": "./personnel.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
@@ -30,7 +30,7 @@
     {
       "name": "Personnel Check-In",
       "short_name": "Check-In",
-      "url": "./personnel.html?v=1.0.1",
+      "url": "./personnel.html",
       "icons": [
         {
           "src": "icon-192.png",
@@ -41,7 +41,7 @@
     {
       "name": "Commander Dashboard",
       "short_name": "Commander",
-      "url": "./commander.html?v=1.0.1",
+      "url": "./commander.html",
       "icons": [
         {
           "src": "icon-192.png",
