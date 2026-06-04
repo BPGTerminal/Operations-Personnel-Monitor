@@ -1,5 +1,5 @@
 // OPM Service Worker - enables offline capability and install prompt
-const CACHE_NAME = 'opm-v4';
+const CACHE_NAME = 'opm-v5';
 const STATIC_ASSETS = [
   './personnel.html',
   './commander.html',
@@ -38,7 +38,7 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
   // Always go network for Apps Script (live data)
-  if(url.hostname.includes('script.google.com') || 
+  if(url.hostname.includes('google') || 
      url.hostname.includes('docs.google.com')){
     return; // let it go to network normally
   }
