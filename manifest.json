@@ -2,7 +2,7 @@
   "name": "OPM - Operations Personnel Monitor",
   "short_name": "OPM",
   "description": "EOC field personnel tracking and communications system",
-  "start_url": "./personnel.html",
+  "start_url": "./personnel.html?v=1.0.1",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
