@@ -1,5 +1,5 @@
 // OPM Service Worker - enables offline capability and install prompt
-const CACHE_NAME = 'opm-v5';
+const CACHE_NAME = 'opm-v6';
 const STATIC_ASSETS = [
   './personnel.html',
   './commander.html',
@@ -44,11 +44,10 @@ self.addEventListener('fetch', e => {
   }
 
   // For HTML pages: network first, cache fallback
-  if(e.request.destination === 'document' || url.pathname.endsWith('.html') || url.search.includes('v=')){
+  if (e.request.mode === 'navigate' || url.pathname.includes('personnel') || url.pathname.includes('commander') || url.search.includes('v=')) {
     e.respondWith(
       fetch(e.request)
         .then(res => {
-          // Update cache with fresh version
           const clone = res.clone();
           caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
           return res;
