@@ -64,9 +64,61 @@ select option{background:#0f1628;color:#fff;}
 #meet-fab.active{background:#ff4444;animation:blink .8s infinite;}
 #photo-input{display:none;}
 #status-bar{background:rgba(0,229,255,.05);border-bottom:1px solid var(--border);padding:4px 16px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim);display:flex;justify-content:space-between;}
+
+/* ── SETUP WIZARD ───────────────────────────────────────── */
+#opm-setup{position:fixed;inset:0;z-index:999998;background:#0a0e1a;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-family:'Share Tech Mono',monospace;padding:20px;overflow-y:auto;}
+#opm-setup .sw-logo{font-size:40px;margin-bottom:6px;}
+#opm-setup .sw-title{font-size:22px;font-weight:bold;color:#00e5ff;letter-spacing:3px;margin-bottom:4px;}
+#opm-setup .sw-sub{font-size:9px;color:rgba(0,229,255,.4);letter-spacing:2px;margin-bottom:24px;}
+#opm-setup .sw-card{background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.2);
+  border-radius:4px;padding:20px;width:100%;max-width:420px;}
+#opm-setup .sw-label{font-size:9px;color:#00e5ff;letter-spacing:2px;margin-bottom:5px;display:block;}
+#opm-setup .sw-input{width:100%;box-sizing:border-box;background:rgba(0,229,255,.07);
+  border:1px solid rgba(0,229,255,.2);color:#fff;font-family:'Share Tech Mono',monospace;
+  font-size:11px;padding:10px 12px;outline:none;border-radius:2px;margin-bottom:14px;
+  word-break:break-all;}
+#opm-setup .sw-input:focus{border-color:#00e5ff;}
+#opm-setup .sw-btn{width:100%;background:rgba(0,229,255,.15);border:1px solid #00e5ff;
+  color:#00e5ff;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;
+  padding:13px;cursor:pointer;border-radius:2px;margin-top:4px;}
+#opm-setup .sw-btn:hover{background:rgba(0,229,255,.28);}
+#opm-setup .sw-err{font-size:10px;color:#ff3b5c;letter-spacing:1px;min-height:14px;
+  text-align:center;margin-top:8px;}
+#opm-setup .sw-hint{font-size:9px;color:rgba(255,255,255,.18);text-align:center;
+  margin-top:12px;line-height:1.6;}
+
 </style>
 </head>
 <body>
+
+<!-- ══ OPM SETUP WIZARD ══ -->
+<div id="opm-setup" style="display:none;">
+  <div class="sw-logo">⚙️</div>
+  <div class="sw-title">OPM SETUP</div>
+  <div class="sw-sub">FIRST-TIME CONFIGURATION</div>
+  <div class="sw-card">
+    <label class="sw-label">APPS SCRIPT URL  (from your Google Sheet deployment)</label>
+    <input class="sw-input" id="sw-sheet-url" type="url"
+      placeholder="https://script.google.com/macros/s/.../exec"
+      autocomplete="off" autocorrect="off" autocapitalize="off"/>
+
+    <label class="sw-label">SETTINGS CSV URL  (published from your Google Sheet)</label>
+    <input class="sw-input" id="sw-csv-url" type="url"
+      placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?...&output=csv"
+      autocomplete="off" autocorrect="off" autocapitalize="off"/>
+
+    <button class="sw-btn" onclick="swConnect()">CONNECT MY EOC ▶</button>
+    <div class="sw-err" id="sw-err"></div>
+    <div class="sw-hint">
+      Get these URLs from your Google Sheet deployment.<br>
+      See the <em>Getting Your URLs</em> guide for help.
+    </div>
+  </div>
+</div>
+<!-- ══ END SETUP WIZARD ══ -->
+
 
 <!-- LOGIN SCREEN -->
 <div id="login-screen">
@@ -239,10 +291,29 @@ async function loadSettings(){
     return;
   }
 
-  // ── STEP 4: No teams found at all ────────────────────────────
-  sel.innerHTML = '<option value="">⚠ No teams found — check setup</option>';
+  // ── STEP 4: No teams / no URLs configured — show setup prompt ─
+  const _hasUrls = (_getCfg().sheetUrl || '') || (_getCfg().settingsCsvUrl || '');
+  sel.innerHTML = '<option value="">⚠ No teams — tap button below</option>';
   evd.textContent = 'NOT CONFIGURED';
-  console.error('[OPM] No teams available from any source');
+  console.error('[OPM] No teams available from any source. URLs:', _getCfg());
+
+  // Show a big visible "Setup Required" button inside the login form
+  const _existingBtn = document.getElementById('setup-needed-btn');
+  if(!_existingBtn){
+    const _setupDiv = document.createElement('div');
+    _setupDiv.id = 'setup-needed-btn';
+    _setupDiv.style.cssText = 'margin:12px 0;padding:14px;background:rgba(255,59,92,.12);border:1px solid #ff3b5c;border-radius:2px;text-align:center;cursor:pointer;';
+    _setupDiv.innerHTML = '<div style="color:#ff3b5c;font-family:\'Share Tech Mono\',monospace;font-size:11px;letter-spacing:1px;margin-bottom:6px;">⚠ APP NOT CONFIGURED</div>' +
+      '<div style="color:#aaa;font-family:\'Share Tech Mono\',monospace;font-size:10px;margin-bottom:10px;">' +
+      (_hasUrls ? 'Could not reach your Google Sheet.<br>Check your internet connection.' : 'This app needs setup.<br>Tap below to enter your URLs.') +
+      '</div>' +
+      '<button onclick="swReset()" style="background:rgba(0,229,255,.15);border:1px solid #00e5ff;color:#00e5ff;font-family:\'Share Tech Mono\',monospace;font-size:11px;letter-spacing:1px;padding:10px 20px;cursor:pointer;border-radius:2px;">' +
+      (_hasUrls ? '🔄 RETRY SETUP' : '⚙ ENTER SERVER URLS') +
+      '</button>';
+    // Insert after the team select
+    const _sel = document.getElementById('l-team');
+    if(_sel && _sel.parentNode) _sel.parentNode.insertBefore(_setupDiv, _sel.nextSibling);
+  }
 }
 
 
@@ -654,5 +725,91 @@ document.addEventListener('DOMContentLoaded', async function(){
       });
     }
   </script>
+
+<script>
+// ══ OPM SETUP WIZARD ════════════════════════════════════════
+function _swCfg(){ try{ return JSON.parse(localStorage.getItem('tms_config')||'{}'); }catch(e){ return {}; } }
+
+function swShow(){
+  const w = document.getElementById('opm-setup');
+  if(w){ w.style.display='flex'; }
+  // Pre-fill existing URLs if any
+  const cfg = _swCfg();
+  const su = document.getElementById('sw-sheet-url');
+  const cu = document.getElementById('sw-csv-url');
+  if(su && cfg.sheetUrl)    su.value = cfg.sheetUrl;
+  if(cu && cfg.settingsCsvUrl) cu.value = cfg.settingsCsvUrl;
+  window._swBlocking = true;
+}
+
+function swHide(){
+  const w = document.getElementById('opm-setup');
+  if(w){ w.style.opacity='0'; w.style.transition='opacity 0.3s';
+    setTimeout(()=>{ w.style.display='none'; w.style.opacity='1'; },300); }
+  window._swBlocking = false;
+}
+
+function swReset(){
+  // Remove the "setup needed" button if visible
+  const btn = document.getElementById('setup-needed-btn');
+  if(btn) btn.remove();
+  swShow();
+}
+
+async function swConnect(){
+  const sheetUrl = (document.getElementById('sw-sheet-url').value||'').trim();
+  const csvUrl   = (document.getElementById('sw-csv-url').value||'').trim();
+  const err      = document.getElementById('sw-err');
+  err.textContent = '';
+
+  if(!sheetUrl || !sheetUrl.includes('script.google.com')){
+    err.textContent = '✗ Please enter a valid Apps Script URL'; return;
+  }
+  if(!csvUrl || !csvUrl.includes('docs.google.com')){
+    err.textContent = '✗ Please enter a valid Settings CSV URL'; return;
+  }
+
+  err.textContent = '⏳ Testing connection...';
+  try{
+    const baseUrl = sheetUrl.split('?')[0];
+    const res = await fetch(baseUrl + '?action=ping&t=' + Date.now(), {cache:'no-store'});
+    const d   = await res.json();
+    if(!d || (!d.status && !d.app)){
+      err.textContent = '✗ Could not reach that Apps Script URL'; return;
+    }
+  } catch(e){
+    err.textContent = '✗ Connection failed — check the URL and try again'; return;
+  }
+
+  // Save both URLs to tms_config
+  const existing = _swCfg();
+  const merged   = { ...existing, sheetUrl, settingsCsvUrl: csvUrl };
+  localStorage.setItem('tms_config', JSON.stringify(merged));
+  localStorage.setItem('opm_setup_done', '1');
+
+  err.style.color = '#00ff88';
+  err.textContent = '✅ Connected! Loading your settings...';
+
+  setTimeout(async ()=>{
+    swHide();
+    // Remove any "setup needed" button
+    const sbtn = document.getElementById('setup-needed-btn');
+    if(sbtn) sbtn.remove();
+    // Reload settings now that URLs are saved
+    await loadSettings();
+    if(typeof init === 'function' && !window._swBlocking) init();
+  }, 800);
+}
+
+// ── Run on page load ─────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', function(){
+  const cfg = _swCfg();
+  const hasUrls = cfg.sheetUrl && cfg.settingsCsvUrl;
+  if(!hasUrls || localStorage.getItem('opm_setup_done') !== '1'){
+    swShow();
+  }
+});
+</script>
+
 </body>
 </html>
