@@ -281,12 +281,18 @@ async function loadSettings(){
 
   // ── STEP 3: Last resort — use cached teams from localStorage ──
   // Only used when BOTH server calls fail (no internet, etc.)
+  // BUT: wipe cache if it contains known-stale team names from old events
   const cached = getCached();
-  if(cached.teams && cached.teams.length){
+  const STALE_TEAMS = ['ADMINISTRATIVE UNIT','OPERATIONS UNIT','UTILITY UNIT','SAFETY & SECURITY UNIT','TERMINAL OPERATIONS'];
+  const isStale = cached.teams && cached.teams.every(t => STALE_TEAMS.includes(t.name));
+  if(isStale){
+    saveCache({});  // nuke stale cache
+    console.warn('[OPM] Wiped stale cached teams');
+  }
+  if(cached.teams && cached.teams.length && !isStale){
     populateTeams(cached.teams);
     evd.textContent = (cached.eventName||'OPM').toUpperCase();
     console.warn('[OPM] Using cached teams — server unreachable');
-    // Show a warning so user knows teams may be outdated
     sel.title = 'Teams loaded from cache — may not be current. Check your connection.';
     return;
   }
@@ -769,17 +775,9 @@ async function swConnect(){
     err.textContent = '✗ Please enter a valid Settings CSV URL'; return;
   }
 
-  err.textContent = '⏳ Testing connection...';
-  try{
-    const baseUrl = sheetUrl.split('?')[0];
-    const res = await fetch(baseUrl + '?action=ping&t=' + Date.now(), {cache:'no-store'});
-    const d   = await res.json();
-    if(!d || (!d.status && !d.app)){
-      err.textContent = '✗ Could not reach that Apps Script URL'; return;
-    }
-  } catch(e){
-    err.textContent = '✗ Connection failed — check the URL and try again'; return;
-  }
+  err.textContent = '⏳ Saving and connecting...';
+  // Skip strict ping — just validate URL format and save
+  // Apps Script URLs can fail CORS/redirect checks on mobile even when working fine
 
   // Save both URLs to tms_config
   const existing = _swCfg();
