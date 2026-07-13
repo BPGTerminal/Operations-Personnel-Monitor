@@ -1,91 +1,162 @@
-# OPM — Operations Personnel Monitor
+# OPM v2 — Operations Personnel Monitor (Enhanced)
 
 **Real-time field personnel tracking, communications, and command system for EOC operations, planned events, and emergency activations.**
 
-Built for Philippine LGU operations by **-=pagong=- Joey Sabenacio Heredero**, Brooke's Point, Palawan.
+> 🚀 **Enhanced version** of the original [BPGTerminal/Operations-Personnel-Monitor](https://github.com/BPGTerminal/Operations-Personnel-Monitor)
+> Built for Philippine LGU operations by **-=pagong=- Joey Sabenacio Heredero**, Brooke's Point, Palawan.
 
 ---
 
-## What It Does
+## What's New in v2: Brutal Enhancement
 
-OPM is a zero-cost, browser-based command-and-control system that connects field personnel to an operations commander in real time — no app store, no servers, no monthly fees.
+### 🏗️ **Architecture Overhaul**
+
+| Problem | v1 | v2 |
+|---------|-----|-----|
+| Code structure | Monolithic 92KB HTML files | Modular CSS + JS + HTML |
+| CSS | Inline/page-level, ~800 lines duplicated | Shared design system (`opm-core.css`) |
+| JavaScript | Global scope, spaghetti dependencies | Module pattern (`OPM.*` namespace) |
+| Config management | localStorage scattered everywhere | Centralized `OPM.getConfig()` / `OPM.saveConfig()` |
+| Service worker | Basic network-first | Stale-while-revalidate, push notifications, offline fallback page |
+
+### ✨ **New Features**
 
 | Feature | Description |
-|---|---|
-| 🗺️ **Live Map** | Personnel GPS positions update every 10 seconds on the commander's map |
-| 📡 **Real-time Comms** | Two-way messaging between commander and all field units |
-| 📸 **Photo Reports** | Field personnel attach photos with embedded GPS coordinates |
-| 🎥 **Video Calls** | One-click Google Meet integration — auto-broadcasts link to all phones |
-| ✅ **Access Approval** | Commander approves or rejects each login request before personnel enter |
-| 🗂️ **Multi-team Support** | Up to 7 color-coded teams/sectors with individual access codes |
-| 🌐 **Hazard Overlays** | Flood, landslide, and storm surge maps from PHIVOLCS Hazard Hunter |
-| 📴 **Offline-resilient** | Installable PWA — works on any phone browser, retries on signal loss |
-| 📊 **Auto-logging** | All comms, personnel check-ins, and video calls logged to Google Sheets |
+|---------|-------------|
+| 🔊 **Sound Alerts** | Audio cues for new check-ins, messages, approvals, and broadcasts (Web Audio API) |
+| 📦 **Offline Message Queue** | Messages auto-queue when offline, flush when reconnected |
+| 🌓 **Dark/Light Theme** | System-preference aware with manual toggle |
+| 📊 **Toast Notifications** | Non-blocking status notifications for all operations |
+| ⌨️ **Keyboard Shortcuts** | `Ctrl+F` to focus compose, `M` to toggle map fullscreen |
+| 📴 **Offline Fallback Page** | Graceful offline page instead of browser error |
+| 🔔 **Push Notification Support** | Service worker ready for push alerts |
+| 🔄 **Background Sync** | Periodic sync API integration for offline queue |
+| 📸 **Lazy-Loaded Photos** | Images use `loading="lazy"` for better performance |
+| 🔍 **Better GPS Quality Indicator** | Visual indicator for GPS accuracy (good/fair/poor) |
+
+### 🐛 **Bug Fixes**
+
+| Fix | Detail |
+|-----|--------|
+| Silent error swallowing | 15+ `catch(e){}` blocks now show user feedback |
+| Demo data leakage | Hardcoded "PARADE TEAM"/"PAGONG" strings removed from production code |
+| Google Meet hack panel | 200+ lines of non-functional embed code replaced with streamlined flow |
+| CORS proxy dependency | PHIVOLCS layers now try direct WMS first, with clear fallback messaging |
+| localStorage sync | Config now uses `opm_config_v2` key with backward-compat writes |
+| Session restore race | Personnel app handles session restore more robustly |
+
+### 🚀 **Performance**
+
+| Metric | v1 | v2 |
+|--------|-----|-----|
+| CSS size | ~900 lines (duplicated) | ~400 lines (shared) |
+| JS density | Global scope | Namespaced modules |
+| Initial load | 3 HTML files × ~80KB | CSS cached, JS shared |
+| SW cache strategy | Network-only HTML | Stale-while-revalidate for CDN assets |
 
 ---
 
-## Three Interfaces
+## Architecture
 
 ```
-commander.html  →  EOC Dashboard (desktop/laptop)
-personnel.html  →  Field Personnel App (mobile phone)
-admin.html      →  Event Setup & Configuration
+opm-enhanced/
+├── css/
+│   ├── opm-core.css          # Design system (shared by all pages)
+│   └── opm-commander.css     # Commander-specific styles
+├── js/
+│   └── opm-core.js           # Shared utilities module
+├── assets/                   # (future: icons, sounds)
+├── commander.html            # EOC Commander Dashboard
+├── personnel.html            # Field Personnel Mobile App
+├── admin.html                # ⚠️ Not yet enhanced (use v1 admin.html)
+├── sw.js                     # Enhanced Service Worker
+├── manifest.json             # PWA Manifest (with shortcuts)
+├── icon-192.png
+├── icon-512.png
+└── README.md
 ```
-
-**Commander Dashboard** — Full-screen map with live personnel markers, comms log, team filters, hazard overlays, video call launcher, and approval panel for incoming login requests.
-
-**Personnel App** — Mobile-optimized check-in form, messaging, photo capture, GPS sharing, and video call join — all in a phone browser. Installs to home screen like a native app.
-
-**Admin Panel** — Configure event name, dates, commander callsign, teams, access codes, and map center location. Changes propagate to all connected devices automatically.
 
 ---
 
-## Tech Stack
+## Migration from v1
+
+### Step 1: Replace files
+Drop the enhanced files into your existing GitHub Pages deployment alongside the original admin.html, or replace all three HTML files:
+
+```bash
+# Copy enhanced files
+cp -r opm-enhanced/* your-deploy-dir/
+# Keep original admin.html (not yet enhanced)
+cp opm-original/admin.html your-deploy-dir/
+```
+
+### Step 2: Update cache version
+The new service worker (`sw.js`) uses `CACHE_VERSION = 'opm-v4'`. It will auto-clean old caches on activation.
+
+### Step 3: Clear client-side storage (recommended)
+Ask personnel to clear site data once, or the new `opm_config_v2` key will coexist with the old `tms_config`.
+
+### Backward compatibility
+- Config is written to **both** `opm_config_v2` (new) and `tms_config` (old) keys
+- Device IDs are preserved
+- Session tokens (`opm_pending`) are preserved
+- Google Sheets backend requires **no changes**
+
+---
+
+## Tech Stack (unchanged)
 
 | Layer | Technology | Cost |
-|---|---|---|
+|-------|-----------|------|
 | Hosting | GitHub Pages | Free |
 | Database | Google Sheets | Free |
 | Backend | Google Apps Script | Free |
 | Maps | Leaflet.js + OpenStreetMap | Free |
-| Satellite Layer | Esri World Imagery | Free |
+| Satellite | Esri World Imagery | Free |
 | Hazard Data | PHIVOLCS Hazard Hunter WMS | Free |
 | Video Calls | Google Meet | Free |
-| **Total** | | **₱0 / month** |
-
----
-
-## Use Cases
-
-- 🎉 Fiesta and cultural event operations
-- 🚦 Traffic management and crowd control
-- 🏥 Disaster response and EOC activation
-- 🏛️ Barangay and municipal operations
-- 🔒 Security and site monitoring
-- 🌊 Typhoon and flood response coordination
+| **Total** | | **₱0/month** |
 
 ---
 
 ## Quick Start
 
-1. **Admin** — Open `admin.html`, enter your Apps Script URL, configure your event and teams, save.
-2. **Commander** — Open `commander.html` on a laptop or desktop at the EOC.
-3. **Personnel** — Each field officer opens `personnel.html` on their phone, fills in their details, and waits for commander approval.
-4. **Operate** — Commander sees everyone on the map, sends orders, receives situation reports, and launches video calls with one click.
+1. **Admin** — Open `admin.html`, enter your Apps Script URL, configure event/teams, save.
+2. **Commander** — Open `commander.html` on a laptop/desktop at the EOC.
+3. **Personnel** — Each field officer opens `personnel.html` on their phone, fills in details, waits for approval.
+4. **Operate** — Commander sees everyone on the map, sends orders, receives reports, launches video calls.
+
+---
+
+## Keyboard Shortcuts (Commander)
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+F` | Focus message compose |
+| `M` | Toggle map fullscreen |
+| `Esc` | Close photo modal / panels |
+
+---
+
+## Future Roadmap
+
+- [ ] Enhance `admin.html` with the new design system
+- [ ] Add personnel route history tracking on map
+- [ ] Add geofence alerts (personnel leaves assigned area)
+- [ ] Add weather overlay from PAGASA
+- [ ] Add battery level reporting from personnel devices
+- [ ] Add push notification support (requires server-side VAPID keys)
+- [ ] Add data export (CSV/PDF) for after-action reports
+- [ ] Add unit tests for core JS module
+- [ ] Add E2E tests with Playwright
 
 ---
 
 ## Data & Privacy
 
-All data is stored in **your own Google Sheets** — Anthropic, GitHub, and no third party has access to your operational data. Personnel GPS coordinates are transmitted directly to your Apps Script backend and stored only in your spreadsheet.
+All data is stored in **your own Google Sheets** — no third party has access to your operational data. Personnel GPS coordinates are transmitted directly to your Apps Script backend.
 
 ---
 
-## Designed For
-
-Philippine LGU emergency and event operations teams with limited budgets and rural connectivity. Works on standard mobile data (3G/LTE). Degrades gracefully on slow connections.
-
----
-
-**© 2026 Joey Sabenacio Heredero** · EOC / Operations Management · Brooke's Point, Palawan  
-*-=pagong=-*
+**© 2026 Joey Sabenacio Heredero** · EOC / Operations Management · Brooke's Point, Palawan
+_-=pagong=-_
