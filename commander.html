@@ -38,6 +38,7 @@
     <span class="live-indicator"><span class="live-dot"></span>LIVE</span>
     <span id="clock" class="mono text-accent">--:--:--</span>
     <span id="online-badge" class="text-success mono text-xs">0 ONLINE</span>
+    <span id="backend-indicator" class="mono text-xs dim" title="Backend URL" style="cursor:help;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🔌 --</span>
     <button class="theme-toggle" onclick="OPM.toggleTheme()" title="Toggle theme">🌓</button>
     <button class="btn btn-sm" onclick="toggleSoundBtn()" id="sound-btn" title="Toggle sound">🔊</button>
     <a class="btn btn-sm" href="admin.html">⚙ ADMIN</a>
@@ -244,13 +245,32 @@ async function init() {
   setupDragListeners();
   setupKeyboardShortcuts();
 
-  // Check for password gate
+  // Check for password gate — simple password check
   if (!sessionStorage.getItem('opm_commander_gate')) {
-    showPasswordGate();
+    showCommanderGate();
     return;
   }
 
   await startPolling();
+}
+
+function showCommanderGate() {
+  var pw = prompt('Enter Commander Password (default: PAGONG):');
+  if (!pw) { document.body.innerHTML = '<div style="color:#fff;text-align:center;padding:100px;"><h1>Access Denied</h1><p>Refresh to try again.</p></div>'; return; }
+  
+  var storedPw = 'PAGONG';
+  try {
+    var cfg = OPM.getConfig();
+    if (cfg.commanderPw) storedPw = String(cfg.commanderPw).toUpperCase().trim();
+  } catch(e) {}
+  
+  if (pw.toUpperCase().trim() === storedPw) {
+    sessionStorage.setItem('opm_commander_gate', '1');
+    init();
+  } else {
+    alert('Wrong password.');
+    showCommanderGate();
+  }
 }
 
 function updateHeader() {
@@ -259,6 +279,20 @@ function updateHeader() {
   document.getElementById('hdr-title').innerHTML = `${name} <span>// COMMANDER</span>`;
   document.getElementById('commander-label').textContent = cfg.commander || 'COMMANDER';
   document.title = `EOC Dashboard — ${name}`;
+  
+  // Show backend URL snippet
+  const url = OPM.SHEET_URL();
+  const indicator = document.getElementById('backend-indicator');
+  if (indicator) {
+    if (url) {
+      const short = url.replace(/https:\/\/script.google.com\/macros\/s\//,'').slice(0,16) + '...';
+      indicator.textContent = 'ON ' + short;
+      indicator.style.color = 'var(--success)';
+    } else {
+      indicator.textContent = 'NO BACKEND';
+      indicator.style.color = 'var(--danger)';
+    }
+  }
 }
 
 function startClock() {
@@ -494,10 +528,14 @@ const REFRESH_INTERVAL = 5000;
 async function startPolling() {
   await refreshConfig();
   await fetchAll();
+  // Force immediate approval check
+  await fetchApprovals();
+  document.getElementById('approval-panel').style.display = 'block';
+  
   setInterval(fetchAll, REFRESH_INTERVAL);
   setInterval(refreshConfig, 30000);
-  setInterval(fetchApprovals, 8000);
-
+  setInterval(fetchApprovals, 5000); // check every 5 seconds instead of 8
+  
   document.getElementById('cmd-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') sendMessage();
   });
@@ -887,11 +925,15 @@ document.addEventListener('keydown', e => {
 // ============================================================
 async function fetchApprovals() {
   const url = OPM.SHEET_URL();
-  if (!url) return;
+  if (!url) {
+    console.log('[OPM] No sheet URL — approvals skipped');
+    return;
+  }
 
   try {
     const res = await fetch(`${url}?action=getPending&t=${Date.now()}`, { cache: 'no-store' });
     const data = await res.json();
+    console.log('[OPM] Pending approvals:', data);
     const badge = document.getElementById('approval-badge');
 
     if (data.pending && data.pending.length > 0) {
@@ -920,10 +962,12 @@ async function fetchApprovals() {
       badge.classList.remove('has-pending');
       badge.innerHTML = '⚠ APPROVALS';
       document.getElementById('approval-list').innerHTML =
-        '<div style="padding:12px;text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">No pending requests.</div>';
+        '<div style="padding:12px;text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">No pending requests.<br><button class="btn btn-sm" onclick="fetchApprovals()" style="margin-top:8px;">🔄 REFRESH</button></div>';
     }
   } catch (e) {
     console.warn('[OPM] Approval fetch:', e.message);
+    const list = document.getElementById('approval-list');
+    list.innerHTML = '<div style="padding:12px;text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--danger);">⚠ Cannot fetch approvals<br><span style="font-size:8px;">' + e.message + '</span><br><button class="btn btn-sm" onclick="fetchApprovals()" style="margin-top:8px;">🔄 RETRY</button></div>';
   }
 }
 
@@ -1155,5 +1199,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1a6e4c89cbc9b87',t:'MTc4MzkzMTA5MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
