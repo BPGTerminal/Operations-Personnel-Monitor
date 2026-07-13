@@ -1,1741 +1,1160 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-  <!-- PWA: installable as home screen app -->
-  <link rel="manifest" href="manifest.json"/>
-  <meta name="theme-color" content="#00e5ff"/>
-  <meta name="mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-  <meta name="apple-mobile-web-app-title" content="OPM"/>
-  <link rel="apple-touch-icon" href="icon-192.png"/>
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="screen-orientation" content="any">
-<title>OPM — Operations Personnel Monitor</title>
+<title>OPM — Commander Dashboard</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#00e5ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+
+<!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-  :root{
-    --bg:#0a0e1a; --panel:#0f1628; --border:#1e3a5f;
-    --accent:#00e5ff; --accent2:#ff6b35; --green:#00ff88;
-    --text:#c8d8e8; --dim:#4a6080; --red:#ff3b5c;
-  }
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{
-    background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;
-    height:100vh;overflow:hidden;display:grid;
-    grid-template-rows:54px 1fr;
-    grid-template-columns:1fr 330px;
-    transition:grid-template-columns .3s;
-  }
-  body.map-maximized{
-    grid-template-columns:1fr 0;
-  }
-  body.map-maximized aside{
-    display:none;
-  }
-  /* HEADER */
-  header{
-    grid-column:1/-1;background:var(--panel);border-bottom:1px solid var(--border);
-    display:flex;align-items:center;justify-content:space-between;padding:0 12px;
-    height:54px;overflow:hidden;flex-wrap:nowrap;
-  }
-  .hdr-left{display:flex;align-items:center;gap:8px;min-width:0;flex:1;overflow:hidden;}
-  .eoc-badge{background:var(--accent);color:#000;font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:bold;padding:3px 8px;letter-spacing:1px;}
-  header h1{font-size:13px;font-weight:700;letter-spacing:1px;color:#fff;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
-  header h1 span{color:var(--accent);}
-  .hdr-right{display:flex;align-items:center;gap:8px;font-family:'Share Tech Mono',monospace;font-size:10px;flex-shrink:0;white-space:nowrap;}
-  #clock{color:var(--accent);letter-spacing:1px;}
-  .live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;animation:blink 1.5s infinite;}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-  .admin-link{color:var(--dim);text-decoration:none;font-size:11px;letter-spacing:1px;border:1px solid var(--border);padding:3px 8px;transition:all .2s;}
-  .admin-link:hover{color:var(--accent);border-color:var(--accent);}
-  /* MAP */
-  #map{background:#07101f;position:relative;}
-  .leaflet-tile{filter:brightness(.7) saturate(.5) hue-rotate(200deg);}
-  .leaflet-tile.satellite{filter:none;}
-  .leaflet-tile.plain{filter:none;}
-  /* SIDEBAR */
-  aside{background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
-  .panel-hdr{background:rgba(0,229,255,.06);border-bottom:1px solid var(--border);padding:6px 14px;font-size:10px;font-family:'Share Tech Mono',monospace;letter-spacing:2px;color:var(--accent);text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none;flex-shrink:0;}
-  .panel-hdr:hover{background:rgba(0,229,255,.1);}
-  .panel-toggle{font-size:12px;color:var(--dim);transition:transform .25s;display:inline-block;}
-  .panel-toggle.open{transform:rotate(180deg);}
-  /* Personnel content — collapsible, never hides header */
-  #personnel-section{display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;max-height:44%;}
-  #personnel-section.hidden{display:none;}
-  /* Comms content — collapsible, never hides header */
-  #comms-section{display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0;}
-  #comms-section.hidden{display:none;}
-  /* TEAM FILTER */
-  #team-filters{display:flex;gap:0;border-bottom:1px solid var(--border);}
-  .tf-btn{flex:1;background:none;border:none;border-right:1px solid var(--border);color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;padding:7px 4px;cursor:pointer;transition:all .2s;text-transform:uppercase;}
-  .tf-btn:last-child{border-right:none;}
-  .tf-btn.active,.tf-btn:hover{background:rgba(0,229,255,.1);color:var(--accent);}
-  /* PERSONNEL */
-  #personnel-list{flex:1;overflow-y:auto;padding:4px;}
-  .p-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-left:3px solid var(--dim);margin-bottom:5px;padding:7px 10px;cursor:pointer;transition:all .2s;}
-  .p-card:hover{background:rgba(0,229,255,.05);border-color:var(--accent);}
-  .p-card.online{border-left-color:var(--green);}
-  .p-card.selected{background:rgba(0,229,255,.09);border-color:var(--accent);}
-  .pc-name{font-weight:700;font-size:14px;color:#fff;}
-  .pc-team{font-size:11px;margin-top:1px;font-weight:600;}
-  .pc-post{font-size:11px;color:var(--dim);margin-top:1px;}
-  .pc-status{font-size:10px;font-family:'Share Tech Mono',monospace;margin-top:3px;}
-  .pc-status.on{color:var(--green);}
-  .pc-status.off{color:var(--dim);}
-  .pc-time{font-size:10px;color:var(--dim);}
-  .pc-actions{display:flex;gap:5px;margin-top:5px;}
-  .pc-btn{flex:1;background:rgba(0,229,255,.08);border:1px solid var(--border);color:var(--accent);font-size:9px;font-family:'Share Tech Mono',monospace;padding:4px;cursor:pointer;letter-spacing:1px;transition:all .2s;}
-  .pc-btn:hover{background:var(--accent);color:#000;}
-  /* MESSAGES */
-  #msg-log{flex:1;overflow-y:auto;padding:4px;display:flex;flex-direction:column;gap:3px;}
-  .msg-item{border:1px solid var(--border);padding:4px 8px;font-size:11px;animation:fadeIn .3s;}
-  @keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
-  .msg-item.commander{border-left:3px solid var(--accent2);}
-  .msg-item.personnel{border-left:3px solid var(--green);}
-  .msg-item.system{border-left:3px solid var(--dim);opacity:.65;}
-  .msg-hdr{display:flex;justify-content:space-between;margin-bottom:1px;}
-  .msg-sender{font-weight:700;font-size:11px;color:var(--accent);}
-  .msg-time{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim);}
-  .msg-photo{margin-top:5px;width:100%;border:1px solid var(--border);cursor:pointer;max-height:110px;object-fit:cover;border-radius:1px;}
-  /* COMPOSE */
-  .compose{border-top:1px solid var(--border);padding:8px;background:rgba(0,0,0,.2);}
-  .compose-target{font-size:11px;font-family:'Share Tech Mono',monospace;color:var(--dim);margin-bottom:5px;}
-  .compose-target span{color:var(--accent2);}
-  .compose-row{display:flex;gap:5px;}
-  #cmd-input{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:14px;padding:7px 10px;outline:none;}
-  #cmd-input:focus{border-color:var(--accent);}
-  #cmd-input::placeholder{color:var(--dim);}
-  #send-btn{background:var(--accent2);border:none;color:#fff;font-family:'Share Tech Mono',monospace;font-size:11px;padding:0 12px;cursor:pointer;letter-spacing:1px;}
-  /* GOOGLE MEET — sidebar launcher */
-  #jitsi-section{border-top:1px solid var(--border);}
-  #jitsi-hdr{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;cursor:default;user-select:none;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--accent);background:rgba(0,229,255,.05);}
-  .jitsi-dot{width:7px;height:7px;border-radius:50%;background:#444;display:inline-block;margin-right:5px;}
-  .jitsi-dot.live{background:#ff4444;animation:pulse 1s infinite;}
-  #jitsi-body{padding:6px;background:rgba(0,0,0,.25);}
-  .jitsi-row{display:flex;gap:4px;margin-bottom:5px;}
-  #jitsi-room-in{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 7px;outline:none;letter-spacing:1px;}
-  #jitsi-room-in:focus{border-color:var(--accent);}
-  .jbtn{background:rgba(0,229,255,.08);border:1px solid var(--border);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:9px;padding:4px 9px;cursor:pointer;letter-spacing:1px;transition:all .2s;white-space:nowrap;}
-  .jbtn:hover{background:var(--accent);color:#000;}
-  .jbtn.red{border-color:#ff4444;color:#ff4444;}
-  .jbtn.red:hover{background:#ff4444;color:#fff;}
-  .jbtn.green{border-color:#00ff88;color:#00ff88;}
-  .jbtn.green:hover{background:#00ff88;color:#000;}
 
-  /* GOOGLE MEET FLOATING STATUS PANEL */
-  #jitsi-float{
-    display:none;position:fixed;z-index:8000;
-    width:340px;min-width:220px;
-    background:rgba(5,8,16,.97);border:1px solid rgba(0,229,255,.4);
-    box-shadow:0 0 24px rgba(0,229,255,.2);
-    flex-direction:column;overflow:hidden;
-  }
-  #jitsi-float.show{display:flex;}
-  #jf-titlebar{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:5px 8px;background:rgba(0,229,255,.08);
-    cursor:grab;user-select:none;flex-shrink:0;
-    border-bottom:1px solid rgba(0,229,255,.2);
-  }
-  #jf-titlebar:active{cursor:grabbing;}
-  #jf-titlebar span{font-family:'Share Tech Mono',monospace;font-size:9px;color:#00e5ff;letter-spacing:1px;}
-  #jf-controls{display:flex;gap:4px;align-items:center;}
-  .jf-btn{background:none;border:1px solid rgba(0,229,255,.3);color:#00e5ff;font-family:'Share Tech Mono',monospace;font-size:8px;padding:2px 6px;cursor:pointer;letter-spacing:1px;transition:all .2s;white-space:nowrap;}
-  .jf-btn:hover{background:#00e5ff;color:#000;}
-  .jf-btn.red{border-color:#ff4444;color:#ff4444;}
-  .jf-btn.red:hover{background:#ff4444;color:#fff;}
-  .jf-btn.minimize{border-color:#ffaa00;color:#ffaa00;}
-  .jf-btn.minimize:hover{background:#ffaa00;color:#000;}
-  .jf-btn.green{border-color:#00ff88;color:#00ff88;}
-  .jf-btn.green:hover{background:#00ff88;color:#000;}
-  #jf-iframe-wrap{flex:1;background:rgba(0,0,0,.4);position:relative;padding:10px 10px 6px 10px;}
-  #jf-meet-link{font-family:'Share Tech Mono',monospace;font-size:9px;color:#00e5ff;word-break:break-all;letter-spacing:0.5px;margin-bottom:8px;line-height:1.5;}
-  #jf-meet-link a{color:#00e5ff;text-decoration:none;}
-  #jf-meet-link a:hover{text-decoration:underline;}
-  #jf-actions{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;}
-  #jf-status-line{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--dim);letter-spacing:0.5px;border-top:1px solid rgba(0,229,255,.1);padding-top:6px;}
-  #jf-idle{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 12px;color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;text-align:center;gap:6px;}
-  #jf-idle .jf-icon{font-size:28px;opacity:0.4;}
-  #jf-resize-hint{font-size:7px;color:rgba(0,229,255,.3);font-family:'Share Tech Mono',monospace;text-align:right;padding:1px 4px;flex-shrink:0;letter-spacing:0.5px;pointer-events:none;}
-
-  /* APPROVAL NOTIFICATION PANEL */
-  #approval-panel{display:none;position:fixed;top:60px;right:10px;z-index:9000;width:300px;background:rgba(5,8,16,.97);border:1px solid #ffaa00;box-shadow:0 0 20px rgba(255,170,0,.3);}
-  #approval-panel-hdr{background:rgba(255,170,0,.12);padding:6px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,170,0,.3);}
-  #approval-panel-hdr span{font-family:'Share Tech Mono',monospace;font-size:10px;color:#ffaa00;letter-spacing:1px;}
-  #approval-list{max-height:300px;overflow-y:auto;padding:6px;}
-  .ap-item{background:rgba(255,255,255,.04);border:1px solid rgba(255,170,0,.2);padding:7px 9px;margin-bottom:5px;}
-  .ap-name{font-weight:700;font-size:13px;color:#fff;}
-  .ap-detail{font-size:10px;color:var(--dim);margin-top:2px;font-family:'Share Tech Mono',monospace;}
-  .ap-btns{display:flex;gap:5px;margin-top:6px;}
-  .ap-approve{flex:1;background:rgba(0,255,136,.1);border:1px solid #00ff88;color:#00ff88;font-family:'Share Tech Mono',monospace;font-size:9px;padding:4px;cursor:pointer;letter-spacing:1px;transition:all .2s;}
-  .ap-approve:hover{background:#00ff88;color:#000;}
-  .ap-reject{flex:1;background:rgba(255,59,92,.08);border:1px solid #ff3b5c;color:#ff3b5c;font-family:'Share Tech Mono',monospace;font-size:9px;padding:4px;cursor:pointer;letter-spacing:1px;transition:all .2s;}
-  .ap-reject:hover{background:#ff3b5c;color:#fff;}
-  /* Approval badge on header */
-  #approval-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,170,0,.12);border:1px solid rgba(255,170,0,.3);color:#ffaa00;font-family:'Share Tech Mono',monospace;font-size:9px;font-weight:bold;padding:3px 8px;cursor:pointer;transition:all .3s;letter-spacing:1px;}
-  #approval-badge.has-pending{background:#ffaa00;color:#000;border-color:#ffaa00;animation:blink 1.2s infinite;}
-  #approval-badge .badge-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,170,0,.4);flex-shrink:0;}
-  #approval-badge.has-pending .badge-dot{background:#000;}
-  
-  /* PHOTO MODAL */
-  #photo-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:center;justify-content:center;}
-  #photo-modal.show{display:flex;flex-direction:column;align-items:center;}
-  .photo-fallback{display:flex;align-items:center;justify-content:center;background:rgba(0,229,255,.1);border:1px solid var(--accent);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:11px;padding:8px 14px;text-decoration:none;letter-spacing:1px;margin-top:6px;}
-  .msg-photo-wrap{margin-top:6px;}
-  #photo-modal img{max-width:90vw;max-height:90vh;border:2px solid var(--accent);}
-  #pm-close{position:absolute;top:20px;right:24px;color:var(--accent);font-size:28px;cursor:pointer;font-family:'Share Tech Mono',monospace;}
-  /* SCROLLBAR */
-  ::-webkit-scrollbar{width:3px;}
-  ::-webkit-scrollbar-thumb{background:var(--border);}
-  .empty{color:var(--dim);font-size:12px;font-family:'Share Tech Mono',monospace;text-align:center;padding:16px;}
-  /* LEGEND */
-  #legend{position:absolute;bottom:24px;left:12px;z-index:500;background:rgba(5,8,16,.28);border:none;padding:6px 10px;font-family:'Share Tech Mono',monospace;font-size:9px;backdrop-filter:none;}
-  .leg-item{display:flex;align-items:center;gap:5px;margin-bottom:2px;}
-  .leg-dot{width:8px;height:8px;border-radius:50%;border:1px solid rgba(255,255,255,.2);flex-shrink:0;}
-  /* MARKER */
-  /* .p-marker base — overridden by new CSS block below */
-  @keyframes pulse{0%,100%{box-shadow:0 0 8px rgba(0,255,136,.5)}50%{box-shadow:0 0 20px rgba(0,255,136,1),0 0 40px rgba(0,255,136,.3)}}
-
-
-  /* ============================================================
-     MAP CONTROLS — left side, compact, above Leaflet (z-index 400+)
-     ============================================================ */
-  #map { position:relative; overflow:hidden; }
-
-  #map-controls {
-    position:absolute;
-    top:10px;
-    left:60px;               /* clear of zoom controls */
-    z-index:1000;
-    display:flex;
-    flex-direction:row;      /* side by side */
-    gap:4px;
-    align-items:flex-start;
-    pointer-events:none;     /* let map clicks through between buttons */
-  }
-  #map-max-btn, #layer-toggle-btn {
-    pointer-events:all;
-    background:rgba(5,8,16,.38);
-    border:1px solid rgba(0,229,255,.25);
-    color:#00e5ff;
-    font-family:'Share Tech Mono',monospace;
-    font-size:9px;
-    letter-spacing:1px;
-    padding:4px 8px;
-    cursor:pointer;
-    white-space:nowrap;
-    line-height:1.4;
-  }
-  #map-max-btn:hover, #layer-toggle-btn:hover {
-    background:rgba(0,229,255,.15);
-    border-color:#00e5ff;
-  }
-
-  /* wrapper gives the panel an anchor point */
-  #layer-wrapper {
-    position:relative;
-    pointer-events:all;
-  }
-  #layer-panel {
-    position:absolute;
-    top:calc(100% + 2px);
-    left:0;
-    width:160px;
-    background:rgba(5,8,16,.97);
-    border:1px solid #1e3a5f;
-    padding:4px 0;
-    display:none;
-    z-index:1001;
-  }
-  #layer-panel.open { display:block; }
-
-  .lp-section { padding:2px 0; border-bottom:1px solid #0f2035; }
-  .lp-section:last-child { border-bottom:none; }
-  .lp-label {
-    font-family:'Share Tech Mono',monospace;
-    font-size:7px;
-    color:#4a6080;
-    letter-spacing:1px;
-    padding:3px 8px 1px;
-    text-transform:uppercase;
-  }
-  .lp-row {
-    display:flex;
-    align-items:center;
-    gap:6px;
-    padding:4px 8px;
-    cursor:pointer;
-    font-family:'Share Tech Mono',monospace;
-    font-size:9px;
-    color:#8aa8c8;
-  }
-  .lp-row:hover { background:rgba(0,229,255,.08); color:#00e5ff; }
-  .lp-check {
-    width:10px;
-    height:10px;
-    border:1px solid #1e3a5f;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:7px;
-    flex-shrink:0;
-    line-height:1;
-  }
-  .lp-check.on        { border-color:#00e5ff; color:#00e5ff; }
-  .lp-check.hazard-on { border-color:#ff9900; color:#ff9900; }
-  .lp-name { font-size:9px; }
-  .lp-opacity { flex:1; accent-color:#00e5ff; height:3px; }
-
-  /* Shrink Leaflet attribution badge */
-  .leaflet-control-attribution {
-    font-size:7px !important;
-    padding:1px 4px !important;
-    background:transparent !important;
-    color:#c0d8f0 !important;
-    max-width:200px;
-    text-shadow:0 0 4px rgba(0,0,0,0.9),0 1px 3px rgba(0,0,0,1) !important;
-    box-shadow:none !important;
-    opacity:0.6;
-  }
-  .leaflet-control-attribution a { color:#c0d8f0 !important; }
-
-  /* FOOTER transition for fade cycle */
-  #pagong-footer { transition:opacity 1s ease; }
-
-  /* PERSONNEL MARKER — half size */
-  .p-marker {
-    width:18px !important;
-    height:18px !important;
-    border-radius:50%;
-    border:2px solid rgba(255,255,255,.7) !important;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:7px !important;
-    font-weight:bold;
-    color:#000;
-    box-shadow:0 0 6px rgba(255,255,255,.25) !important;
-  }
-
-
-/* ══ COMMANDER PASSWORD GATE ══════════════════════════════ */
-#opm-gate {
-  position: fixed; inset: 0; z-index: 999999;
-  background: #0a0e1a;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  font-family: 'Share Tech Mono', monospace;
-  padding: 24px;
-}
-#opm-gate .g-logo  { width: 80px; height: 80px; border-radius: 50%; margin-bottom: 8px; box-shadow: 0 0 24px rgba(0,229,255,.4); }
-#opm-gate .g-brand { font-size: 28px; font-weight: bold; color: #00e5ff; letter-spacing: 4px; margin-bottom: 2px; }
-#opm-gate .g-sub   { font-size: 9px; color: rgba(0,229,255,.45); letter-spacing: 3px; margin-bottom: 28px; }
-#opm-gate .g-card  { background: rgba(0,229,255,.05); border: 1px solid rgba(0,229,255,.2); border-radius: 4px; padding: 24px; width: 100%; max-width: 360px; }
-#opm-gate .g-label { font-size: 9px; color: #00e5ff; letter-spacing: 2px; margin-bottom: 6px; display: block; }
-#opm-gate .g-input {
-  width: 100%; box-sizing: border-box;
-  background: rgba(0,229,255,.07); border: 1px solid rgba(0,229,255,.25);
-  color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 18px;
-  padding: 12px 14px; outline: none; border-radius: 2px;
-  letter-spacing: 4px; text-align: center; margin-bottom: 10px;
-}
-#opm-gate .g-input:focus { border-color: #00e5ff; box-shadow: 0 0 12px rgba(0,229,255,.2); }
-#opm-gate .g-btn {
-  width: 100%; background: rgba(0,229,255,.15); border: 1px solid #00e5ff;
-  color: #00e5ff; font-family: 'Share Tech Mono', monospace;
-  font-size: 12px; letter-spacing: 2px; padding: 14px;
-  cursor: pointer; border-radius: 2px; transition: background .2s;
-}
-#opm-gate .g-btn:hover { background: rgba(0,229,255,.3); }
-#opm-gate .g-err  { font-size: 10px; color: #ff3b5c; letter-spacing: 1px; min-height: 16px; text-align: center; margin-top: 8px; }
-#opm-gate .g-hint { font-size: 9px; color: rgba(255,255,255,.2); text-align: center; margin-top: 10px; letter-spacing: 1px; }
-
-</style>
+<!-- OPM Styles -->
+<link rel="stylesheet" href="css/opm-core.css">
+<link rel="stylesheet" href="css/opm-commander.css">
 </head>
 <body>
 
-<!-- ══ COMMANDER PASSWORD GATE ══ -->
-<div id="opm-gate">
-  <img class="g-logo" src="data:image/png;base64,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" alt="OPM"/>
-  <div class="g-brand">OPM</div>
-  <div class="g-sub">COMMANDER ACCESS</div>
-  <div class="g-card">
-    <label class="g-label">COMMANDER PASSWORD</label>
-    <input class="g-input" id="g-pw" type="password"
-           placeholder="••••••"
-           autocomplete="off" autocorrect="off" autocapitalize="off"
-           onkeydown="if(event.key==='Enter') opmGateUnlock()"/>
-    <button class="g-btn" onclick="opmGateUnlock()">UNLOCK COMMANDER ▶</button>
-    <div class="g-err" id="g-err"></div>
-    <div class="g-hint">Default: PAGONG — change in Admin settings</div>
+<!-- ═══════════ HEADER ═══════════ -->
+<header class="header">
+  <div class="header-left">
+    <span class="badge badge-accent">OPM</span>
+    <h1 class="header-title" id="hdr-title">Loading... <span>// COMMANDER</span></h1>
   </div>
-</div>
-<!-- ══ END GATE ══ -->
-
-
-<header>
-  <div class="hdr-left">
-    <div class="eoc-badge">OPM</div>
-    <h1 id="hdr-title">Operations Personnel Monitor <span>// Commander</span></h1>
-  </div>
-  <div class="hdr-right">
-    <span id="approval-badge" onclick="toggleApprovalPanel()" title="Click to approve/reject login requests"><span class="badge-dot"></span>APPROVALS</span>
-    <span><span class="live-dot"></span>LIVE</span>
-    <span id="clock">--:--:--</span>
-    <span id="online-badge">0 ONLINE</span>
-    <button onclick="confirmClearEvent()" style="background:rgba(255,59,92,.1);border:1px solid rgba(255,59,92,.4);color:#ff3b5c;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;padding:4px 10px;cursor:pointer;margin-right:6px;transition:all .2s;" onmouseover="this.style.background='rgba(255,59,92,.25)'" onmouseout="this.style.background='rgba(255,59,92,.1)'">🗑 CLEAR EVENT</button>
-    <a class="admin-link" href="admin.html">⚙ ADMIN</a>
+  <div class="header-right">
+    <span id="approval-badge" class="badge badge-warning" onclick="toggleApprovalPanel()" title="Approve/reject login requests">⚠ APPROVALS</span>
+    <span class="live-indicator"><span class="live-dot"></span>LIVE</span>
+    <span id="clock" class="mono text-accent">--:--:--</span>
+    <span id="online-badge" class="text-success mono text-xs">0 ONLINE</span>
+    <button class="theme-toggle" onclick="OPM.toggleTheme()" title="Toggle theme">🌓</button>
+    <button class="btn btn-sm" onclick="toggleSoundBtn()" id="sound-btn" title="Toggle sound">🔊</button>
+    <a class="btn btn-sm" href="admin.html">⚙ ADMIN</a>
   </div>
 </header>
 
-<div id="map">
-  <!-- Map Controls: left side, stacked, compact -->
-  <div id="map-controls">
-    <button id="map-max-btn"
-      onclick="event.stopPropagation();toggleMapMax()"
-      title="Toggle fullscreen map">&#9636; MAXIMIZE</button>
-    <div id="layer-wrapper">
-      <button id="layer-toggle-btn"
-        onclick="event.stopPropagation();toggleLayerPanel()">&#128506; LAYERS &#9662;</button>
-      <div id="layer-panel" onclick="event.stopPropagation()">
-        <div class="lp-section">
-          <div class="lp-label">BASE MAP</div>
-          <div class="lp-row" onclick="event.stopPropagation();setLayer('street')">
-            <div class="lp-check on" id="chk-street">&#10003;</div>
-            <span class="lp-name">Street Map</span>
+<!-- ═══════════ MAP ═══════════ -->
+<div id="map-container">
+  <div id="map"></div>
+
+  <!-- Map controls -->
+  <div class="map-controls">
+    <button class="map-btn" onclick="toggleMapMax()" title="Toggle fullscreen map">⛶ MAXIMIZE</button>
+    <div style="position:relative;">
+      <button class="map-btn" onclick="toggleLayerPanel()">🗺 LAYERS ▾</button>
+      <div class="layer-panel" id="layer-panel" onclick="event.stopPropagation()">
+        <div class="layer-section">
+          <div class="layer-label">Base Map</div>
+          <div class="layer-row" onclick="setBaseLayer('street')">
+            <div class="layer-check on" id="chk-street">✓</div> Street
           </div>
-          <div class="lp-row" onclick="event.stopPropagation();setLayer('satellite')">
-            <div class="lp-check" id="chk-satellite"></div>
-            <span class="lp-name">Satellite</span>
+          <div class="layer-row" onclick="setBaseLayer('satellite')">
+            <div class="layer-check" id="chk-satellite"></div> Satellite
           </div>
-          <div class="lp-row" onclick="event.stopPropagation();setLayer('topo')">
-            <div class="lp-check" id="chk-topo"></div>
-            <span class="lp-name">Terrain/Topo</span>
+          <div class="layer-row" onclick="setBaseLayer('topo')">
+            <div class="layer-check" id="chk-topo"></div> Terrain
           </div>
         </div>
-        <div class="lp-section">
-          <div class="lp-label">HAZARD OVERLAY</div>
-          <div class="lp-row" onclick="event.stopPropagation();toggleHazard('flood')">
-            <div class="lp-check" id="chk-flood"></div>
-            <span class="lp-name">Flood</span>
+        <div class="layer-section">
+          <div class="layer-label">Hazard Overlay</div>
+          <div class="layer-row" onclick="toggleHazard('flood')">
+            <div class="layer-check" id="chk-flood"></div> Flood
           </div>
-          <div class="lp-row" onclick="event.stopPropagation();toggleHazard('landslide')">
-            <div class="lp-check" id="chk-landslide"></div>
-            <span class="lp-name">Landslide</span>
+          <div class="layer-row" onclick="toggleHazard('landslide')">
+            <div class="layer-check" id="chk-landslide"></div> Landslide
           </div>
-          <div class="lp-row" onclick="event.stopPropagation();toggleHazard('storm')">
-            <div class="lp-check" id="chk-storm"></div>
-            <span class="lp-name">Storm Surge</span>
+          <div class="layer-row" onclick="toggleHazard('storm')">
+            <div class="layer-check" id="chk-storm"></div> Storm Surge
           </div>
-          <div style="padding:4px 6px;">
-            <a href="https://hazardhunter.georisk.gov.ph/map#lat=8.7891&lng=117.8370&zoom=13" target="_blank" rel="noopener"
-               style="display:block;font-family:'Share Tech Mono',monospace;font-size:8px;color:#ff9900;letter-spacing:1px;text-decoration:none;padding:4px 6px;border:1px solid #ff990055;text-align:center;">
-              ⚠ HAZARD MAPS REQUIRE LIVE CONNECTION<br/>TAP TO OPEN PHIVOLCS HAZARD HUNTER ↗
-            </a>
-          </div>
-          <div style="padding:4px 8px 4px;display:flex;align-items:center;gap:6px;">
-            <span style="font-family:'Share Tech Mono',monospace;font-size:7px;color:#4a6080;">OPACITY</span>
-            <input type="range" class="lp-opacity" id="hazard-opacity" min="10" max="90" value="65"
-              oninput="event.stopPropagation();setHazardOpacity(this.value)" onclick="event.stopPropagation()"/>
+          <div style="padding:4px 8px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-family:var(--font-mono);font-size:7px;color:var(--text-dim);">OPACITY</span>
+              <input type="range" class="layer-opacity" id="hazard-opacity" min="10" max="90" value="65"
+                oninput="setHazardOpacity(this.value)" style="flex:1;accent-color:var(--warning);height:3px;">
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Map Legend -->
+  <div class="map-legend" id="map-legend"></div>
+
   <!-- Hazard Legend -->
-  <div id="hazard-legend">
-    <div class="leg-title" id="leg-title">HAZARD LEGEND</div>
-    <div id="leg-rows"></div>
+  <div class="hazard-legend" id="hazard-legend">
+    <div class="hazard-legend-title" id="hazard-legend-title">HAZARD</div>
+    <div id="hazard-legend-rows"></div>
   </div>
-  <div id="legend"></div>
 </div>
 
-<aside>
-  <!-- PERSONNEL HEADER — always visible -->
-  <div class="panel-hdr" onclick="toggleSection('personnel')" title="Click to show/hide personnel list">
-    <span>PERSONNEL <span style="color:var(--green);font-size:10px;" id="online-count">0 / 0</span></span>
-    <span id="toggle-personnel" style="font-size:11px;color:var(--dim);font-family:'Share Tech Mono',monospace;">▾</span>
-  </div>
-  <!-- PERSONNEL CONTENT — collapsible -->
-  <div id="personnel-section">
-    <div id="team-filters"></div>
-    <div id="personnel-list"><div class="empty">Waiting for personnel...</div></div>
-  </div>
-
-  <!-- COMMS HEADER — always visible -->
-  <div class="panel-hdr" onclick="toggleSection('comms')" title="Click to show/hide comms log">
-    <span>COMMS LOG</span>
-    <span id="toggle-comms" style="font-size:11px;color:var(--dim);font-family:'Share Tech Mono',monospace;">▾</span>
-  </div>
-  <!-- COMMS CONTENT — collapsible -->
-  <div id="comms-section">
-    <div id="msg-log"><div class="empty">No messages yet.</div></div>
-  </div>
-
-  <div class="compose">
-    <div class="compose-target">FROM: <span style="color:var(--green)" id="commander-label">PAGONG</span> &nbsp;|&nbsp; TO: <span id="target-label">ALL PERSONNEL</span></div>
-    <div class="compose-row">
-      <input type="text" id="cmd-input" placeholder="Type message or command..."/>
-      <button id="send-btn" onclick="sendMessage()">SEND</button>
+<!-- ═══════════ SIDEBAR ═══════════ -->
+<aside class="sidebar">
+  <!-- Personnel -->
+  <div class="sidebar-section personnel" id="personnel-section">
+    <div class="section-header" onclick="toggleSection('personnel')">
+      <span>👥 PERSONNEL <span id="online-count" class="text-success">0 / 0</span></span>
+      <span class="section-toggle">▾</span>
     </div>
-  </div>
-
-  <!-- GOOGLE MEET — compact one-line -->
-  <div id="jitsi-section" style="border-top:1px solid var(--border);padding:4px 8px;display:flex;align-items:center;gap:6px;flex-shrink:0;">
-    <span class="jitsi-dot" id="jitsi-dot"></span>
-    <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:1px;flex-shrink:0;">🎥 VIDEO</span>
-    <span id="jitsi-live-badge" style="font-size:8px;color:var(--dim);flex-shrink:0;">IDLE</span>
-    <div style="flex:1;"></div>
-    <button class="jbtn green" style="padding:3px 10px;font-size:9px;" onclick="launchJitsiFloat()">▶ START</button>
-    <button class="jbtn red" style="padding:3px 8px;font-size:9px;" onclick="closeJitsiFloat()">END</button>
-    <div id="meet-link-display" style="display:none;"></div>
-  </div>
-
-  <!-- GOOGLE MEET FLOATING STATUS PANEL -->
-  <div id="jitsi-float">
-    <div id="jf-titlebar">
-      <span><span class="jitsi-dot" id="jf-dot"></span>🎥 GOOGLE MEET</span>
-      <div id="jf-controls">
-        <button class="jf-btn minimize" onclick="minimizeJitsiFloat()">MIN</button>
-        <button class="jf-btn" onclick="snapJitsiFloat()">SNAP</button>
-        <button class="jf-btn red" onclick="closeJitsiFloat()">END ✕</button>
+    <div class="team-filters" id="team-filters"></div>
+    <div class="section-content">
+      <div class="personnel-list" id="personnel-list">
+        <div style="padding:16px;text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">Waiting for personnel...</div>
       </div>
     </div>
-    <div id="jf-iframe-wrap">
-      <div id="jf-idle"><div class="jf-icon">🎥</div>Press ▶ START CALL<br/>to launch Google Meet</div>
+  </div>
+
+  <!-- Comms -->
+  <div class="sidebar-section comms" id="comms-section">
+    <div class="section-header" onclick="toggleSection('comms')">
+      <span>💬 COMMS LOG</span>
+      <span class="section-toggle">▾</span>
     </div>
-    <div id="jf-resize-hint">drag title bar to move</div>
+    <div class="section-content">
+      <div class="message-list" id="message-list">
+        <div style="padding:16px;text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">No messages yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compose -->
+  <div class="compose">
+    <div class="compose-info">
+      FROM: <span class="from" id="commander-label">COMMANDER</span> |
+      TO: <span class="to" id="target-label">ALL PERSONNEL</span>
+    </div>
+    <div class="compose-row">
+      <input type="text" id="cmd-input" placeholder="Type message or command...">
+      <button class="btn btn-primary" onclick="sendMessage()">SEND</button>
+    </div>
+  </div>
+
+  <!-- Video Bar -->
+  <div class="video-bar">
+    <span class="video-status-dot" id="video-dot"></span>
+    <span class="video-label">🎥 VIDEO</span>
+    <span class="video-status-text" id="video-status">IDLE</span>
+    <div style="flex:1;"></div>
+    <button class="btn btn-success btn-sm" onclick="launchVideoCall()">▶ START</button>
+    <button class="btn btn-danger btn-sm" onclick="endVideoCall()">END</button>
+    <button class="btn btn-sm" onclick="broadcastMeetUrl()" id="broadcast-btn" style="display:none;">📢 BROADCAST</button>
   </div>
 </aside>
 
-<div id="photo-modal">
-  <span id="pm-close" onclick="closePhoto()">✕</span>
-  <img id="pm-img" src="" alt="Situation photo"/>
-  <a id="pm-fallback" href="#" target="_blank" style="display:none;color:#fff;font-family:'Share Tech Mono',monospace;font-size:13px;margin-top:10px;">📷 Open in Google Drive</a>
+<!-- ═══════════ OVERLAYS ═══════════ -->
+
+<!-- Approval Panel -->
+<div class="approval-panel" id="approval-panel">
+  <div class="approval-panel-header">
+    <span>⚠ PENDING LOGIN REQUESTS</span>
+    <span onclick="document.getElementById('approval-panel').style.display='none'" style="cursor:pointer;color:#888;font-size:18px;">✕</span>
+  </div>
+  <div class="approval-list" id="approval-list">
+    <div style="padding:12px;text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">No pending requests.</div>
+  </div>
 </div>
 
+<!-- Video Float -->
+<div class="video-float" id="video-float">
+  <div class="video-float-titlebar" id="video-float-drag">
+    <span>🎥 GOOGLE MEET</span>
+    <div class="flex gap-xs">
+      <button class="btn btn-warning btn-sm" onclick="minimizeVideoFloat()">MIN</button>
+      <button class="btn btn-sm" onclick="snapVideoFloat()">SNAP</button>
+      <button class="btn btn-danger btn-sm" onclick="endVideoCall()">END ✕</button>
+    </div>
+  </div>
+  <div class="video-float-body" id="video-float-body">
+    <div id="vf-idle" style="text-align:center;padding:20px;color:var(--text-dim);font-family:var(--font-mono);font-size:11px;">
+      <div style="font-size:32px;margin-bottom:8px;">🎥</div>
+      Press ▶ START to launch Google Meet
+    </div>
+    <div id="vf-active" style="display:none;">
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--accent);margin-bottom:8px;">
+        <span style="color:#ff4444;">● LIVE</span> since <span id="vf-start-time">--:--</span>
+      </div>
+      <div class="flex gap-xs" style="margin-bottom:8px;">
+        <input type="text" id="vf-meet-url" placeholder="Paste Meet link here..."
+          style="flex:1;background:var(--bg-surface);border:1px solid var(--border-color);color:#fff;font-family:var(--font-mono);font-size:10px;padding:5px 8px;outline:none;border-radius:3px;">
+      </div>
+      <div class="flex gap-xs">
+        <button class="btn btn-success btn-sm" onclick="broadcastMeetUrl()">📢 BROADCAST TO ALL</button>
+        <button class="btn btn-sm" onclick="copyMeetUrl()">COPY</button>
+      </div>
+      <div style="font-family:var(--font-mono);font-size:8px;color:var(--text-dim);margin-top:8px;">
+        Google Meet opens in a new tab.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Photo Modal -->
+<div id="photo-modal">
+  <span id="pm-close" onclick="closePhotoModal()">✕</span>
+  <img id="pm-img" src="" alt="Situation photo">
+  <a id="pm-fallback" href="#" target="_blank" class="btn btn-sm" style="margin-top:10px;display:none;">📷 Open in Google Drive</a>
+</div>
+
+<!-- ═══════════ SCRIPTS ═══════════ -->
+<script src="js/opm-core.js"></script>
 <script>
 // ============================================================
+// COMMANDER DASHBOARD — State
 // ============================================================
-// CONFIG — loads from localStorage cache (populated by Admin)
-// Falls back to hardcoded defaults if nothing saved yet
-// ============================================================
-function loadConfig(){
-  try {
-    const s = localStorage.getItem('tms_config');
-    const cfg = s ? JSON.parse(s) : null;
-    if (cfg && cfg.sheetUrl) return cfg;
-  } catch(e){}
-  // No config yet — setup wizard will handle it
-  return { sheetUrl:'', settingsCsvUrl:'', teams:[] };
-}
-
-// Fetch fresh settings from Sheet and refresh page config
-async function refreshConfigFromSheet() {
-  try {
-    const url = CFG.sheetUrl || (function(){ try{ return JSON.parse(localStorage.getItem("tms_config")||"{}").sheetUrl||""; }catch(e){ return ""; } })();
-    const res = await fetch(url + '?action=getSettings&t=' + Date.now(), {redirect:'follow', cache:'no-store'});
-    const data = await res.json();
-    const cfg = data.settings;
-    console.log('[OPM] Settings from sheet:', JSON.stringify(cfg).substring(0,200));
-    if (!cfg) return;
-    // Update cache
-    let freshTeams = cfg.teams;
-    if(typeof freshTeams === 'string'){ try{ freshTeams = JSON.parse(freshTeams); }catch(e){ freshTeams = null; } }
-    const merged = {...CFG, ...cfg, sheetUrl: url};
-    if(Array.isArray(freshTeams) && freshTeams.length) merged.teams = freshTeams;
-    localStorage.setItem('tms_config', JSON.stringify(merged));
-    // Update visible elements
-    const title = `${merged.eventName||'OPM'} <span>// ${merged.commander||'PAGONG'}</span>`;
-    const el = document.getElementById('event-title');
-    if (el) el.innerHTML = title;
-    document.title = `EOC Dashboard — ${merged.eventName||'TMS'}`;
-    // Rebuild team UI if teams changed
-    if(Array.isArray(freshTeams) && freshTeams.length){
-      CFG.teams = freshTeams; // update live CFG
-      buildTeamFilters();
-      buildLegend();
-    }
-  } catch(e){ console.log('Config refresh skipped:', e.message); }
-}
-
-const CFG = loadConfig();
-const SHEET_URL = CFG.sheetUrl;
-const REFRESH = 5000;
+let state = {
+  config: OPM.getConfig(),
+  personnel: {},
+  markers: {},
+  selectedTarget: 'ALL',
+  selectedTeam: 'ALL',
+  map: null,
+  baseLayer: null,
+  baseLayerKey: 'street',
+  hazardLayer: null,
+  hazardKey: null,
+  messages: new Set(),
+  messageList: [],
+  approvals: {},
+  videoUrl: '',
+  videoStartTime: null,
+  sections: { personnel: true, comms: true },
+  mapMax: false,
+};
 
 // ============================================================
-// STATE
+// INITIALIZATION
 // ============================================================
-let personnelData = {};
-let markers = {};
-let selectedTarget = 'ALL';
-let selectedTeamFilter = 'ALL';
-let map;
-let logEntries = [];
-let messageCache = new Set();
-
-// ============================================================
-// INIT
-// ============================================================
-async function init(){
-  // Don't run if gate is still showing
-  if (window._gateBlocking) return;
-  // Unlock screen orientation
-  try { if(screen.orientation?.unlock) screen.orientation.unlock(); } catch(e){}
-  try { if(screen.orientation?.lock) screen.orientation.lock('any').catch(()=>{}); } catch(e){}
-
-  // Unlock screen orientation — allow landscape on tablets — allow landscape on tablets
-  try {
-    if (screen.orientation && screen.orientation.unlock) {
-      screen.orientation.unlock();
-    }
-  } catch(e) {}
-
+async function init() {
   updateHeader();
   initMap();
   startClock();
-  // Clear stale old-format team config
-  try {
-    const stored = JSON.parse(localStorage.getItem('tms_config')||'{}');
-    const oldTeamNames = ['PARADE TEAM','EVENT CENTER TEAM','MOBILE TEAM'];
-    if(stored.teams && stored.teams.length && oldTeamNames.includes(stored.teams[0].name)){
-      localStorage.removeItem('tms_config'); console.log('[OPM] Cleared stale team config');
-    }
-  } catch(e){}
-  // Fetch fresh config FIRST, then build UI with correct teams
-  await refreshConfigFromSheet();
   buildTeamFilters();
   buildLegend();
-  fetchUpdates();
-  setInterval(fetchUpdates, REFRESH);
-  setInterval(checkEventVersion, 30000);
-  fetchPendingApprovals();
-  setInterval(()=>fetchPendingApprovals().catch(e=>console.warn('pending poll:',e)), 8000);
-  setInterval(refreshConfigFromSheet, 30000);
-  // Refresh config display every 10s so admin changes reflect immediately
-  setInterval(function(){
-    try {
-      const fresh = JSON.parse(localStorage.getItem('tms_config'));
-      if(fresh) {
-        const title = `${fresh.eventName||'OPM'} <span>// ${fresh.commander||'COMMANDER'}</span>`;
-        document.getElementById('event-title').innerHTML = title;
-        const cmdLabel = document.getElementById('commander-label');
-        if(cmdLabel) cmdLabel.textContent = fresh.commander||'PAGONG';
-        document.title = `EOC Dashboard — ${fresh.eventName||'TMS'}`;
-        if(!SHEET_URL && fresh.sheetUrl) location.reload(); // reload if URL just got added
-      }
-    } catch(e){}
-  }, 10000);
-  document.getElementById('cmd-input').addEventListener('keydown',e=>{ if(e.key==='Enter') sendMessage(); });
-  // restore log from session
-  // Check if sheet was cleared since last session — wipe stale localStorage if so
-  checkEventVersion().then(()=>{
-    const saved = localStorage.getItem('parade_log_session');
-    if(saved){ try{ JSON.parse(saved).forEach(m=>addMessage(m,false)); }catch(e){} }
-  });
+  setupDragListeners();
+  setupKeyboardShortcuts();
+
+  // Check for password gate
+  if (!sessionStorage.getItem('opm_commander_gate')) {
+    showPasswordGate();
+    return;
+  }
+
+  await startPolling();
 }
 
-function updateHeader(){
-  const name = CFG.eventName || "Pista i ang Kanyog'an";
-  const cmd  = CFG.commander || 'PAGONG';
+function updateHeader() {
+  const cfg = OPM.getConfig();
+  const name = cfg.eventName || 'Operations Personnel Monitor';
   document.getElementById('hdr-title').innerHTML = `${name} <span>// COMMANDER</span>`;
-  const lbl = document.getElementById('commander-label');
-  if(lbl) lbl.textContent = cmd;
+  document.getElementById('commander-label').textContent = cfg.commander || 'COMMANDER';
   document.title = `EOC Dashboard — ${name}`;
 }
 
+function startClock() {
+  const update = () => {
+    document.getElementById('clock').textContent = OPM.formatTime();
+  };
+  update();
+  setInterval(update, 1000);
+}
+
 // ============================================================
-// MAP LAYERS
+// MAP
 // ============================================================
 const TILE_LAYERS = {
   street: {
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attr: '© OpenStreetMap', maxZoom:19,
+    attr: '© OpenStreetMap contributors',
     filter: 'brightness(.75) saturate(.5) hue-rotate(200deg)'
   },
   satellite: {
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attr: '© Esri World Imagery', maxZoom:19,
+    attr: '© Esri World Imagery',
     filter: 'brightness(.9) saturate(.9)'
   },
   topo: {
     url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-    attr: '© OpenTopoMap', maxZoom:17,
+    attr: '© OpenTopoMap',
     filter: 'brightness(.75) saturate(.4) hue-rotate(180deg)'
   }
 };
 
-// PHIVOLCS Hazard Hunter WMS layers
 const HAZARD_LAYERS = {
   flood: {
     url: 'https://hazardhunter.georisk.gov.ph/geoserver/hazardhunter/wms',
     layers: 'hazardhunter:fh_100yr',
     label: 'FLOOD HAZARD (100yr)',
-    legend: [{color:'#ff0000',label:'High'},{color:'#ff8800',label:'Medium'},{color:'#ffff00',label:'Low'}]
+    legend: [
+      { color: '#ff0000', label: 'High' },
+      { color: '#ff8800', label: 'Medium' },
+      { color: '#ffff00', label: 'Low' }
+    ]
   },
   landslide: {
     url: 'https://hazardhunter.georisk.gov.ph/geoserver/hazardhunter/wms',
     layers: 'hazardhunter:lh_combined',
     label: 'RAIN-INDUCED LANDSLIDE',
-    legend: [{color:'#cc0000',label:'High'},{color:'#ff6600',label:'Medium'},{color:'#ffcc00',label:'Low'}]
+    legend: [
+      { color: '#cc0000', label: 'High' },
+      { color: '#ff6600', label: 'Medium' },
+      { color: '#ffcc00', label: 'Low' }
+    ]
   },
   storm: {
     url: 'https://hazardhunter.georisk.gov.ph/geoserver/hazardhunter/wms',
     layers: 'hazardhunter:ssa_level3',
     label: 'STORM SURGE ADVISORY',
-    legend: [{color:'#0000ff',label:'SSA 3 (>3m)'},{color:'#0088ff',label:'SSA 2 (1-3m)'},{color:'#00ccff',label:'SSA 1 (<1m)'}]
+    legend: [
+      { color: '#0000ff', label: 'SSA 3 (>3m)' },
+      { color: '#0088ff', label: 'SSA 2 (1-3m)' },
+      { color: '#00ccff', label: 'SSA 1 (<1m)' }
+    ]
   }
 };
 
-let currentBaseLayer = null;
-let activeHazardLayer = null;
-let currentLayerKey = 'street';
-let currentHazardKey = null;
+function initMap() {
+  const cfg = OPM.getConfig();
+  const lat = parseFloat(cfg.lat) || 8.7891;
+  const lng = parseFloat(cfg.lng) || 117.8370;
 
+  state.map = L.map('map', {
+    zoomControl: true,
+    attributionControl: true
+  }).setView([lat, lng], 15);
 
-// ============================================================
-// LAYER PANEL HELPERS (must be defined before initMap)
-// ============================================================
-function toggleLayerPanel(){
-  const p = document.getElementById('layer-panel');
-  if(p) p.classList.toggle('open');
-}
-document.addEventListener('click', function(e){
-  const ctrl = document.getElementById('map-controls');
-  if(ctrl && !ctrl.contains(e.target)){
-    const p = document.getElementById('layer-panel');
-    if(p) p.classList.remove('open');
-  }
-});
-function updateBaseChecks(key){
-  ['street','satellite','topo'].forEach(function(k){
-    const c = document.getElementById('chk-'+k);
-    if(c){ c.innerHTML = k===key ? '&#10003;' : ''; c.className='lp-check'+(k===key?' on':''); }
+  setBaseLayer('street');
+
+  // Close layer panel on outside click
+  document.addEventListener('click', (e) => {
+    const panel = document.getElementById('layer-panel');
+    const mapControls = document.querySelector('.map-controls');
+    if (panel && mapControls && !mapControls.contains(e.target)) {
+      panel.classList.remove('open');
+    }
   });
 }
-function updateHazardCheck(key, on){
-  const c = document.getElementById('chk-'+key);
-  if(c){ c.innerHTML = on ? '&#10003;' : ''; c.className='lp-check'+(on?' hazard-on':''); }
-}
-function setHazardOpacity(val){
-  if(typeof activeHazardLayer !== 'undefined' && activeHazardLayer) activeHazardLayer.setOpacity(val/100);
-}
 
-function initMap(){
-  // Parse as float — localStorage round-trips values as strings
-  const lat = parseFloat(CFG.lat) || 8.7891;
-  const lng = parseFloat(CFG.lng) || 117.8370;
-  map = L.map('map',{zoomControl:true}).setView([lat, lng], 15);
-  setLayer('street');
-}
-
-function setLayer(key){
+function setBaseLayer(key) {
   const cfg = TILE_LAYERS[key];
-  if(!cfg) return;
+  if (!cfg) return;
 
-  if(currentBaseLayer) map.removeLayer(currentBaseLayer);
+  if (state.baseLayer) state.map.removeLayer(state.baseLayer);
+  state.baseLayer = L.tileLayer(cfg.url, { attribution: cfg.attr, maxZoom: 19 }).addTo(state.map);
+  state.baseLayerKey = key;
 
-  currentBaseLayer = L.tileLayer(cfg.url, {attribution:cfg.attr, maxZoom:cfg.maxZoom});
-  currentBaseLayer.addTo(map);
-  currentLayerKey = key;
+  // Update checks
+  ['street', 'satellite', 'topo'].forEach(k => {
+    const el = document.getElementById('chk-' + k);
+    if (el) {
+      el.innerHTML = k === key ? '✓' : '';
+      el.className = 'layer-check' + (k === key ? ' on' : '');
+    }
+  });
 
-  // Apply brightness filter to map tiles
-  setTimeout(()=>{
-    document.querySelectorAll('.leaflet-tile-pane img').forEach(img=>{
-      img.style.filter = cfg.filter||'';
+  // Apply brightness
+  setTimeout(() => {
+    document.querySelectorAll('.leaflet-tile-pane img').forEach(img => {
+      img.style.filter = cfg.filter || '';
     });
   }, 300);
-
-  updateBaseChecks(key);
 }
 
-function toggleHazard(key){
+function toggleHazard(key) {
   const legend = document.getElementById('hazard-legend');
 
-  if(currentHazardKey === key){
-    if(activeHazardLayer){ map.removeLayer(activeHazardLayer); activeHazardLayer=null; }
-    currentHazardKey = null;
-    ['flood','landslide','storm'].forEach(k=>updateHazardCheck(k,false));
-    legend.style.display='none';
+  if (state.hazardKey === key) {
+    if (state.hazardLayer) { state.map.removeLayer(state.hazardLayer); state.hazardLayer = null; }
+    state.hazardKey = null;
+    ['flood', 'landslide', 'storm'].forEach(k => updateHazardCheck(k, false));
+    legend.style.display = 'none';
     return;
   }
 
-  if(activeHazardLayer){ map.removeLayer(activeHazardLayer); activeHazardLayer=null; }
-  ['flood','landslide','storm'].forEach(k=>updateHazardCheck(k,false));
+  if (state.hazardLayer) { state.map.removeLayer(state.hazardLayer); state.hazardLayer = null; }
+  ['flood', 'landslide', 'storm'].forEach(k => updateHazardCheck(k, false));
 
   const hcfg = HAZARD_LAYERS[key];
-  if(!hcfg) return;
+  if (!hcfg) return;
 
-  const opacity = parseFloat(document.getElementById('hazard-opacity')?.value||65)/100;
-
-  // Try direct WMS first (works if PHIVOLCS has CORS open), then proxy fallback
-  function tryLoad(useProxy){
-    let layer;
-    if(useProxy){
-      // Build tile URL via allorigins CORS proxy with bbox template
-      const base = hcfg.url + '?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap' +
-        '&LAYERS='+encodeURIComponent(hcfg.layers)+
-        '&FORMAT=image%2Fpng&TRANSPARENT=true&WIDTH=256&HEIGHT=256'+
-        '&SRS=EPSG%3A3857&BBOX={bbox-epsg-3857}';
-      const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(base);
-      layer = L.tileLayer(proxyUrl, {
-        opacity, attribution:'© PHIVOLCS-DOST',
-        tileSize:256, maxZoom:18
-      });
-    } else {
-      layer = L.tileLayer.wms(hcfg.url, {
-        layers: hcfg.layers, format:'image/png',
-        transparent:true, opacity, version:'1.1.1',
-        attribution:'© PHIVOLCS-DOST Hazard Hunter'
-      });
-    }
-
-    layer.addTo(map);
-
-    // If tiles fail, try proxy or show offline notice
-    let tilesRequested=0, tilesFailed=0;
-    layer.on('tileload', function(){ tilesRequested++; });
-    layer.on('tileerror', function(){
-      tilesFailed++;
-      if(!useProxy && tilesFailed>=2){
-        map.removeLayer(layer);
-        tryLoad(true); // retry via proxy
-      } else if(useProxy && tilesFailed>=3){
-        map.removeLayer(layer);
-        activeHazardLayer=null; currentHazardKey=null;
-        updateHazardCheck(key,false); legend.style.display='none';
-        showHazardOfflineNotice(hcfg.label, hcfg.url);
-      }
-    });
-    return layer;
-  }
+  const opacity = parseFloat(document.getElementById('hazard-opacity')?.value || 65) / 100;
 
   try {
-    activeHazardLayer = tryLoad(false);
-  } catch(e){
-    showHazardOfflineNotice(hcfg.label, hcfg.url);
-    return;
+    state.hazardLayer = L.tileLayer.wms(hcfg.url, {
+      layers: hcfg.layers,
+      format: 'image/png',
+      transparent: true,
+      opacity,
+      version: '1.1.1',
+      attribution: '© PHIVOLCS-DOST'
+    }).addTo(state.map);
+
+    state.hazardKey = key;
+    updateHazardCheck(key, true);
+
+    // Update legend
+    document.getElementById('hazard-legend-title').textContent = hcfg.label;
+    document.getElementById('hazard-legend-rows').innerHTML = hcfg.legend.map(l =>
+      `<div class="hazard-legend-row"><div class="legend-dot" style="background:${l.color};"></div>${l.label}</div>`
+    ).join('');
+    legend.style.display = 'block';
+
+    // Handle CORS error
+    state.hazardLayer.on('tileerror', () => {
+      state.map.removeLayer(state.hazardLayer);
+      state.hazardLayer = null;
+      state.hazardKey = null;
+      updateHazardCheck(key, false);
+      legend.style.display = 'none';
+      OPM.toast('Hazard layer unavailable (CORS). Open PHIVOLCS Hazard Hunter directly.', 'warning', 5000);
+      addSystemMessage(`⚠ Hazard layer "${hcfg.label}" could not load — <a href="https://hazardhunter.georisk.gov.ph" target="_blank" style="color:#ff9900;">open PHIVOLCS ↗</a>`);
+    });
+  } catch (e) {
+    OPM.toast('Failed to load hazard layer', 'error');
   }
-
-  currentHazardKey = key;
-  updateHazardCheck(key, true);
-  document.getElementById('leg-title').textContent = hcfg.label;
-  document.getElementById('leg-rows').innerHTML = hcfg.legend.map(l=>
-    `<div class="leg-row"><div class="leg-dot" style="background:${l.color}"></div>${l.label}</div>`
-  ).join('');
-  legend.style.display='block';
 }
 
-function showHazardOfflineNotice(label, url){
-  addMessage({
-    sender:'SYSTEM', post:'', type:'system',
-    time:new Date().toLocaleTimeString('en-US',{hour12:false}),
-    body:`⚠️ Hazard layer "${label}" unavailable (CORS restriction). `+
-         `<a href="${url||'https://hazardhunter.georisk.gov.ph'}" target="_blank" `+
-         `style="color:#ff9900;text-decoration:underline;">Open PHIVOLCS Hazard Hunter ↗</a>`
-  });
+function updateHazardCheck(key, on) {
+  const el = document.getElementById('chk-' + key);
+  if (el) {
+    el.innerHTML = on ? '✓' : '';
+    el.className = 'layer-check' + (on ? ' hazard-on' : '');
+  }
 }
 
-function buildTeamFilters(){
+function setHazardOpacity(val) {
+  if (state.hazardLayer) state.hazardLayer.setOpacity(val / 100);
+}
+
+function toggleLayerPanel() {
+  document.getElementById('layer-panel').classList.toggle('open');
+}
+
+function toggleMapMax() {
+  state.mapMax = !state.mapMax;
+  document.body.classList.toggle('map-max', state.mapMax);
+  setTimeout(() => state.map.invalidateSize(), 300);
+}
+
+// ============================================================
+// TEAM FILTERS & LEGEND
+// ============================================================
+function buildTeamFilters() {
+  const cfg = OPM.getConfig();
+  const teams = Array.isArray(cfg.teams) ? cfg.teams : [];
   const bar = document.getElementById('team-filters');
-  bar.innerHTML = `<button class="tf-btn active" onclick="filterTeam('ALL',this)">ALL</button>`;
-  CFG.teams.forEach(t=>{
-    const b = document.createElement('button');
-    b.className = 'tf-btn';
-    b.textContent = t.name.split(' ')[0]; // first word only to keep short
-    b.onclick = ()=>{ filterTeam(t.name,b); };
-    bar.appendChild(b);
+  bar.innerHTML = '<button class="tf-btn active" onclick="filterTeam(\'ALL\', this)">ALL</button>';
+
+  teams.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'tf-btn';
+    btn.textContent = t.name.split(' ')[0];
+    btn.onclick = () => filterTeam(t.name, btn);
+    bar.appendChild(btn);
   });
 }
 
-function buildLegend(){
-  const leg = document.getElementById('legend');
-  let html = '';
-  CFG.teams.forEach(t=>{
-    html += `<div class="leg-item"><div class="leg-dot" style="background:${t.color};box-shadow:0 0 4px ${t.color}80"></div><span style="color:${t.color};font-size:9px;letter-spacing:1px;opacity:.85;">${t.name}</span></div>`;
-  });
-  leg.innerHTML = html;
+function buildLegend() {
+  const cfg = OPM.getConfig();
+  const teams = Array.isArray(cfg.teams) ? cfg.teams : [];
+  const leg = document.getElementById('map-legend');
+  leg.innerHTML = teams.map(t =>
+    `<div class="legend-item">
+      <div class="legend-dot" style="background:${t.color};box-shadow:0 0 4px ${t.color}80"></div>
+      <span style="color:${t.color};font-size:9px;">${t.name}</span>
+    </div>`
+  ).join('');
 }
 
-function filterTeam(name, btn){
-  selectedTeamFilter = name;
-  document.querySelectorAll('.tf-btn').forEach(b=>b.classList.remove('active'));
+function filterTeam(name, btn) {
+  state.selectedTeam = name;
+  document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderPersonnelList();
-}
-
-function startClock(){
-  const u=()=>{ document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false}); };
-  u(); setInterval(u,1000);
+  // Reset message target to ALL when filtering
+  state.selectedTarget = 'ALL';
+  document.getElementById('target-label').textContent = 'ALL PERSONNEL';
 }
 
 // ============================================================
-// DATA FETCH
+// DATA FETCHING
 // ============================================================
-async function fetchUpdates(){
-  if(!SHEET_URL){ loadDemoData(); return; }
-  try{
-    const r = await fetch(`${SHEET_URL}?action=getAll`);
-    const d = await r.json();
-    if(d.personnel){
-      console.log('[TMS] Personnel data:', JSON.stringify(d.personnel));
-      updatePersonnel(d.personnel);
+const REFRESH_INTERVAL = 5000;
+
+async function startPolling() {
+  await refreshConfig();
+  await fetchAll();
+  setInterval(fetchAll, REFRESH_INTERVAL);
+  setInterval(refreshConfig, 30000);
+  setInterval(fetchApprovals, 8000);
+
+  document.getElementById('cmd-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') sendMessage();
+  });
+}
+
+async function refreshConfig() {
+  const url = OPM.SHEET_URL();
+  if (!url) return;
+
+  try {
+    const res = await fetch(`${url}?action=getSettings&t=${Date.now()}`, { cache: 'no-store' });
+    const data = await res.json();
+    if (data.settings) {
+      const cfg = data.settings;
+      if (typeof cfg.teams === 'string') cfg.teams = JSON.parse(cfg.teams);
+      OPM.saveConfig({ ...OPM.getConfig(), ...cfg, sheetUrl: url });
+      updateHeader();
+      buildTeamFilters();
+      buildLegend();
     }
-    if(d.messages) updateMessages(d.messages);
-  }catch(e){ console.warn('[TMS] Fetch error',e); }
+  } catch (e) {
+    console.warn('[OPM] Config refresh failed:', e.message);
+  }
 }
 
-// ============================================================
-// DEMO DATA
-// ============================================================
-function loadDemoData(){
+async function fetchAll() {
+  const url = OPM.SHEET_URL();
+  if (!url) { loadDemoData(); return; }
+
+  try {
+    const res = await fetch(`${url}?action=getAll&t=${Date.now()}`, { cache: 'no-store' });
+    const data = await res.json();
+    if (data.personnel) updatePersonnel(data.personnel);
+    if (data.messages) updateMessages(data.messages);
+  } catch (e) {
+    console.warn('[OPM] Fetch failed:', e.message);
+    if (Object.keys(state.personnel).length === 0) loadDemoData();
+  }
+}
+
+function loadDemoData() {
+  OPM.toast('Demo mode — no backend connected', 'info', 4000);
   const demo = [
-    {id:'P1',name:'Ofc. Reyes',  team:'PARADE TEAM',      post:'North Checkpoint', lat:8.7901,lng:117.8360,online:true, lastSeen:'12:34'},
-    {id:'P2',name:'Ofc. Santos', team:'PARADE TEAM',      post:'South Checkpoint', lat:8.7881,lng:117.8375,online:true, lastSeen:'12:34'},
-    {id:'P3',name:'Ofc. Cruz',   team:'EVENT CENTER TEAM',post:'Main Stage',       lat:8.7895,lng:117.8395,online:true, lastSeen:'12:33'},
-    {id:'P4',name:'Ofc. Bautista',team:'MOBILE TEAM',     post:'Patrol Route',     lat:8.7870,lng:117.8350,online:false,lastSeen:'12:10'},
+    { id: 'P1', name: 'Ofc. Reyes', team: 'ALPHA TEAM', post: 'North Gate', lat: 8.7901, lng: 117.8360, online: true, lastSeen: OPM.formatTime() },
+    { id: 'P2', name: 'Ofc. Santos', team: 'ALPHA TEAM', post: 'South Checkpoint', lat: 8.7881, lng: 117.8375, online: true, lastSeen: OPM.formatTime() },
+    { id: 'P3', name: 'Ofc. Cruz', team: 'BRAVO TEAM', post: 'Main Stage', lat: 8.7895, lng: 117.8395, online: true, lastSeen: OPM.formatTime() },
+    { id: 'P4', name: 'Ofc. Bautista', team: 'CHARLIE TEAM', post: 'Patrol', lat: 8.7870, lng: 117.8350, online: false, lastSeen: '12:10:00' },
   ];
   updatePersonnel(demo);
-  if(logEntries.length===0){
-    addMessage({sender:'SYSTEM',post:'',body:'Demo mode — Google Sheets not connected yet.',type:'system',time:'--:--'});
-    addMessage({sender:'Ofc. Reyes',post:'North Checkpoint',body:'All clear at north end. Crowd forming.',type:'personnel',time:'12:30',team:'PARADE TEAM'});
-    addMessage({sender:'Ofc. Cruz',post:'Main Stage',body:'Stage area secure. VIPs arriving soon.',type:'personnel',time:'12:32',team:'EVENT CENTER TEAM'});
+  if (state.messageList.length === 0) {
+    addSystemMessage('Demo mode — Google Sheets not connected. Configure in Admin panel.');
+    addMessage({ sender: 'Ofc. Reyes', post: 'North Gate', body: 'All clear at north end.', type: 'personnel', time: OPM.formatTime(), team: 'ALPHA TEAM' });
+    addMessage({ sender: 'Ofc. Cruz', post: 'Main Stage', body: 'Stage area secure.', type: 'personnel', time: OPM.formatTime(), team: 'BRAVO TEAM' });
   }
 }
 
 // ============================================================
-// PERSONNEL
+// PERSONNEL MANAGEMENT
 // ============================================================
-function updatePersonnel(list){
-  // Sanitize — Sheet sometimes returns strings
-  list = list.map(p=>({
+function updatePersonnel(list) {
+  if (!Array.isArray(list)) return;
+
+  const now = Date.now();
+
+  const sanitized = list.map(p => ({
     ...p,
-    id: p.id || p.deviceId, // normalize — Apps Script returns deviceId
-    team: normalizeTeamName(p.team), // map old/partial names to current team names
-    lat: parseFloat(p.lat)||0,
-    lng: parseFloat(p.lng)||0,
-    online: p.online===true || p.online==='TRUE' || p.online==='true'
+    id: p.id || p.deviceId,
+    lat: parseFloat(p.lat) || 0,
+    lng: parseFloat(p.lng) || 0,
+    online: p.online === true || p.online === 'TRUE' || p.online === 'true',
+    team: resolveTeam(p.team),
+    // Track when we first saw this person with no GPS
+    _firstSeen: (state.personnel[p.id || p.deviceId] || {})._firstSeen || now
   }));
-  list.forEach(p=>{
-    const existing = personnelData[p.id];
-    // If we already have this person with real GPS, don't overwrite with 0,0
-    if(existing && (existing.lat||0)!==0 && (existing.lng||0)!==0 && (p.lat||0)===0 && (p.lng||0)===0){
-      console.log('[TMS] Kept better GPS for',p.name,'- ignoring 0,0 duplicate row');
-      return; // skip this bad row
+
+  let hasNewOnline = false;
+
+  sanitized.forEach(p => {
+    const existing = state.personnel[p.id];
+
+    // Don't overwrite good GPS with 0,0 from stale data
+    if (existing && existing.lat !== 0 && existing.lng !== 0 && p.lat === 0 && p.lng === 0) {
+      p.lat = existing.lat;
+      p.lng = existing.lng;
     }
-    personnelData[p.id]=p;
-    console.log('[TMS] Person:',p.name,'online:',p.online,'lat:',p.lat,'lng:',p.lng);
+
+    // Detect new check-ins
+    if (!existing && p.online) hasNewOnline = true;
+
+    state.personnel[p.id] = p;
   });
 
-  // Auto-fit map to show all online personnel with valid GPS
-  const online = list.filter(p=>p.online && (p.lat||0) !== 0 && (p.lng||0) !== 0);
-  if(online.length>0 && !map._fitted){
-    map.fitBounds(online.map(p=>[p.lat,p.lng]),{padding:[60,60]});
-    map._fitted=true;
-  }
-  // If no online with GPS yet, keep default center but don't lock
-  if(online.length===0) map._fitted=false;
+  // Audio alert for new personnel
+  if (hasNewOnline) OPM.playSound('checkin');
 
-  // Update markers
-  list.forEach(p=>{
-    if(p.online && (p.lat||0) !== 0 && (p.lng||0) !== 0) updateMarker(p);
-    else removeMarker(p.id);
+  // Auto-fit map (only with GPS personnel)
+  const withGps = sanitized.filter(p => p.online && p.lat !== 0 && p.lng !== 0);
+  if (withGps.length > 0 && !state.map._fitted) {
+    state.map.fitBounds(withGps.map(p => [p.lat, p.lng]), { padding: [60, 60] });
+    state.map._fitted = true;
+  }
+  if (withGps.length === 0 && Object.keys(state.personnel).length === 0) {
+    state.map._fitted = false;
+  }
+
+  // Update markers — show ALL online personnel
+  sanitized.forEach(p => {
+    const hasGps = p.online && p.lat !== 0 && p.lng !== 0;
+    const noGpsLongEnough = p.online && (p.lat === 0 || p.lng === 0) && (now - (p._firstSeen || now) > 30000);
+
+    if (hasGps) {
+      upsertMarker(p);
+    } else if (noGpsLongEnough) {
+      // Fallback: place at event center with "NO GPS" badge after 30s
+      const cfg = OPM.getConfig();
+      const fallLat = parseFloat(cfg.lat) || 8.7891;
+      const fallLng = parseFloat(cfg.lng) || 117.8370;
+      // Offset slightly so multiple people don't stack
+      const offset = (Object.values(state.personnel).filter(x => x.online && x.lat === 0).length - 1) * 0.0002;
+      upsertMarker({ ...p, lat: fallLat + offset, lng: fallLng + offset }, true);
+    } else {
+      removeMarker(p.id);
+    }
   });
 
   // Stats
-  const total = list.length;
-  const onlineCt = list.filter(p=>p.online).length;
+  const total = Object.keys(state.personnel).length;
+  const onlineCt = Object.values(state.personnel).filter(p => p.online).length;
+  const noGpsCt = Object.values(state.personnel).filter(p => p.online && p.lat === 0 && p.lng === 0).length;
   document.getElementById('online-count').textContent = `${onlineCt} / ${total}`;
-  document.getElementById('online-badge').textContent = `${onlineCt} ONLINE`;
+  document.getElementById('online-badge').textContent = `${onlineCt} ONLINE${noGpsCt > 0 ? ' (' + noGpsCt + ' no GPS)' : ''}`;
 
   renderPersonnelList();
 }
 
-// Resolve a stored team name to the canonical CFG team name
-function resolveTeam(teamName){
-  if(!teamName) return '';
-  // Exact match
-  let t = CFG.teams.find(t=>t.name===teamName);
-  if(t) return t.name;
-  // Fuzzy: keyword overlap
-  const upper = teamName.toUpperCase();
-  t = CFG.teams.find(t=>{
-    const cn = t.name.toUpperCase();
-    return cn.includes(upper) || upper.includes(cn) ||
-           t.name.toUpperCase().split(' ').some(w=>w.length>3 && upper.includes(w));
-  });
-  return t ? t.name : teamName; // return canonical name or original if no match
-}
+function resolveTeam(teamName) {
+  if (!teamName) return '';
+  const teams = Array.isArray(OPM.getConfig().teams) ? OPM.getConfig().teams : [];
+  const exact = teams.find(t => t.name === teamName);
+  if (exact) return teamName;
 
-function getTeamColor(teamName){
-  if(!teamName) return '#888';
-  // Exact match first
-  let t = CFG.teams.find(t=>t.name===teamName);
-  if(t) return t.color;
-  // Fuzzy: check if any significant word from stored team name appears in CFG team names
   const upper = teamName.toUpperCase();
-  t = CFG.teams.find(t=>{
-    const cn = t.name.toUpperCase();
-    return cn.includes(upper) || upper.includes(cn) ||
-           t.name.toUpperCase().split(' ').some(w=>w.length>3 && upper.includes(w));
-  });
-  return t ? t.color : '#888';
-}
-
-function normalizeTeamName(teamName){
-  if(!teamName) return teamName;
-  // Try to map old/partial team names to current CFG team names
-  const exact = CFG.teams.find(t=>t.name===teamName);
-  if(exact) return teamName;
-  const upper = teamName.toUpperCase();
-  const fuzzy = CFG.teams.find(t=>{
-    const cn = t.name.toUpperCase();
-    return cn.includes(upper) || upper.includes(cn) ||
-           t.name.toUpperCase().split(' ').some(w=>w.length>3 && upper.includes(w));
-  });
+  const fuzzy = teams.find(t => t.name.toUpperCase().includes(upper) || upper.includes(t.name.toUpperCase()));
   return fuzzy ? fuzzy.name : teamName;
 }
 
-function updateMarker(p){
-  const lat = parseFloat(p.lat), lng = parseFloat(p.lng);
-  if(!lat || !lng || isNaN(lat) || isNaN(lng)) return; // no GPS yet
-  const color = getTeamColor(p.team); // getTeamColor already does fuzzy match
-  const initials = p.name.replace(/^(Ofc\.|PO|SPO|Insp\.)\s*/i,'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  const glowColor = color.replace('#','');
-  const html = `<div class="p-marker" style="background:${color};box-shadow:0 0 8px ${color}80;">${initials}</div>`;
-  const icon = L.divIcon({html,className:'',iconSize:[18,18],iconAnchor:[9,9]});
+function getTeamColor(teamName) {
+  if (!teamName) return '#888';
+  const teams = Array.isArray(OPM.getConfig().teams) ? OPM.getConfig().teams : [];
+  const t = teams.find(t => t.name === teamName);
+  return t ? t.color : '#888';
+}
 
-  if(markers[p.id]){
-    markers[p.id].setLatLng([lat,lng]);
-    markers[p.id].setIcon(icon);
+function upsertMarker(p, noGps) {
+  const color = getTeamColor(p.team);
+  const initials = p.name.replace(/^(Ofc\.|PO|SPO|Insp\.)\s*/i, '').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+  const borderColor = noGps ? '#ffaa00' : 'rgba(255,255,255,.7)';
+  const opacity = noGps ? '0.6' : '1';
+  const html = `<div style="width:22px;height:22px;border-radius:50%;background:${color};opacity:${opacity};border:2px solid ${borderColor};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:bold;color:#000;box-shadow:0 0 8px ${color}80;">${initials}</div>`;
+  const icon = L.divIcon({ html, className: '', iconSize: [22, 22], iconAnchor: [11, 11] });
+
+  const latLng = [parseFloat(p.lat), parseFloat(p.lng)];
+
+  const popupContent = noGps
+    ? `<b>${p.name}</b><br><span style="color:${color}">${p.team || ''}</span><br>${p.post || ''}<br><span style="color:#ffaa00;">⚠ ESTIMATED — No GPS</span><br><small>${p.lastSeen || ''}</small>`
+    : `<b>${p.name}</b><br><span style="color:${color}">${p.team || ''}</span><br>${p.post || ''}<br><small>${p.lastSeen || ''}</small>`;
+
+  if (state.markers[p.id]) {
+    state.markers[p.id].setLatLng(latLng);
+    state.markers[p.id].setIcon(icon);
+    state.markers[p.id].unbindPopup();
+    state.markers[p.id].bindPopup(popupContent);
   } else {
-    markers[p.id] = L.marker([lat,lng],{icon})
-      .addTo(map)
-      .bindPopup(`<b>${p.name}</b><br><span style="color:${color}">${p.team||''}</span><br>${p.post||''}<br><small>Last seen: ${p.lastSeen}</small>`);
+    state.markers[p.id] = L.marker(latLng, { icon })
+      .addTo(state.map)
+      .bindPopup(popupContent);
   }
 }
 
-function removeMarker(id){
-  if(markers[id]){ map.removeLayer(markers[id]); delete markers[id]; }
+function removeMarker(id) {
+  if (state.markers[id]) {
+    state.map.removeLayer(state.markers[id]);
+    delete state.markers[id];
+  }
 }
 
-function renderPersonnelList(){
+function renderPersonnelList() {
   const container = document.getElementById('personnel-list');
-  const list = Object.values(personnelData);
-  const filtered = selectedTeamFilter==='ALL' ? list : list.filter(p=>resolveTeam(p.team)===selectedTeamFilter);
+  const list = Object.values(state.personnel);
+  const filtered = state.selectedTeam === 'ALL' ? list : list.filter(p => resolveTeam(p.team) === state.selectedTeam);
 
-  if(filtered.length===0){
-    container.innerHTML='<div class="empty">No personnel in this team yet.</div>';
+  if (filtered.length === 0) {
+    container.innerHTML = '<div style="padding:16px;text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">No personnel in this team.</div>';
     return;
   }
 
-  container.innerHTML='';
-  // Sort: online first
-  filtered.sort((a,b)=> (b.online?1:0)-(a.online?1:0));
+  filtered.sort((a, b) => (b.online ? 1 : 0) - (a.online ? 1 : 0));
 
-  filtered.forEach(p=>{
+  container.innerHTML = filtered.map(p => {
     const color = getTeamColor(p.team);
-    const canonicalTeam = resolveTeam(p.team);
-    const card = document.createElement('div');
-    card.className=`p-card ${p.online?'online':''} ${selectedTarget===p.id?'selected':''}`;
-    card.style.borderLeftColor = p.online ? color : 'var(--dim)';
-    card.onclick = function(){
-      const acts = document.getElementById('pca-'+p.id);
-      if(acts) acts.style.display = acts.style.display==='none' ? 'flex' : 'none';
-    };
-    card.innerHTML=`
-      <div style="display:flex;justify-content:space-between;align-items:baseline;">
-        <span class="pc-name">${p.name}</span>
-        <span class="pc-time">${p.lastSeen||'—'}</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-top:1px;">
-        <span class="pc-team" style="color:${color};font-size:10px;">${canonicalTeam||p.team||''}</span>
-        <span class="pc-post" style="font-size:10px;">· ${p.post||'?'}</span>
-        <span class="pc-status ${p.online?'on':'off'}" style="margin-left:auto;">${p.online?'● ONLINE':'○ OFF'}</span>
-      </div>
-      <div class="pc-actions" id="pca-${p.id}" style="display:none;gap:5px;margin-top:4px;">
-        <button class="pc-btn" onclick="event.stopPropagation();selectTarget('${p.id}','${p.name}')">MESSAGE</button>
-        <button class="pc-btn" onclick="event.stopPropagation();focusOn('${p.id}')">LOCATE</button>
-      </div>
-    `;
-    container.appendChild(card);
-  });
+    const selectedClass = state.selectedTarget === p.id ? ' selected' : '';
+    const noGps = p.online && (!p.lat || p.lat === 0);
+    return `
+      <div class="personnel-card${p.online ? ' online' : ''}${selectedClass}" style="border-left-color:${p.online ? color : 'var(--text-dim)'};">
+        <div class="pc-header">
+          <span class="pc-name">${p.name}${noGps ? ' <span style="font-size:10px;color:#ffaa00;" title="No GPS — location estimated">📍?</span>' : ''}</span>
+          <span class="pc-time">${p.lastSeen || '—'}</span>
+        </div>
+        <div class="pc-meta">
+          <span style="color:${color};">${p.team || ''}</span>
+          <span style="color:var(--text-dim);">· ${p.post || '?'}</span>
+          <span class="pc-status ${p.online ? 'online' : 'offline'}">${p.online ? '● ONLINE' : '○ OFFLINE'}</span>
+        </div>
+        <div class="pc-actions">
+          <button class="pc-btn" onclick="selectTarget('${p.id}','${p.name}')">MESSAGE</button>
+          <button class="pc-btn" onclick="focusPerson('${p.id}')">LOCATE</button>
+        </div>
+      </div>`;
+  }).join('');
 }
 
-function focusOn(id){
-  const p = personnelData[id];
-  if(p && p.lat && p.lng){
-    map.setView([p.lat,p.lng],17);
-    if(markers[id]) markers[id].openPopup();
+function focusPerson(id) {
+  const p = state.personnel[id];
+  if (p && p.lat && p.lng) {
+    state.map.setView([p.lat, p.lng], 17);
+    if (state.markers[id]) state.markers[id].openPopup();
   }
 }
 
 // ============================================================
 // MESSAGING
 // ============================================================
-function selectTarget(id,name){
-  selectedTarget=id;
-  document.getElementById('target-label').textContent=name.toUpperCase();
+function selectTarget(id, name) {
+  state.selectedTarget = id;
+  document.getElementById('target-label').textContent = name.toUpperCase();
   renderPersonnelList();
 }
 
-async function sendMessage(){
-  const input=document.getElementById('cmd-input');
-  const body=input.value.trim();
-  if(!body) return;
+async function sendMessage() {
+  const input = document.getElementById('cmd-input');
+  const body = input.value.trim();
+  if (!body) return;
 
-  const msg={
-    sender:CFG.commander||'PAGONG',
-    post:'EOC',
+  const cfg = OPM.getConfig();
+  const msg = {
+    sender: cfg.commander || 'COMMANDER',
+    post: 'EOC',
     body,
-    type:'commander',
-    time:new Date().toLocaleTimeString('en-US',{hour12:false}),
-    target:selectedTarget
+    type: 'commander',
+    time: OPM.formatTime(),
+    target: state.selectedTarget,
   };
-  addMessage(msg);
-  input.value='';
 
-  if(SHEET_URL){
-    try{ await fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'sendMessage',...msg})}); }catch(e){}
+  addMessage(msg);
+  input.value = '';
+  input.focus();
+
+  const url = OPM.SHEET_URL();
+  if (url) {
+    try {
+      await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'sendMessage', ...msg })
+      });
+    } catch (e) {
+      OPM.enqueueOffline('sendMessage', msg);
+      OPM.toast('Message queued — will send when online', 'warning');
+    }
   }
 }
 
-function updateMessages(messages){
-  messages.forEach(m=>{
+function updateMessages(messages) {
+  if (!Array.isArray(messages)) return;
+  messages.forEach(m => {
     const key = `${m.time}_${m.sender}_${m.body}`;
-    if(!messageCache.has(key)){
-      messageCache.add(key);
+    if (!state.messages.has(key)) {
+      state.messages.add(key);
       addMessage(m);
     }
   });
 }
 
-function renderMsgBody(body){
-  if(!body) return '';
-  // Linkify any URL
-  return body.replace(/(https?:\/\/[^\s<]+)/gi, function(url){
-    const isMeet = /meet\.google\.com/i.test(url);
-    if(isMeet){
-      return '<span style="color:#c0d8f0">'+url+'</span> '+
-        '<a href="'+url+'" target="_blank" style="display:inline-block;margin-left:4px;background:rgba(0,255,136,.15);border:1px solid #00ff88;color:#00ff88;font-family:Share Tech Mono,monospace;font-size:9px;padding:2px 8px;text-decoration:none;letter-spacing:1px;">▶ JOIN</a>';
-    }
-    return '<a href="'+url+'" target="_blank" style="color:#00e5ff;text-decoration:underline;font-size:10px;">'+url+'</a>';
-  });
-}
+function addMessage(msg, playSoundFlag = true) {
+  // Skip empty body messages
+  if (!msg || (!msg.body && !msg.photoUrl)) return;
 
-function addMessage(msg, save=true){
-  const log=document.getElementById('msg-log');
-  log.querySelectorAll('.empty').forEach(e=>e.remove());
+  const list = document.getElementById('message-list');
+  // Remove empty state
+  const empty = list.querySelector('div[style]');
+  if (empty) empty.remove();
 
-  const item=document.createElement('div');
-  item.className=`msg-item ${msg.type}`;
   const teamColor = msg.team ? getTeamColor(msg.team) : 'var(--accent)';
-  item.innerHTML=`
-    <div class="msg-hdr">
-      <span class="msg-sender" style="color:${teamColor}">${msg.sender}${msg.post?` · ${msg.post}`:''}</span>
-      <span class="msg-time">${msg.time}</span>
-    </div>
-    <div class="msg-body">${renderMsgBody(msg.body)}</div>
-    ${msg.photoUrl?(()=>{
-        // Convert drive.google.com/uc?id=X to embeddable thumbnail URL
-        const raw = msg.photoUrl;
-        const match = raw.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-        const embedUrl = match
-          ? 'https://lh3.googleusercontent.com/d/'+match[1]
-          : raw;
-        return `<div class="msg-photo-wrap">
-          <img class="msg-photo" src="${embedUrl}"
-            onclick="openPhoto('${embedUrl}','${raw}')"
-            onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
-            title="Click to enlarge"/>
-          <a class="photo-fallback" href="${raw}" target="_blank" style="display:none;">
-            📷 View Photo in Drive
-          </a>
-        </div>`;
-      })():''}
-  `;
-  log.appendChild(item);
-  log.scrollTop=log.scrollHeight;
+  const isMeetMsg = msg.body && msg.body.includes('meet.google.com');
 
-  if(save){
-    logEntries.push(msg);
-    localStorage.setItem('parade_log_session', JSON.stringify(logEntries));
+  const item = document.createElement('div');
+  item.className = `message ${msg.type}`;
+  item.innerHTML = `
+    <div class="msg-header">
+      <span class="msg-sender" style="color:${teamColor}">${msg.sender || ''}${msg.post ? ` · ${msg.post}` : ''}</span>
+      <span class="msg-time">${msg.time || ''}</span>
+    </div>
+    <div class="msg-body">${renderMessageBody(msg.body || '')}</div>
+    ${msg.photoUrl ? renderPhotoHtml(msg.photoUrl) : ''}
+  `;
+
+  list.appendChild(item);
+  list.scrollTop = list.scrollHeight;
+
+  state.messageList.push(msg);
+  // Keep only last 200 messages in memory
+  if (state.messageList.length > 200) state.messageList.shift();
+
+  // Sound alert
+  if (playSoundFlag) {
+    if (msg.type === 'system') OPM.playSound('alert');
+    else if (isMeetMsg) OPM.playSound('broadcast');
+    else OPM.playSound('message');
   }
 }
 
+function addSystemMessage(body) {
+  addMessage({
+    sender: 'SYSTEM',
+    post: '',
+    body,
+    type: 'system',
+    time: OPM.formatTime()
+  });
+}
+
+function renderMessageBody(body) {
+  if (!body) return '';
+  // Linkify URLs
+  return body.replace(/(https?:\/\/[^\s<]+)/gi, url => {
+    const isMeet = /meet\.google\.com/i.test(url);
+    if (isMeet) {
+      return `
+        <span style="color:#c0d8f0;word-break:break-all;">${url}</span>
+        <a href="${url}" target="_blank" rel="noopener" class="msg-join-btn">▶ JOIN VIDEO CALL</a>`;
+    }
+    return `<a href="${url}" target="_blank" rel="noopener" style="color:var(--accent);">${url}</a>`;
+  });
+}
+
+function renderPhotoHtml(photoUrl) {
+  const match = photoUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  const embedUrl = match ? `https://lh3.googleusercontent.com/d/${match[1]}` : photoUrl;
+  return `
+    <div style="margin-top:6px;">
+      <img class="msg-photo" src="${embedUrl}"
+        onclick="openPhotoModal('${embedUrl}','${photoUrl}')"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+        loading="lazy">
+      <a class="photo-fallback btn btn-sm" href="${photoUrl}" target="_blank" style="display:none;">
+        📷 View Photo in Drive
+      </a>
+    </div>`;
+}
+
 // ============================================================
-// PHOTO
+// PHOTO MODAL
 // ============================================================
-function openPhoto(url, fallback){
+function openPhotoModal(url, fallback) {
   const img = document.getElementById('pm-img');
   img.src = url;
-  img.onerror = function(){
-    // If embed fails, show drive link instead
-    this.style.display='none';
+  img.onerror = () => {
+    img.style.display = 'none';
     const fb = document.getElementById('pm-fallback');
-    if(fb){ fb.href=fallback||url; fb.style.display='block'; }
+    if (fb) { fb.href = fallback || url; fb.style.display = 'inline-flex'; }
   };
+  img.onload = () => img.style.display = '';
+  document.getElementById('pm-fallback').style.display = 'none';
   document.getElementById('photo-modal').classList.add('show');
 }
-function closePhoto(){ document.getElementById('photo-modal').classList.remove('show'); }
 
-// ============================================================
-// DOWNLOAD LOG
-// ============================================================
-function downloadLog(){
-  const header = `OPM — Comms Log\nEvent: ${CFG.eventName||'—'} | Date: ${CFG.eventDate||'—'} | Commander: ${CFG.commander||'—'}\n${'='.repeat(60)}\n\n`;
-  const body = logEntries.map(m=>`[${m.time}] ${m.sender}${m.post?` (${m.post})`:''}: ${m.body}`).join('\n');
-  const blob = new Blob([header+body],{type:'text/plain'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=`TMS_Log_${(CFG.eventName||'Event').replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.txt`;
-  a.click();
+function closePhotoModal() {
+  document.getElementById('photo-modal').classList.remove('show');
 }
 
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closePhotoModal();
+});
 
 // ============================================================
-// MAP MAXIMIZE
+// APPROVALS
 // ============================================================
-let mapMaximized = false;
-function toggleMapMax(){
-  mapMaximized = !mapMaximized;
-  document.body.classList.toggle('map-maximized', mapMaximized);
-  const btn = document.getElementById('map-max-btn');
-  if(btn) btn.textContent = mapMaximized ? '⛶ RESTORE' : '⛶ MAXIMIZE';
-  setTimeout(function(){ map.invalidateSize(); }, 300);
-}
+async function fetchApprovals() {
+  const url = OPM.SHEET_URL();
+  if (!url) return;
 
-// ============================================================
-// FOOTER: smaller, hides after 1 min, reappears after 5 min
-// ============================================================
-(function footerCycle(){
-  const footer = document.getElementById('pagong-footer');
-  if(!footer) return;
-  async function hide(){
-    footer.style.transition = 'opacity 1s';
-    footer.style.opacity = '0';
-    footer.style.pointerEvents = 'none';
-    setTimeout(show, 5 * 60 * 1000); // reappear after 5 min
-  }
-  async function show(){
-    footer.style.transition = 'opacity 1s';
-    footer.style.opacity = '1';
-    footer.style.pointerEvents = '';
-    setTimeout(hide, 60 * 1000); // hide again after 1 min
-  }
-  setTimeout(hide, 60 * 1000); // first hide after 1 min
-})();
-
-init();
-
-// ============================================================
-// ============================================================
-// EVENT VERSION CHECK — detects server-side clear, wipes stale local cache
-// ============================================================
-let _knownVersion = localStorage.getItem('opm_event_version') || '';
-
-async function checkEventVersion(){
-  if(!SHEET_URL) return;
-  try{
-    const r = await fetch(SHEET_URL + '?action=getEventVersion&t=' + Date.now(), {cache:'no-store'});
-    const d = await r.json();
-    const serverVersion = d.version || '';
-    if(serverVersion && serverVersion !== _knownVersion){
-      // Server was cleared — wipe our local cache
-      clearLocalCache();
-      _knownVersion = serverVersion;
-      localStorage.setItem('opm_event_version', serverVersion);
-      console.log('[OPM] Event version changed — local cache cleared.');
-    }
-  }catch(e){}
-}
-
-function clearLocalCache(){
-  // Wipe ONLY event data — keep tms_config (has sheetUrl, lat/lng, teams)
-  logEntries = [];
-  messageCache = new Set(); // reset so fresh messages show after clear
-  localStorage.removeItem('parade_log_session');
-  personnelData = {};
-  markers && Object.values(markers).forEach(m=>{ try{ map.removeLayer(m); }catch(e){} });
-  markers = {};
-  // Clear UI
-  const log = document.getElementById('msg-log');
-  if(log) log.innerHTML = '<div class="empty">Event data cleared by Commander.</div>';
-  const pList = document.getElementById('personnel-list');
-  if(pList) pList.innerHTML = '<div class="empty">Waiting for personnel...</div>';
-  const oc = document.getElementById('online-count');
-  if(oc) oc.textContent = '0 / 0';
-  const ob = document.getElementById('online-badge');
-  if(ob) ob.textContent = '0 ONLINE';
-  console.log('[OPM] Local cache cleared (config preserved).');
-}
-
-// ============================================================
-// COLLAPSIBLE PANELS
-// ============================================================
-const _open = { personnel: true, comms: true };
-
-function toggleSection(name){
-  _open[name] = !_open[name];
-  applyLayout();
-}
-
-function applyLayout(){
-  const pSec = document.getElementById('personnel-section');
-  const cSec = document.getElementById('comms-section');
-  const tP   = document.getElementById('toggle-personnel');
-  const tC   = document.getElementById('toggle-comms');
-
-  // Arrows always visible in headers — just change direction
-  if(tP) tP.textContent = _open.personnel ? '▾' : '▸';
-  if(tC) tC.textContent = _open.comms     ? '▾' : '▸';
-
-  // Personnel content
-  if(_open.personnel){
-    pSec.style.display = 'flex';
-    pSec.style.flexDirection = 'column';
-    pSec.style.overflow = 'hidden';
-    pSec.style.flexShrink = '0';
-    // Give personnel more height when comms is closed
-    pSec.style.maxHeight = _open.comms ? '44%' : 'calc(100% - 130px)';
-  } else {
-    pSec.style.display = 'none';
-  }
-
-  // Comms content
-  if(_open.comms){
-    cSec.style.display = 'flex';
-    cSec.style.flexDirection = 'column';
-    cSec.style.flex = '1';
-    cSec.style.overflow = 'hidden';
-    cSec.style.minHeight = '0';
-  } else {
-    cSec.style.display = 'none';
-  }
-}
-
-// ============================================================
-// APPROVAL SYSTEM
-// ============================================================
-let pendingApprovals = {};
-
-async function toggleApprovalPanel(){
-  const p = document.getElementById('approval-panel');
-  p.style.display = p.style.display === 'none' ? 'block' : 'none';
-}
-
-async function confirmClearEvent(){
-  const ok = confirm(
-    'CLEAR ALL EVENT DATA?\n\n' +
-    'This will permanently delete:\n' +
-    '  • All personnel check-ins\n' +
-    '  • All comms log messages\n' +
-    '  • All pending approvals\n\n' +
-    'Settings and Video Logs will be kept.\n\n' +
-    'Type OK to confirm.'
-  );
-  if(!ok) return;
-  const btn = event.target;
-  btn.textContent = '⏳ CLEARING...';
-  btn.disabled = true;
-  // Clear UI immediately regardless of server response
-  clearLocalCache();
-  try{
-    const r = await fetch(SHEET_URL, {
-      method:'POST',
-      body: JSON.stringify({ action:'clearEventData' })
-    });
-    const d = await r.json();
-    if(d.status === 'cleared'){
-      clearLocalCache(); // run again to be sure
-      btn.textContent = '✓ CLEARED';
-      btn.style.color = '#00ff88';
-      btn.style.borderColor = '#00ff88';
-      setTimeout(()=>{ btn.textContent='🗑 CLEAR EVENT'; btn.style.color='#ff3b5c'; btn.style.borderColor='rgba(255,59,92,.4)'; btn.disabled=false; }, 3000);
-      addMessage({sender:'SYSTEM',post:'',body:'✅ Event data cleared. Ready for new event.',type:'system',time:new Date().toLocaleTimeString('en-US',{hour12:false})});
-    } else {
-      throw new Error('Server error');
-    }
-  }catch(e){
-    alert('Clear failed. Try running clearEventData() manually in Apps Script editor.\nError: '+e.message);
-    btn.textContent='🗑 CLEAR EVENT'; btn.disabled=false;
-  }
-}
-
-async function fetchPendingApprovals(){
-  if(!SHEET_URL) return;
-  try{
-    const r = await fetch(SHEET_URL + '?action=getPending&t=' + Date.now(), {cache:'no-store'});
-    const d = await r.json();
-    const badge = document.getElementById('approval-badge');
-    const list  = document.getElementById('approval-list');
-    if(!d.pending) return;
-
-    if(d.pending.length > 0){
-      // Make badge glow amber and show count
-      badge.classList.add('has-pending');
-      badge.innerHTML = '<span class="badge-dot"></span>&#x26A0; ' + d.pending.length + ' APPROVAL' + (d.pending.length>1?'S':'');
-      // Auto-open panel when new request comes in
-      document.getElementById('approval-panel').style.display = 'block';
-      // Render request list
-      list.innerHTML = '';
-      d.pending.forEach(function(req){
-        const item = document.createElement('div');
-        item.className = 'ap-item';
-        item.innerHTML =
-          '<div class="ap-name">' + req.name + '</div>' +
-          '<div class="ap-detail">' + req.team + ' &nbsp;&middot;&nbsp; ' + req.post + '</div>' +
-          '<div class="ap-detail">Requested: ' + req.time + '</div>' +
-          '<div class="ap-btns">' +
-            '<button class="ap-approve" onclick="handleApproval(\'' + req.deviceId + '\',\'approve\',this)">&#x2713; APPROVE</button>' +
-            '<button class="ap-reject"  onclick="handleApproval(\'' + req.deviceId + '\',\'reject\',this)">&#x2715; REJECT</button>' +
-          '</div>';
-        pendingApprovals[req.deviceId] = req; // store so handleApproval can access name
-        list.appendChild(item);
-      });
-    } else {
-      // No pending — badge goes back to quiet state
-      badge.classList.remove('has-pending');
-      badge.innerHTML = '<span class="badge-dot"></span>APPROVALS';
-      list.innerHTML = '<div style="padding:12px;font-family:monospace;font-size:10px;color:var(--dim);">No pending requests.</div>';
-    }
-  }catch(e){ console.log('[OPM] fetchPendingApprovals error:', e.message); }
-}
-
-async function handleApproval(deviceId, action, btn){
-  btn.textContent = action==='approve' ? 'APPROVING...' : 'REJECTING...';
-  btn.disabled = true;
-  try{
-    await fetch(SHEET_URL, {
-      method:'POST',
-      body: JSON.stringify({ action: action==='approve' ? 'approveUser' : 'rejectUser', deviceId, name: (pendingApprovals[deviceId]||{}).name||'' })
-    });
-    delete pendingApprovals[deviceId];
-    setTimeout(fetchPendingApprovals, 800);
-    const msgBody = action==='approve' ? '\u2705 Login APPROVED by Commander.' : '\u274C Login REJECTED by Commander.';
-    addMessage({sender:'SYSTEM',post:'',body:msgBody,type:'system',time:new Date().toLocaleTimeString('en-US',{hour12:false})});
-  }catch(e){ btn.textContent='ERROR'; }
-}
-
-// GOOGLE MEET — DRAGGABLE FLOATING STATUS PANEL
-// Note: Google Meet blocks iframe embedding by design.
-// This panel opens Meet in a new tab and tracks the session
-// locally, sends the link as a message to all personnel,
-// and logs the call to Google Drive on END.
-// ============================================================
-(function(){
-  var floatEl, titlebar, isDragging=false, startX,startY,startL,startT;
-  var minimized=false, savedH, currentMeetUrl='';
-
-  function init(){
-    floatEl  = document.getElementById('jitsi-float');
-    titlebar = document.getElementById('jf-titlebar');
-    floatEl.style.right = '345px';
-    floatEl.style.top   = '64px';
-    floatEl.style.left  = 'auto';
-    floatEl.style.width = '340px';
-
-    titlebar.addEventListener('mousedown', onDragStart);
-    titlebar.addEventListener('touchstart', onDragStartTouch, {passive:false});
-    document.addEventListener('mousemove', onDragMove);
-    document.addEventListener('touchmove', onDragMoveTouch, {passive:false});
-    document.addEventListener('mouseup',  onDragEnd);
-    document.addEventListener('touchend', onDragEnd);
-  }
-
-  function onDragStart(e){
-    if(e.target.tagName==='BUTTON') return;
-    isDragging=true;
-    var r=floatEl.getBoundingClientRect();
-    floatEl.style.left=r.left+'px'; floatEl.style.top=r.top+'px'; floatEl.style.right='auto';
-    startX=e.clientX; startY=e.clientY; startL=r.left; startT=r.top;
-    e.preventDefault();
-  }
-  function onDragStartTouch(e){
-    if(e.target.tagName==='BUTTON') return;
-    var t=e.touches[0];
-    isDragging=true;
-    var r=floatEl.getBoundingClientRect();
-    floatEl.style.left=r.left+'px'; floatEl.style.top=r.top+'px'; floatEl.style.right='auto';
-    startX=t.clientX; startY=t.clientY; startL=r.left; startT=r.top;
-    e.preventDefault();
-  }
-  function onDragMove(e){
-    if(!isDragging) return;
-    var dx=e.clientX-startX, dy=e.clientY-startY;
-    var newL=Math.max(0,Math.min(startL+dx, window.innerWidth-floatEl.offsetWidth));
-    var newT=Math.max(0,Math.min(startT+dy, window.innerHeight-40));
-    floatEl.style.left=newL+'px'; floatEl.style.top=newT+'px';
-  }
-  function onDragMoveTouch(e){
-    if(!isDragging) return;
-    var t=e.touches[0];
-    var dx=t.clientX-startX, dy=t.clientY-startY;
-    var newL=Math.max(0,Math.min(startL+dx, window.innerWidth-floatEl.offsetWidth));
-    var newT=Math.max(0,Math.min(startT+dy, window.innerHeight-40));
-    floatEl.style.left=newL+'px'; floatEl.style.top=newT+'px';
-    e.preventDefault();
-  }
-  function onDragEnd(){ isDragging=false; }
-
-  // Normalise whatever user typed into a proper Meet URL
-  function toMeetUrl(input){
-    input = (input||'').trim();
-    if(!input) return 'https://meet.google.com/new';
-    // Already a full URL
-    if(input.startsWith('http')) return input;
-    // Just a code like "abc-defg-hij"
-    return 'https://meet.google.com/'+input.replace(/[^a-z0-9-]/gi,'');
-  }
-
-  window.launchJitsiFloat = function(){
-    if(!floatEl) init();
-    // Fixed room based on event name — no user input needed
-    var cfg = loadConfig();
-    var roomCode = (cfg.eventName||'PARADE26-EOC').replace(/[^a-z0-9]/gi,'-').toLowerCase().slice(0,28);
-    currentMeetUrl = 'https://meet.google.com/new?authuser=0';
-    // We open a new Meet room — Google assigns the code automatically
-    // After host creates it, BROADCAST sends the link to all personnel
-    window._jitsiStartTime = new Date().toLocaleTimeString('en-US',{hour12:false,timeZone:'Asia/Manila'});
-
-    window.open(currentMeetUrl,'_blank','noopener');
-
-    var wrap = document.getElementById('jf-iframe-wrap');
-    wrap.innerHTML =
-      '<div id="jf-status-line" style="padding:10px 0 6px 0;">'+
-        '<span style="color:#ff4444;font-size:11px;">● LIVE</span> since '+window._jitsiStartTime+'<br/><br/>'+
-        '<span style="color:var(--dim);font-size:8px;">Google Meet opened in new tab.<br/>'+
-        'Copy the room link from Meet,<br/>paste below and BROADCAST to team.</span>'+
-      '</div>'+
-      '<div style="display:flex;gap:4px;margin:6px 0;">'+
-        '<input id="jf-paste-url" placeholder="Paste Meet link here..." style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(0,229,255,.3);color:#fff;font-family:Share Tech Mono,monospace;font-size:9px;padding:4px 6px;outline:none;"/>'+
-      '</div>'+
-      '<div id="jf-actions">'+
-        '<button class="jf-btn green" onclick="broadcastMeetLink()">📢 BROADCAST TO ALL</button>'+
-        '<button class="jf-btn" onclick="copyMeetLink()">COPY</button>'+
-      '</div>'+
-      '<div id="jf-status-line" style="margin-top:8px;font-size:7px;color:var(--dim);">'+
-        'Recording: press Record inside Meet · saves to your Drive'+
-      '</div>';
-
-    floatEl.classList.add('show');
-    minimized=false;
-    document.getElementById('jitsi-dot').classList.add('live');
-    document.getElementById('jf-dot').classList.add('live');
-    document.getElementById('jitsi-live-badge').innerHTML='<span style="color:#ff4444">● LIVE</span>';
-    var disp = document.getElementById('meet-link-display');
-    if(disp){disp.style.display='block';disp.textContent='Meet opened in new tab — paste link above';}
-  };
-
-  window.copyMeetLink = function(){
-    if(!currentMeetUrl) return;
-    navigator.clipboard.writeText(currentMeetUrl).then(function(){
-      var btn=document.querySelector('#jf-actions .jf-btn:nth-child(2)');
-      if(btn){btn.textContent='COPIED ✓'; setTimeout(function(){btn.textContent='COPY LINK';},1500);}
-    });
-  };
-
-  window.broadcastMeetLink = function(){
-    var pasteEl = document.getElementById('jf-paste-url');
-    var url = pasteEl ? pasteEl.value.trim() : currentMeetUrl;
-    if(!url) { alert('Paste the Meet link first!'); return; }
-    currentMeetUrl = url;
-    var cfg=loadConfig();
-    fetch(cfg.sheetUrl,{
-      method:'POST',
-      body:JSON.stringify({
-        action:'sendMessage', name:cfg.commander||'PAGONG',
-        team:'EOC', post:'Commander',
-        body:'🎥 VIDEO CALL ACTIVE — tap to join: '+url,
-        type:'commander', target:'ALL'
-      })
-    }).catch(()=>{});
-    // Also show as clickable in comms log
-    var btn=document.querySelector('#jf-actions .jf-btn.green');
-    if(btn){btn.textContent='✓ SENT TO ALL'; btn.style.borderColor='#00ff88';
-      setTimeout(function(){btn.textContent='📢 BROADCAST TO ALL';},3000);}
-    var disp=document.getElementById('meet-link-display');
-    if(disp){disp.textContent='Broadcast: '+url;}
-  };
-
-  window.minimizeJitsiFloat = function(){
-    if(!floatEl) return;
-    if(!minimized){
-      savedH=floatEl.style.height||'auto';
-      floatEl.style.maxHeight='32px';
-      minimized=true;
-    } else {
-      floatEl.style.maxHeight='none';
-      minimized=false;
-    }
-  };
-
-  window.snapJitsiFloat = function(){
-    if(!floatEl) return;
-    floatEl.style.left='auto'; floatEl.style.right='345px';
-    floatEl.style.top='64px'; floatEl.style.width='340px';
-    minimized=false; floatEl.style.maxHeight='none';
-  };
-
-  window.closeJitsiFloat = function(){
-    if(!floatEl) return;
-    if(document.getElementById('jf-dot').classList.contains('live')){
-      var cfg=loadConfig();
-      var endTime=new Date().toLocaleTimeString('en-US',{hour12:false,timeZone:'Asia/Manila'});
-      fetch(cfg.sheetUrl,{
-        method:'POST',
-        body:JSON.stringify({
-          action:'logVideoCall', room:currentMeetUrl,
-          startedBy:cfg.commander||'Commander',
-          timeStart:window._jitsiStartTime||'', timeEnd:endTime,
-          participants:[cfg.commander||'Commander'],
-          notes:'Google Meet session — recording in host Drive if enabled'
-        })
-      }).catch(()=>{});
-    }
-    floatEl.classList.remove('show');
-    document.getElementById('jf-iframe-wrap').innerHTML=
-      '<div id="jf-idle"><div class="jf-icon">🎥</div>Press ▶ START CALL<br/>to launch Google Meet</div>';
-    document.getElementById('jitsi-dot').classList.remove('live');
-    document.getElementById('jf-dot').classList.remove('live');
-    document.getElementById('jitsi-live-badge').textContent='IDLE';
-    currentMeetUrl=''; window._jitsiStartTime=null; minimized=false;
-    floatEl.style.maxHeight='none';
-  };
-
-  document.addEventListener('DOMContentLoaded', init);
-})();
-
-</script>
-
-  <!-- PAGONG FOOTER -->
-  <div id="pagong-footer" style="
-    position:fixed;bottom:0;left:0;right:341px;
-    background:transparent;border-top:none;
-    padding:0 8px 2px 8px;display:flex;align-items:flex-end;
-    justify-content:flex-start;z-index:500;pointer-events:none;
-  ">
-    <div style="display:flex;align-items:center;gap:6px;">
-      <img src="data:image/png;base64,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" alt="-=pagong=-" style="width:20px;height:20px;border-radius:50%;opacity:0.7;flex-shrink:0;"/>
-      <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:#00e5ff;letter-spacing:2px;opacity:0.9;text-shadow:0 0 8px #00e5ff,0 0 16px #00e5ff66;">-=pagong=-</div>
-      <div style="font-size:8px;color:#7ecfff;font-family:'Share Tech Mono',monospace;opacity:0.85;letter-spacing:0.8px;white-space:nowrap;text-shadow:0 0 6px #00e5ff88,0 0 12px #00e5ff44;">&nbsp;&middot;&nbsp; JOEY SABENACIO HEREDERO &nbsp;&middot;&nbsp; 09468206576 &nbsp;&middot;&nbsp; joeyherederopal@gmail.com &nbsp;&nbsp; &copy; 2026</div>
-    </div>
-  </div>
-  </div>
-
-
-  <!-- APPROVAL PANEL — fixed top-right dropdown -->
-  <div id="approval-panel" style="display:none;position:fixed;top:58px;right:10px;z-index:9100;width:310px;background:rgba(4,8,18,.98);border:1px solid #ffaa00;box-shadow:0 4px 24px rgba(255,170,0,.25);">
-    <div style="background:rgba(255,170,0,.1);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,170,0,.25);">
-      <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#ffaa00;letter-spacing:1px;">&#x26A0; PENDING LOGIN REQUESTS</span>
-      <span onclick="document.getElementById('approval-panel').style.display='none'" style="cursor:pointer;color:#888;font-size:18px;line-height:1;padding:0 4px;">&#x2715;</span>
-    </div>
-    <div id="approval-list" style="max-height:320px;overflow-y:auto;padding:8px;">
-      <div style="padding:10px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim);text-align:center;">No pending requests.</div>
-    </div>
-  </div>
-
-  <script>
-    if('serviceWorker' in navigator){
-      window.addEventListener('load', async () => {
-        // Nuke all old caches on every load
-        const keys = await caches.keys();
-        for(const key of keys){
-          if(key !== 'opm-v3'){
-            await caches.delete(key);
-            console.log('[OPM] Deleted old cache:', key);
-          }
-        }
-        navigator.serviceWorker.register('./sw.js')
-          .then(r => {
-            if(r.waiting) r.waiting.postMessage({type:'SKIP_WAITING'});
-            console.log('[OPM] SW registered:', r.scope);
-          })
-          .catch(e => console.log('[OPM] SW failed:', e));
-      });
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        window.location.reload();
-      });
-    }
-  </script>
-
-<script>
-// ══ COMMANDER GATE — global scope ══════════════════════════
-(function(){
-  // Check session — stays unlocked until tab is closed
-  if (sessionStorage.getItem('opm_gate') === '1') {
-    var g = document.getElementById('opm-gate');
-    if (g) g.style.display = 'none';
-    return;
-  }
-  // Show gate on load
-  window.addEventListener('DOMContentLoaded', function(){
-    var g = document.getElementById('opm-gate');
-    if (g) g.style.display = 'flex';
-    // Block main init until unlocked
-    window._gateBlocking = true;
-    // Focus password field
-    setTimeout(function(){
-      var pw = document.getElementById('g-pw');
-      if (pw) pw.focus();
-    }, 100);
-  });
-})();
-
-function opmGateUnlock() {
-  var pw  = (document.getElementById('g-pw').value || '').trim().toUpperCase();
-  var err = document.getElementById('g-err');
-  err.textContent = '';
-
-  // Get password from config (set in Admin), default PAGONG
-  var storedPw = 'PAGONG';
   try {
-    var cfg = JSON.parse(localStorage.getItem('tms_config') || '{}');
-    if (cfg.commanderPw) storedPw = cfg.commanderPw.toString().toUpperCase().trim();
-  } catch(e) {}
+    const res = await fetch(`${url}?action=getPending&t=${Date.now()}`, { cache: 'no-store' });
+    const data = await res.json();
+    const badge = document.getElementById('approval-badge');
 
-  if (!pw) { err.textContent = '✗ Enter your password.'; return; }
+    if (data.pending && data.pending.length > 0) {
+      badge.classList.add('has-pending');
+      badge.innerHTML = `⚠ ${data.pending.length} APPROVAL${data.pending.length > 1 ? 'S' : ''}`;
+      document.getElementById('approval-panel').style.display = 'block';
+      OPM.playSound('approval');
 
-  if (pw === storedPw) {
-    sessionStorage.setItem('opm_gate', '1');
-    var g = document.getElementById('opm-gate');
-    if (g) {
-      g.style.opacity = '0';
-      g.style.transition = 'opacity 0.3s';
-      setTimeout(function(){ g.style.display = 'none'; }, 300);
+      const list = document.getElementById('approval-list');
+      list.innerHTML = data.pending.map(req => {
+        state.approvals[req.deviceId] = req;
+        return `
+          <div class="approval-item">
+            <div style="font-weight:700;font-size:13px;color:#fff;">${req.name}</div>
+            <div style="font-size:10px;color:var(--text-dim);font-family:var(--font-mono);">
+              ${req.team} · ${req.post}
+            </div>
+            <div style="font-size:9px;color:var(--text-dim);margin-top:2px;">Requested: ${req.time}</div>
+            <div class="approval-btns">
+              <button class="btn btn-success btn-sm btn-block" onclick="handleApproval('${req.deviceId}','approve',this)">✓ APPROVE</button>
+              <button class="btn btn-danger btn-sm btn-block" onclick="handleApproval('${req.deviceId}','reject',this)">✕ REJECT</button>
+            </div>
+          </div>`;
+      }).join('');
+    } else {
+      badge.classList.remove('has-pending');
+      badge.innerHTML = '⚠ APPROVALS';
+      document.getElementById('approval-list').innerHTML =
+        '<div style="padding:12px;text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">No pending requests.</div>';
     }
-    // Start main app if blocked
-    window._gateBlocking = false;
-    if (typeof init === 'function') init();
-  } else {
-    err.textContent = '✗ Wrong password. Try again.';
-    document.getElementById('g-pw').value = '';
-    document.getElementById('g-pw').focus();
-    // Shake animation
-    var card = document.querySelector('#opm-gate .g-card');
-    if (card) {
-      card.style.animation = 'none';
-      card.style.transform = 'translateX(-8px)';
-      setTimeout(function(){ card.style.transform = 'translateX(8px)'; }, 80);
-      setTimeout(function(){ card.style.transform = 'translateX(-5px)'; }, 160);
-      setTimeout(function(){ card.style.transform = 'translateX(0)'; }, 240);
-    }
+  } catch (e) {
+    console.warn('[OPM] Approval fetch:', e.message);
   }
 }
+
+function toggleApprovalPanel() {
+  const panel = document.getElementById('approval-panel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+async function handleApproval(deviceId, action, btn) {
+  btn.textContent = action === 'approve' ? 'APPROVING...' : 'REJECTING...';
+  btn.disabled = true;
+
+  const url = OPM.SHEET_URL();
+  try {
+    await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: action === 'approve' ? 'approveUser' : 'rejectUser',
+        deviceId,
+        name: (state.approvals[deviceId] || {}).name || ''
+      })
+    });
+    delete state.approvals[deviceId];
+    OPM.toast(action === 'approve' ? 'Personnel approved' : 'Request rejected', action === 'approve' ? 'success' : 'error');
+    addSystemMessage(action === 'approve' ? '✅ Login APPROVED by Commander.' : '❌ Login REJECTED by Commander.');
+    setTimeout(fetchApprovals, 1000);
+  } catch (e) {
+    btn.textContent = 'ERROR';
+    btn.disabled = false;
+  }
+}
+
+// ============================================================
+// VIDEO CALLS
+// ============================================================
+function launchVideoCall() {
+  const meetUrl = 'https://meet.google.com/new?authuser=0';
+  state.videoUrl = meetUrl;
+  state.videoStartTime = OPM.formatTime();
+
+  window.open(meetUrl, '_blank', 'noopener');
+
+  // Update UI
+  document.getElementById('video-float').classList.add('show');
+  document.getElementById('vf-idle').style.display = 'none';
+  document.getElementById('vf-active').style.display = 'block';
+  document.getElementById('vf-start-time').textContent = state.videoStartTime;
+  document.getElementById('video-dot').classList.add('live');
+  document.getElementById('video-status').innerHTML = '<span style="color:#ff4444;">● LIVE</span>';
+  document.getElementById('broadcast-btn').style.display = '';
+
+  // Initialize float position
+  const float = document.getElementById('video-float');
+  float.style.right = '345px';
+  float.style.top = '64px';
+
+  OPM.toast('Google Meet opened in new tab — paste link to broadcast', 'info', 4000);
+}
+
+function broadcastMeetUrl() {
+  const urlInput = document.getElementById('vf-meet-url');
+  const url = urlInput.value.trim() || state.videoUrl;
+  if (!url) { OPM.toast('Paste a Meet link first', 'warning'); return; }
+
+  state.videoUrl = url;
+  const cfg = OPM.getConfig();
+
+  // Send as message
+  const msg = {
+    sender: cfg.commander || 'COMMANDER',
+    post: 'EOC',
+    body: `🎥 VIDEO CALL ACTIVE — tap to join: ${url}`,
+    type: 'broadcast',
+    time: OPM.formatTime(),
+    target: 'ALL'
+  };
+  addMessage(msg);
+  document.getElementById('broadcast-btn').textContent = '✓ SENT';
+  setTimeout(() => {
+    document.getElementById('broadcast-btn').textContent = '📢 BROADCAST';
+  }, 3000);
+
+  // API broadcast
+  const sheetUrl = OPM.SHEET_URL();
+  if (sheetUrl) {
+    fetch(sheetUrl, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'sendMessage', ...msg })
+    }).catch(() => {});
+  }
+
+  OPM.toast('Video call link broadcast to all personnel', 'success');
+}
+
+function copyMeetUrl() {
+  if (!state.videoUrl) return;
+  navigator.clipboard.writeText(state.videoUrl).then(() => {
+    OPM.toast('Link copied!', 'success');
+  });
+}
+
+async function endVideoCall() {
+  const confirmed = await OPM.confirm('End Video Call', 'End the active video call session?', 'END CALL', true);
+  if (!confirmed) return;
+
+  // Log call
+  const cfg = OPM.getConfig();
+  const endTime = OPM.formatTime();
+  const sheetUrl = OPM.SHEET_URL();
+  if (sheetUrl) {
+    fetch(sheetUrl, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'logVideoCall',
+        room: state.videoUrl,
+        startedBy: cfg.commander || 'COMMANDER',
+        timeStart: state.videoStartTime || '',
+        timeEnd: endTime,
+        notes: 'Google Meet session'
+      })
+    }).catch(() => {});
+  }
+
+  // Reset UI
+  document.getElementById('video-float').classList.remove('show');
+  document.getElementById('vf-idle').style.display = '';
+  document.getElementById('vf-active').style.display = 'none';
+  document.getElementById('video-dot').classList.remove('live');
+  document.getElementById('video-status').textContent = 'IDLE';
+  document.getElementById('broadcast-btn').style.display = 'none';
+  state.videoUrl = '';
+  state.videoStartTime = null;
+
+  addSystemMessage('🎥 Video call ended.');
+  OPM.toast('Video call ended', 'info');
+}
+
+// ============================================================
+// SECTION TOGGLES
+// ============================================================
+function toggleSection(name) {
+  state.sections[name] = !state.sections[name];
+  document.getElementById(`${name}-section`).classList.toggle('collapsed', !state.sections[name]);
+}
+
+// ============================================================
+// VIDEO FLOAT (draggable)
+// ============================================================
+function setupDragListeners() {
+  const float = document.getElementById('video-float');
+  const drag = document.getElementById('video-float-drag');
+  if (!float || !drag) return;
+
+  let isDragging = false, startX, startY, startL, startT;
+
+  drag.addEventListener('mousedown', e => {
+    if (e.target.tagName === 'BUTTON') return;
+    isDragging = true;
+    const r = float.getBoundingClientRect();
+    float.style.left = r.left + 'px';
+    float.style.top = r.top + 'px';
+    float.style.right = 'auto';
+    startX = e.clientX; startY = e.clientY;
+    startL = r.left; startT = r.top;
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    float.style.left = Math.max(0, Math.min(startL + e.clientX - startX, window.innerWidth - float.offsetWidth)) + 'px';
+    float.style.top = Math.max(0, Math.min(startT + e.clientY - startY, window.innerHeight - 40)) + 'px';
+  });
+
+  document.addEventListener('mouseup', () => { isDragging = false; });
+}
+
+function minimizeVideoFloat() {
+  const float = document.getElementById('video-float');
+  float.style.maxHeight = float.style.maxHeight === '32px' ? 'none' : '32px';
+}
+
+function snapVideoFloat() {
+  const float = document.getElementById('video-float');
+  float.style.left = 'auto';
+  float.style.right = '345px';
+  float.style.top = '64px';
+}
+
+// ============================================================
+// KEYBOARD SHORTCUTS
+// ============================================================
+function setupKeyboardShortcuts() {
+  document.addEventListener('keydown', e => {
+    // Ctrl+F = focus message input
+    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+      e.preventDefault();
+      document.getElementById('cmd-input').focus();
+    }
+    // M = toggle map maximize
+    if (e.key === 'm' && !e.ctrlKey && !e.metaKey && !e.target.closest('input,textarea')) {
+      toggleMapMax();
+    }
+  });
+}
+
+// ============================================================
+// SOUND TOGGLE
+// ============================================================
+function toggleSoundBtn() {
+  const on = OPM.toggleSound();
+  document.getElementById('sound-btn').textContent = on ? '🔊' : '🔇';
+  OPM.toast(on ? 'Sound ON' : 'Sound OFF', 'info', 1500);
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+  init();
+  document.getElementById('sound-btn').textContent = OPM.isSoundEnabled() ? '🔊' : '🔇';
+});
 </script>
 
-</body>
-
-<!-- ============================================================
-     OPM // EOC COMMANDER SYSTEM
-     Copyright (c) 2026 JOEY SABENACIO HEREDERO
-     Contact: 09468206576 | joeyherederopal@gmail.com
-     All rights reserved.
-     ============================================================ -->
+<!-- Service Worker Registration -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(r => console.log('[OPM] SW registered:', r.scope))
+      .catch(e => console.log('[OPM] SW failed:', e));
+  });
+}
+</script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1a645bcec4be39e',t:'MTc4MzkyNDU3Ng=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
