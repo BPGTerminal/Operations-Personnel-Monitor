@@ -14,9 +14,9 @@ const PRECACHE_ASSETS = [
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
-  './css/opm-core.css',
-  './css/opm-commander.css',
-  './js/opm-core.js',
+  './opm-core.css',
+  './opm-commander.css',
+  './opm-core.js',
 ];
 
 // Install: pre-cache static assets
