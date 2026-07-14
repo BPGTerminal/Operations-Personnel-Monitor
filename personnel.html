@@ -428,14 +428,6 @@ body {
 <script src="opm-core.js"></script>
 
 <script>
-// AbortController polyfill for older browsers
-if (typeof AbortController === "undefined") {
-  window.AbortController = function(){ this.signal = { aborted: false }; };
-  AbortController.prototype.abort = function(){ this.signal.aborted = true; };
-  console.warn("[OPM] AbortController polyfill loaded");
-}
-</script>
-<script>
 // ============================================================
 // PERSONNEL APP — State
 // ============================================================
@@ -499,80 +491,61 @@ async function loadSettings() {
   var evd = document.getElementById('event-name-disp');
   var cfg = OPM.getConfig();
 
-  // STEP 0: Show cached teams INSTANTLY if available (no fetch delay)
-  if (_teamsCache && _teamsCache.length) {
-    populateTeams(_teamsCache);
+  // Instant: use cached teams so the dropdown is NEVER empty
+  var cached = null;
+  try { cached = JSON.parse(localStorage.getItem('opm_teams_cache') || 'null'); } catch(e) {}
+  if (!cached || !cached.length) {
+    cached = Array.isArray(cfg.teams) ? cfg.teams : null;
+  }
+  if (cached && cached.length) {
+    populateTeams(cached);
     evd.textContent = (cfg.eventName || 'OPM').toUpperCase();
-    document.getElementById('config-error').style.display = 'none';
   } else {
-    sel.innerHTML = '<option value="">Loading teams...</option>';
-    evd.textContent = 'CONNECTING...';
-    // Show a retry hint after 5 seconds if still loading
-    setTimeout(function(){
-      if (document.getElementById('l-team').value === '' && document.getElementById('l-team').options.length <= 1) {
-        sel.innerHTML = '<option value="">No teams loaded — tap RETRY below</option>';
-        document.getElementById('config-error').style.display = 'block';
-        document.getElementById('config-error').innerHTML = '<div style="color:var(--warning);font-family:var(--font-mono);font-size:11px;margin-bottom:6px;">⚠ Cannot reach server</div><button class="btn btn-warning btn-sm" onclick="loadSettings()">🔄 RETRY</button>';
-      }
-    }, 8000);
+    // Last resort: show fallback teams so user isn't stuck
+    populateTeams([{name:'ADMINISTRATIVE UNIT',code:'ADMIN'},{name:'OPERATIONS UNIT',code:'OPS'},{name:'UTILITY UNIT',code:'UTIL'},{name:'SAFETY & SECURITY',code:'SEC'},{name:'TASK FORCE',code:'TF'}]);
+    evd.textContent = (cfg.eventName || 'OFFLINE MODE').toUpperCase();
   }
 
+  // Background: try to fetch fresh teams (non-blocking, quick timeout)
   var teams = null;
   var eventName = null;
 
-  // STEP 1: Try CSV (fastest) with 8s timeout
+  // Try CSV quickly
   if (cfg.settingsCsvUrl) {
     try {
-      var controller = new AbortController();
-      var timeout = setTimeout(function(){ controller.abort(); }, 8000);
-      var res = await fetch(cfg.settingsCsvUrl + '&t=' + Date.now(), { cache: 'no-store', signal: controller.signal });
-      clearTimeout(timeout);
+      var res = await fetch(cfg.settingsCsvUrl + '&t=' + Date.now());
       var csv = await res.text();
       var parsed = parseCSV(csv);
       if (parsed.teams) {
         teams = typeof parsed.teams === 'string' ? JSON.parse(parsed.teams) : parsed.teams;
-        if (teams.length) { eventName = parsed.eventName; OPM.saveConfig({ teams: teams, eventName: eventName }); }
+        if (teams && teams.length) eventName = parsed.eventName;
       }
-    } catch(e) { console.warn('[OPM] CSV try:', e.message); }
+    } catch(e) { /* silent */ }
   }
 
-  // STEP 2: Try Apps Script with 8s timeout
+  // Try Apps Script
   if (!teams && cfg.sheetUrl) {
     try {
-      var c2 = new AbortController();
-      var t2 = setTimeout(function(){ c2.abort(); }, 8000);
-      var r2 = await fetch(cfg.sheetUrl + '?action=getSettings&t=' + Date.now(), { cache: 'no-store', signal: c2.signal });
-      clearTimeout(t2);
+      var r2 = await fetch(cfg.sheetUrl + '?action=getSettings&t=' + Date.now());
       var d2 = await r2.json();
       if (d2.settings && d2.settings.teams) {
         teams = typeof d2.settings.teams === 'string' ? JSON.parse(d2.settings.teams) : d2.settings.teams;
-        if (teams.length) { eventName = d2.settings.eventName; OPM.saveConfig({ teams: teams, eventName: eventName }); }
+        if (teams && teams.length) eventName = d2.settings.eventName;
       }
-    } catch(e) { console.warn('[OPM] Script try:', e.message); }
+    } catch(e) { /* silent */ }
   }
 
-  // STEP 3: Use cached teams from localStorage
-  if (!teams || !teams.length) {
-    var cached = OPM.getConfig();
-    teams = Array.isArray(cached.teams) ? cached.teams : _teamsCache || [];
-  }
-
-  // STEP 4: Update UI with whatever we have
+  // If we got fresh teams, update UI and cache
   if (teams && teams.length) {
     populateTeams(teams);
-    evd.textContent = (eventName || cfg.eventName || 'OPM').toUpperCase();
-    document.getElementById('config-error').style.display = 'none';
-    // Save to cache for instant next load
-    _teamsCache = teams;
+    if (eventName) evd.textContent = eventName.toUpperCase();
     try { localStorage.setItem('opm_teams_cache', JSON.stringify(teams)); } catch(e) {}
-  } else {
-    sel.innerHTML = '<option value="">No teams - check connection</option>';
-    evd.textContent = 'OFFLINE';
-    document.getElementById('config-error').style.display = 'block';
+    // Also update config
+    OPM.saveConfig({ teams: teams, eventName: eventName || cfg.eventName });
   }
 }
 
-// ═══════════════════════════════════════════════════════════
+// ============================================================
 // GPS// ============================================================
 // GPS
 // ============================================================
@@ -1117,34 +1090,36 @@ document.addEventListener('DOMContentLoaded', function() {
     return;
   }
 
-  // Load teams IMMEDIATELY from cache, then refresh in background
-  loadSettings().catch(function(){});
+  // NON-BLOCKING: show login instantly, load teams + GPS in background
+  loadSettings();
   setupGPS();
-  setInterval(function(){ loadSettings().catch(function(){}); }, 60000);
+  setInterval(loadSettings, 60000);
 
-  // Auto-login check in background (don't block the login page)
-  setTimeout(async function() {
-    var pending = JSON.parse(localStorage.getItem('opm_pending') || 'null');
-    if (!pending || !pending.devId) return;
-    me = pending;
-    try {
-      var ctrl = new AbortController();
-      var t = setTimeout(function(){ ctrl.abort(); }, 5000);
-      var res = await fetch(OPM.SHEET_URL(), {
-        method: 'POST', body: JSON.stringify({ action: 'checkApproval', deviceId: pending.devId }),
-        signal: ctrl.signal
-      });
-      clearTimeout(t);
-      var data = await res.json();
-      if (data.status === 'APPROVED') { enterApp(); return; }
-      if (data.status === 'PENDING') { showWaiting(); return; }
-      if (data.status === 'REJECTED') { localStorage.removeItem('opm_pending'); showRejected(); return; }
-    } catch(e) {
-      // Server unreachable — enter anyway if we have a session
-      enterApp(); return;
-    }
-  }, 500);
+  // Auto-login check after 1 second (don't block)
+  setTimeout(function() {
+    autoLogin();
+  }, 1000);
 });
+
+// Separate auto-login function (runs after page is ready)
+async function autoLogin() {
+  var pending = JSON.parse(localStorage.getItem('opm_pending') || 'null');
+  if (!pending || !pending.devId) return;
+  me = pending;
+  try {
+    var res = await fetch(OPM.SHEET_URL(), {
+      method: 'POST',
+      body: JSON.stringify({ action: 'checkApproval', deviceId: pending.devId })
+    });
+    var data = await res.json();
+    if (data.status === 'APPROVED') { enterApp(); }
+    else if (data.status === 'PENDING') { showWaiting(); }
+    else if (data.status === 'REJECTED') { localStorage.removeItem('opm_pending'); showRejected(); }
+  } catch(e) {
+    // Server unreachable — enter anyway if we have a session
+    enterApp();
+  }
+}
 
 </script>
 
@@ -1163,5 +1138,5 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1aec0c3afbb84a8',t:'MTc4NDAxMzUwMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1aed00ffe6d64c8',t:'MTc4NDAxNDEyOA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
