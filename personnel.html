@@ -903,23 +903,60 @@ function renderMessages(msgs) {
     return;
   }
 
-  list.innerHTML = msgs.slice().reverse().map(m => {
-    const cls = m.type === 'broadcast' ? 'broadcast' : m.type === 'system' ? 'system' : '';
+  // Only show active Meet FAB if link is from last 6 hours
+  const sixHoursAgo = Date.now() - (6 * 60 * 60 * 1000);
+  let foundActiveMeet = false;
+
+  const reversed = [...msgs].reverse();
+
+  // Scan newest-first to find latest Meet link and check if call was ended
+  for (const m of reversed) {
     const meetMatch = (m.body || '').match(/(https:\/\/meet\.google\.com\/[\w-]+)/);
+    const body = (m.body || '').toLowerCase();
 
     if (meetMatch) {
-      meetUrl = meetMatch[1];
-      document.getElementById('meet-fab').classList.add('active');
+      // Parse message timestamp
+      let msgTime = 0;
+      try {
+        const d = new Date(m.time);
+        if (!isNaN(d.getTime())) msgTime = d.getTime();
+        else {
+          const today = new Date().toISOString().substring(0,10);
+          const d2 = new Date(today + 'T' + (m.time||''));
+          if (!isNaN(d2.getTime())) msgTime = d2.getTime();
+        }
+      } catch(e) {}
+
+      if (msgTime > sixHoursAgo) {
+        meetUrl = meetMatch[1];
+        foundActiveMeet = true;
+      }
+      break; // only care about most recent Meet link
     }
 
-    return `
-      <div class="msg-item ${cls}">
-        <div class="sender">${m.sender || ''}${m.post ? ' · ' + m.post : ''}</div>
-        <div class="body">${(m.body || '').replace(/(https:\/\/meet\.google\.com\/[\w-]+)/g, '')}</div>
-        ${m.photoUrl ? `<img class="photo" src="${m.photoUrl}" onclick="window.open('${m.photoUrl}')" loading="lazy">` : ''}
-        ${meetMatch ? `<a href="${meetMatch[1]}" target="_blank" rel="noopener" class="join-btn">▶ JOIN VIDEO CALL</a>` : ''}
-        <div class="time">${m.time || ''}</div>
-      </div>`;
+    // If newest message says call ended, clear
+    if (m.type === 'system' && (body.includes('ended') || body.includes('call ended'))) {
+      meetUrl = null;
+      break;
+    }
+  }
+
+  if (foundActiveMeet) {
+    document.getElementById('meet-fab').classList.add('active');
+  } else {
+    meetUrl = null;
+    document.getElementById('meet-fab').classList.remove('active');
+  }
+
+  list.innerHTML = reversed.map(m => {
+    const cls = m.type === 'broadcast' ? 'broadcast' : m.type === 'system' ? 'system' : '';
+    const meetMatch = (m.body || '').match(/(https:\/\/meet\.google\.com\/[\w-]+)/);
+    let msgTime = 0;
+    try { const d = new Date(m.time); if (!isNaN(d.getTime())) msgTime = d.getTime(); }
+    catch(e) {}
+    const isRecentMeet = meetMatch && foundActiveMeet && msgTime > sixHoursAgo;
+
+    return '<div class="msg-item ${cls}"><div class="sender">${m.sender || ''}${m.post ? ' &middot; ' + m.post : ''}</div><div class="body">${(m.body || '').replace(/(https:\/\/meet\.google\.com\/[\w-]+)/g, '')}</div>${m.photoUrl ? '<img class="photo" src="${m.photoUrl}" onclick="window.open(\'${m.photoUrl}\')" loading="lazy">' : ''}${isRecentMeet ? '<a href="${meetMatch[1]}" target="_blank" rel="noopener" class="join-btn">&blacktriangleright; JOIN VIDEO CALL</a>' : ''}<div class="time">${m.time || ''}</div></div>';
   }).join('');
 
   list.scrollTop = 0;
@@ -1100,5 +1137,5 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1adafa13b71dd3a',t:'MTc4NDAwMjMxNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1ae864fafdee3bb',t:'MTc4NDAxMTEwNw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
