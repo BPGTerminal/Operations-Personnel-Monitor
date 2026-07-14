@@ -16,156 +16,66 @@
 
 <style>
 body { min-height: 100vh; display: flex; flex-direction: column; overflow-y: auto; }
-
-/* Header */
-.dash-header {
-  background: var(--bg-panel); border-bottom: 1px solid var(--border-color);
-  padding: 10px 20px; display: flex; align-items: center; justify-content: space-between;
-  flex-shrink: 0; gap: 12px;
-}
+.dash-header { background: var(--bg-panel); border-bottom: 1px solid var(--border-color); padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 12px; }
 .dash-header h1 { font-size: 18px; font-weight: 700; letter-spacing: 2px; color: #fff; }
 .dash-header h1 span { color: var(--accent); }
 
-/* Filters */
-.filter-bar {
-  background: var(--bg-panel); border-bottom: 1px solid var(--border-color);
-  padding: 10px 20px; display: flex; align-items: center; gap: 10px;
-  flex-shrink: 0; flex-wrap: wrap;
-}
+.filter-bar { background: var(--bg-panel); border-bottom: 1px solid var(--border-color); padding: 10px 20px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
 .filter-bar label { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); letter-spacing: 1px; white-space: nowrap; }
-.filter-bar input[type="date"] {
-  background: var(--bg-surface); border: 1px solid var(--border-color);
-  color: #fff; font-family: var(--font-mono); font-size: 10px; padding: 5px 8px;
-  border-radius: var(--radius);
-}
+.filter-bar input[type="date"] { background: var(--bg-surface); border: 1px solid var(--border-color); color: #fff; font-family: var(--font-mono); font-size: 10px; padding: 5px 8px; border-radius: var(--radius); }
 
-/* Main content */
-.dash-content {
-  flex: 1; padding: 20px; display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 18px; max-width: 1400px; width: 100%; margin: 0 auto;
-}
+.dash-content { flex: 1; padding: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; max-width: 1400px; width: 100%; margin: 0 auto; }
+.stats-row { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.stat-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 16px; text-align: center; }
+.stat-value { font-family: var(--font-mono); font-size: 30px; font-weight: 700; color: var(--accent); line-height: 1; }
+.stat-label { font-family: var(--font-mono); font-size: 9px; color: var(--text-dim); letter-spacing: 1px; margin-top: 6px; text-transform: uppercase; }
 
-/* Stats cards row */
-.stats-row {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
-}
-.stat-card {
-  background: var(--bg-panel); border: 1px solid var(--border-color);
-  border-radius: var(--radius); padding: 16px; text-align: center;
-}
-.stat-value {
-  font-family: var(--font-mono); font-size: 32px; font-weight: 700;
-  color: var(--accent); line-height: 1;
-}
-.stat-label {
-  font-family: var(--font-mono); font-size: 9px; color: var(--text-dim);
-  letter-spacing: 1px; margin-top: 6px; text-transform: uppercase;
-}
-
-/* Chart cards */
-.chart-card {
-  background: var(--bg-panel); border: 1px solid var(--border-color);
-  border-radius: var(--radius); padding: 16px;
-  display: flex; flex-direction: column;
-}
+.chart-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; }
 .chart-card.half { grid-column: span 1; }
 .chart-card.full { grid-column: 1 / -1; }
-
-.chart-title {
-  font-family: var(--font-mono); font-size: 10px; color: var(--accent);
-  letter-spacing: 1.5px; margin-bottom: 10px; text-transform: uppercase; font-weight: 700;
-}
+.chart-title { font-family: var(--font-mono); font-size: 10px; color: var(--accent); letter-spacing: 1.5px; margin-bottom: 10px; text-transform: uppercase; font-weight: 700; }
 .chart-wrap { flex: 1; position: relative; min-height: 250px; }
 .chart-wrap canvas { width: 100% !important; }
 
-/* Insight text */
-.insight {
-  margin-top: 10px; padding: 10px 12px;
-  background: var(--accent-dim); border-left: 3px solid var(--accent);
-  font-size: var(--font-sm); color: var(--text-secondary);
-  border-radius: 0 var(--radius) var(--radius) 0; line-height: 1.5;
-}
+.insight { margin-top: 10px; padding: 10px 12px; background: var(--accent-dim); border-left: 3px solid var(--accent); font-size: var(--font-sm); color: var(--text-secondary); border-radius: 0 var(--radius) var(--radius) 0; line-height: 1.5; }
 .insight.warn { border-color: var(--warning); background: var(--warning-dim); }
 .insight.success { border-color: var(--success); background: var(--success-dim); }
 
-/* Photo gallery */
-.photo-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 8px;
-  margin-top: 8px;
-}
-.photo-thumb {
-  position: relative; aspect-ratio: 4/3; overflow: hidden;
-  border-radius: var(--radius); border: 1px solid var(--border-color);
-  cursor: pointer; background: var(--bg-surface);
-}
-.photo-thumb img {
-  width: 100%; height: 100%; object-fit: cover;
-  transition: transform var(--transition);
-}
+.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-top: 8px; }
+.photo-thumb { position: relative; aspect-ratio: 4/3; overflow: hidden; border-radius: var(--radius); border: 1px solid var(--border-color); cursor: pointer; background: var(--bg-surface); }
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--transition); }
 .photo-thumb:hover img { transform: scale(1.05); }
-.photo-thumb .photo-meta {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  background: linear-gradient(transparent, rgba(0,0,0,.85));
-  padding: 6px 8px; font-size: 8px;
-  font-family: var(--font-mono); color: #fff;
-}
+.photo-thumb .photo-meta { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,.85)); padding: 6px 8px; font-size: 8px; font-family: var(--font-mono); color: #fff; }
 
-/* Narrative section */
-.narrative {
-  background: var(--bg-panel); border: 1px solid var(--border-color);
-  border-radius: var(--radius); padding: 16px;
-  grid-column: 1 / -1;
-}
+.narrative { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 16px; grid-column: 1 / -1; }
 .narrative h3 { font-family: var(--font-mono); font-size: 11px; color: var(--accent); letter-spacing: 2px; margin-bottom: 8px; }
 .narrative p { font-size: var(--font-sm); color: var(--text-secondary); line-height: 1.7; margin-bottom: 8px; }
 
-/* Messages log */
-.msg-log {
-  grid-column: 1 / -1;
-  background: var(--bg-panel); border: 1px solid var(--border-color);
-  border-radius: var(--radius); padding: 16px; max-height: 500px; overflow-y: auto;
-}
-.msg-log-row {
-  display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.03);
-  font-size: var(--font-xs);
-}
+.msg-log { grid-column: 1 / -1; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 16px; max-height: 450px; overflow-y: auto; }
+.msg-log-row { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.03); font-size: var(--font-xs); }
 .msg-log-time { font-family: var(--font-mono); color: var(--text-dim); min-width: 75px; flex-shrink: 0; }
 .msg-log-sender { color: var(--accent); font-weight: 600; min-width: 100px; flex-shrink: 0; }
 .msg-log-body { flex: 1; color: var(--text-secondary); }
 
-/* PDF / Print */
+.empty-state { text-align: center; padding: 40px; color: var(--text-dim); font-family: var(--font-mono); font-size: 12px; }
+
+.photo-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.92); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
+.photo-modal-overlay.show { display: flex; }
+.photo-modal-overlay img { max-width: 92vw; max-height: 85vh; border: 2px solid var(--accent); border-radius: 6px; }
+.photo-modal-close { position: absolute; top: 20px; right: 28px; color: #fff; font-size: 32px; cursor: pointer; font-family: var(--font-mono); }
+
 @media print {
   body { background: #fff !important; color: #000 !important; overflow: visible !important; }
   .dash-header, .filter-bar, .btn { display: none !important; }
   .dash-content { grid-template-columns: 1fr 1fr !important; padding: 10px !important; }
   .stat-card, .chart-card, .narrative { background: #fff !important; border: 1px solid #ccc !important; break-inside: avoid; }
-  .stat-value { color: #1a4d8f !important; }
-  .chart-title { color: #1a4d8f !important; }
+  .stat-value { color: #1a4d8f !important; } .chart-title { color: #1a4d8f !important; }
   * { color: #000 !important; text-shadow: none !important; }
 }
-
-/* Empty state */
-.empty-state { text-align: center; padding: 40px; color: var(--text-dim); font-family: var(--font-mono); font-size: 12px; }
-
-/* Modal for photo */
-.photo-modal-overlay {
-  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.92);
-  z-index: 9999; align-items: center; justify-content: center; flex-direction: column;
-}
-.photo-modal-overlay.show { display: flex; }
-.photo-modal-overlay img { max-width: 92vw; max-height: 85vh; border: 2px solid var(--accent); border-radius: 6px; }
-.photo-modal-close { position: absolute; top: 20px; right: 28px; color: #fff; font-size: 32px; cursor: pointer; font-family: var(--font-mono); }
 </style>
 </head>
 <body>
 
-<!-- Header -->
 <div class="dash-header">
   <div class="flex items-center gap-sm">
     <span class="badge badge-accent">OPM DASHBOARD</span>
@@ -179,9 +89,13 @@ body { min-height: 100vh; display: flex; flex-direction: column; overflow-y: aut
   </div>
 </div>
 
-<!-- Filters -->
 <div class="filter-bar">
-  <label>DATE FROM:</label>
+  <label>UNIT:</label>
+  <select class="select" id="f-unit" onchange="refreshDashboard()" style="width:auto;min-width:180px;">
+    <option value="">ALL UNITS</option>
+  </select>
+  <span style="color:var(--text-dim);margin:0 8px;">|</span>
+  <label>FROM:</label>
   <input type="date" id="f-date-from" onchange="refreshDashboard()">
   <label>TO:</label>
   <input type="date" id="f-date-to" onchange="refreshDashboard()">
@@ -192,14 +106,10 @@ body { min-height: 100vh; display: flex; flex-direction: column; overflow-y: aut
   <span id="last-updated" class="mono text-dim" style="font-size:9px;"></span>
 </div>
 
-<!-- Content -->
 <div class="dash-content" id="dash-content">
-  <div class="chart-card full">
-    <div class="empty-state">⏳ Loading dashboard data...</div>
-  </div>
+  <div class="chart-card full"><div class="empty-state">⏳ Loading dashboard data...</div></div>
 </div>
 
-<!-- Photo Modal -->
 <div class="photo-modal-overlay" id="photo-modal">
   <span class="photo-modal-close" onclick="document.getElementById('photo-modal').classList.remove('show')">✕</span>
   <img id="photo-modal-img" src="" alt="Photo">
@@ -207,37 +117,23 @@ body { min-height: 100vh; display: flex; flex-direction: column; overflow-y: aut
 
 <script src="opm-core.js"></script>
 <script>
-// ============================================================
-// DASHBOARD STATE
-// ============================================================
 let chartInstances = {};
 
-function destroyCharts() {
-  Object.values(chartInstances).forEach(c => c.destroy());
-  chartInstances = {};
-}
+function destroyCharts() { Object.values(chartInstances).forEach(c => c.destroy()); chartInstances = {}; }
 
-// ═══════════ DATA FETCH ═══════════
 async function fetchDashboardData() {
-  const url = OPM.SHEET_URL();
-  if (!url) return null;
-
+  const url = OPM.SHEET_URL(); if (!url) return null;
   const from = document.getElementById('f-date-from').value;
   const to   = document.getElementById('f-date-to').value;
-
   try {
-    const params = new URLSearchParams({ action: 'getDashboardData', t: Date.now() });
+    const params = new URLSearchParams({ action:'getDashboardData', t:Date.now() });
     if (from) params.set('dateFrom', from + ' 00:00:00');
     if (to)   params.set('dateTo',   to   + ' 23:59:59');
-    const res = await fetch(url + '?' + params, { cache: 'no-store' });
+    const res = await fetch(url + '?' + params, { cache:'no-store' });
     return await res.json();
-  } catch(e) {
-    console.error('[OPM] Dashboard fetch:', e.message);
-    return null;
-  }
+  } catch(e) { console.error('[OPM] Dashboard:', e.message); return null; }
 }
 
-// ═══════════ FILTER HELPERS ═══════════
 function setToday() {
   const d = new Date().toISOString().substring(0,10);
   document.getElementById('f-date-from').value = d;
@@ -245,331 +141,212 @@ function setToday() {
   refreshDashboard();
 }
 function setThisWeek() {
-  const now = new Date();
-  const day = now.getDay();
-  const monday = new Date(now); monday.setDate(now.getDate() - (day === 0 ? 6 : day-1));
-  const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
-  document.getElementById('f-date-from').value = monday.toISOString().substring(0,10);
-  document.getElementById('f-date-to').value   = sunday.toISOString().substring(0,10);
+  const now = new Date(), day = now.getDay();
+  const mon = new Date(now); mon.setDate(now.getDate() - (day===0?6:day-1));
+  const sun = new Date(mon); sun.setDate(mon.getDate()+6);
+  document.getElementById('f-date-from').value = mon.toISOString().substring(0,10);
+  document.getElementById('f-date-to').value   = sun.toISOString().substring(0,10);
   refreshDashboard();
 }
 
-// ═══════════ MAIN RENDER ═══════════
+// Populate unit dropdown from config
+function populateUnitDropdown() {
+  const cfg = OPM.getConfig();
+  const teams = Array.isArray(cfg.teams) ? cfg.teams : [];
+  const sel = document.getElementById('f-unit');
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="">ALL UNITS</option>';
+  teams.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t.name; o.textContent = t.name;
+    if (t.name === currentVal) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+// Client-side message categorization (mirrors backend)
+function catMsg(body, type) {
+  const b = (body||'').toLowerCase();
+  if (type==='photo') return 'Photo Reports';
+  if (type==='broadcast') return 'Broadcasts';
+  if (type==='system') return 'System';
+  if (b.includes('apprehend')||b.includes('violation')||b.includes('citation')) return 'Apprehensions';
+  if (b.includes('clear')||b.includes('safe')||b.includes('secure')) return 'Status Reports';
+  if (b.includes('clean')||b.includes('utility')||b.includes('sweep')) return 'Utility Tasks';
+  if (b.includes('document')||b.includes('admin')||b.includes('permit')) return 'Admin Tasks';
+  if (b.includes('traffic')||b.includes('vehicle')||b.includes('parking')) return 'Traffic';
+  if (b.includes('incident')||b.includes('alert')||b.includes('emergency')) return 'Incidents';
+  return 'General Comms';
+}
+
 async function refreshDashboard() {
+  populateUnitDropdown();
   destroyCharts();
   document.getElementById('dash-content').innerHTML = '<div class="chart-card full"><div class="empty-state">⏳ Loading dashboard data...</div></div>';
-
   const data = await fetchDashboardData();
   document.getElementById('last-updated').textContent = 'Updated: ' + OPM.formatTime();
 
   if (!data || !data.summary || data.summary.totalMessages === 0) {
-    document.getElementById('dash-content').innerHTML = `
-      <div class="chart-card full">
-        <div class="empty-state">
-          📊 No data available for this period.<br><br>
-          <button class="btn btn-primary btn-sm" onclick="refreshDashboard()">🔄 TRY AGAIN</button>
-        </div>
-      </div>`;
+    document.getElementById('dash-content').innerHTML = `<div class="chart-card full"><div class="empty-state">📊 No data available for this period.<br><br><button class="btn btn-primary btn-sm" onclick="refreshDashboard()">🔄 TRY AGAIN</button></div></div>`;
     return;
   }
-
-  const s = data.summary;
-  const cfg = OPM.getConfig();
-  document.getElementById('dash-title').innerHTML = `${cfg.eventName || 'Operations Summary'} <span>// ${cfg.commander || 'Report'}</span>`;
 
   buildDashboard(data);
 }
 
-// ═══════════ BUILD DASHBOARD ═══════════
 function buildDashboard(data) {
   const s = data.summary;
-  // Unit data
-  const unitData = Array.isArray(data.unitData) ? data.unitData : [];
-  const categories = data.categories || {};
-  const daily     = data.dailyActivity || [];
-  const photos    = data.photos || [];
-  const all       = data.allMessages || [];
-  const perTeam   = data.personnelByTeam || {};
+  const selectedUnit = document.getElementById('f-unit').value;
+  const cfg = OPM.getConfig();
+
+  // Filter by unit
+  let unitData = Array.isArray(data.unitData) ? data.unitData : [];
+  let categories = data.categories || {};
+  let daily = data.dailyActivity || [];
+  let photos = data.photos || [];
+  let all = data.allMessages || [];
+  let perTeam = data.personnelByTeam || {};
+
+  if (selectedUnit) {
+    unitData = unitData.filter(u => u.team === selectedUnit);
+    const filteredMsgs = all.filter(m => m.team === selectedUnit);
+    categories = {}; filteredMsgs.forEach(m => { const c = catMsg((m.body||'').toLowerCase(), m.type||'chat'); if (!categories[c]) categories[c]=0; categories[c]++; });
+    daily = [];
+    photos = photos.filter(p => p.team === selectedUnit);
+    all = filteredMsgs;
+    const fpt = {}; if (perTeam[selectedUnit]) fpt[selectedUnit] = perTeam[selectedUnit]; perTeam = fpt;
+  }
 
   const unitNames = unitData.map(u => u.team);
-  const unitTasks = unitData.map(u => u.tasks || 0);
-  const unitMsgs  = unitData.map(u => u.messages || 0);
-  const unitIncs  = unitData.map(u => u.incidents || 0);
-
-  const catLabels = Object.keys(categories);
-  const catValues = Object.values(categories);
-
-  const dailyLabels = daily.map(d => d.date);
-  const dailyMsgs   = daily.map(d => d.messages);
-  const dailyPhotos = daily.map(d => d.photos);
-
-  // Compute insights
-  const totalTasks  = unitData.reduce((a,u) => a + (u.tasks||0), 0);
-  const totalIncs   = unitData.reduce((a,u) => a + (u.incidents||0), 0);
-  const topUnit     = unitData.sort((a,b) => (b.tasks||0)-(a.tasks||0))[0];
-  const incidentUnits = unitData.filter(u => (u.incidents||0) > 0);
+  const unitTasks = unitData.map(u => u.tasks||0);
+  const unitMsgs  = unitData.map(u => u.messages||0);
+  const unitIncs  = unitData.map(u => u.incidents||0);
+  const catLabels = Object.keys(categories), catValues = Object.values(categories);
+  const dailyLabels = daily.map(d => d.date), dailyMsgs = daily.map(d => d.messages), dailyPhotos = daily.map(d => d.photos);
+  const totalTasks = unitData.reduce((a,u)=>a+(u.tasks||0), 0);
+  const totalIncs  = unitData.reduce((a,u)=>a+(u.incidents||0), 0);
+  const totalMsgs  = unitData.reduce((a,u)=>a+(u.messages||0), 0);
+  const totalPhotos= unitData.reduce((a,u)=>a+(u.photos||0), 0);
+  const topUnit    = unitData.sort((a,b)=>(b.tasks||0)-(a.tasks||0))[0];
+  const incidentUnits = unitData.filter(u => (u.incidents||0)>0);
+  const unitLabel  = selectedUnit ? ' — ' + selectedUnit : '';
+  const dateFrom = document.getElementById('f-date-from').value || 'beginning';
+  const dateTo   = document.getElementById('f-date-to').value || 'present';
 
   let html = '';
 
-  // ── STATS CARDS ──────────────────────────
+  // Stats
   html += `<div class="stats-row">
-    <div class="stat-card"><div class="stat-value">${s.totalMessages}</div><div class="stat-label">Total Messages</div></div>
-    <div class="stat-card"><div class="stat-value">${s.totalPhotos}</div><div class="stat-label">Photo Reports</div></div>
+    <div class="stat-card"><div class="stat-value">${totalMsgs}</div><div class="stat-label">Total Messages</div></div>
+    <div class="stat-card"><div class="stat-value">${totalPhotos}</div><div class="stat-label">Photo Reports</div></div>
     <div class="stat-card"><div class="stat-value" style="color:var(--success);">${totalTasks}</div><div class="stat-label">Tasks Accomplished</div></div>
     <div class="stat-card"><div class="stat-value" style="color:var(--warning);">${totalIncs}</div><div class="stat-label">Incidents Logged</div></div>
-    <div class="stat-card"><div class="stat-value">${s.totalPersonnel}</div><div class="stat-label">Personnel Deployed</div></div>
-    <div class="stat-card"><div class="stat-value" style="color:var(--success);">${s.onlineNow}</div><div class="stat-label">Currently Online</div></div>
+    <div class="stat-card"><div class="stat-value">${selectedUnit ? all.length : s.totalPersonnel}</div><div class="stat-label">${selectedUnit ? 'Comms Exchanged' : 'Personnel Deployed'}</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--success);">${selectedUnit ? (perTeam[selectedUnit]||0) : s.onlineNow}</div><div class="stat-label">${selectedUnit ? 'Staff in Unit' : 'Currently Online'}</div></div>
   </div>`;
 
-  // ── CHART: Tasks per Unit ────────────────
+  // Tasks chart
   if (unitNames.length > 0) {
-    html += `<div class="chart-card half">
-      <div class="chart-title">📊 Tasks Accomplished per Unit</div>
-      <div class="chart-wrap"><canvas id="chart-tasks"></canvas></div>
-      <div class="insight${topUnit && topUnit.tasks > 0 ? ' success' : ''}">
-        <strong>Insight:</strong> ${topUnit && topUnit.tasks > 0
-          ? `<strong>${topUnit.team}</strong> led operations with <strong>${topUnit.tasks} tasks accomplished</strong>, representing the highest output among all units.`
-          : 'No tasks recorded in this period. Personnel should log accomplishments via the app.'}
-      </div>
-    </div>`;
+    html += `<div class="chart-card ${selectedUnit ? 'full' : 'half'}"><div class="chart-title">📊 Tasks Accomplished${unitLabel}</div><div class="chart-wrap"><canvas id="chart-tasks"></canvas></div>
+      <div class="insight${topUnit && topUnit.tasks>0 ? ' success' : ''}"><strong>Insight:</strong> ${topUnit && topUnit.tasks>0
+        ? `<strong>${topUnit.team}</strong> led with <strong>${topUnit.tasks} tasks</strong>${selectedUnit ? '.' : ', the highest output among all units.'}`
+        : 'No tasks recorded. Personnel should log accomplishments via the app.'}
+      ${selectedUnit && totalMsgs>0 ? `<br>Total for <strong>${selectedUnit}</strong>: ${totalMsgs} messages, ${totalPhotos} photos.` : ''}</div></div>`;
 
-    // ── CHART: Incidents per Unit ──────────
-    html += `<div class="chart-card half">
-      <div class="chart-title">⚠ Incidents & Reports per Unit</div>
-      <div class="chart-wrap"><canvas id="chart-incidents"></canvas></div>
-      <div class="insight${totalIncs > 0 ? ' warn' : ''}">
-        <strong>Insight:</strong> ${totalIncs > 0
-          ? incidentUnits.map(u => `<strong>${u.team}</strong>: ${u.incidents} incident${u.incidents>1?'s':''}`).join('; ') + `. Total of <strong>${totalIncs}</strong> incidents requiring attention.`
-          : 'No incidents reported — all units operating smoothly.'}
-      </div>
-    </div>`;
+    // Incidents chart
+    html += `<div class="chart-card ${selectedUnit ? 'full' : 'half'}"><div class="chart-title">⚠ Incidents & Reports${unitLabel}</div><div class="chart-wrap"><canvas id="chart-incidents"></canvas></div>
+      <div class="insight${totalIncs>0 ? ' warn' : ''}"><strong>Insight:</strong> ${totalIncs>0
+        ? incidentUnits.map(u => `<strong>${u.team}</strong>: ${u.incidents} incident${u.incidents>1?'s':''}`).join('; ')+`. Total: <strong>${totalIncs}</strong> incidents.`
+        : `No incidents${selectedUnit ? ' for ' + selectedUnit : ''} — operating smoothly.`}</div></div>`;
 
-    // ── CHART: Activity Over Time ──────────
-    if (dailyLabels.length > 1) {
-      html += `<div class="chart-card full">
-        <div class="chart-title">📈 Daily Activity Trend</div>
-        <div class="chart-wrap"><canvas id="chart-daily"></canvas></div>
-        <div class="insight">
-          <strong>Insight:</strong> Activity ${dailyMsgs.length > 2
-            ? `peaked at <strong>${Math.max(...dailyMsgs)} messages</strong> on <strong>${dailyLabels[dailyMsgs.indexOf(Math.max(...dailyMsgs))]}</strong>. Average of <strong>${(dailyMsgs.reduce((a,b)=>a+b,0)/dailyMsgs.length).toFixed(1)}</strong> messages per day.`
-            : 'More data needed for trend analysis.'}
-        </div>
-      </div>`;
+    // Daily trend (ALL UNITS only)
+    if (!selectedUnit && dailyLabels.length > 1) {
+      html += `<div class="chart-card full"><div class="chart-title">📈 Daily Activity Trend</div><div class="chart-wrap"><canvas id="chart-daily"></canvas></div>
+        <div class="insight"><strong>Insight:</strong> Peak: <strong>${Math.max(...dailyMsgs)} messages</strong> on <strong>${dailyLabels[dailyMsgs.indexOf(Math.max(...dailyMsgs))]}</strong>. Avg: <strong>${(dailyMsgs.reduce((a,b)=>a+b,0)/dailyMsgs.length).toFixed(1)}</strong> msgs/day.</div></div>`;
     }
   }
 
-  // ── CHART: Message Categories (Pie) ─────
+  // Categories doughnut
   if (catLabels.length > 0) {
-    html += `<div class="chart-card half">
-      <div class="chart-title">🍩 Communications Breakdown</div>
-      <div class="chart-wrap"><canvas id="chart-cats"></canvas></div>
-      <div class="insight">
-        <strong>Insight:</strong> ${catLabels[0]} comprises <strong>${catValues[0]}</strong> messages (${((catValues[0]/s.totalMessages)*100).toFixed(0)}% of all communications).
-        ${catLabels.length > 1 ? `<strong>${catLabels[1]}</strong> follows with ${catValues[1]} entries.` : ''}
-      </div>
-    </div>`;
+    html += `<div class="chart-card ${selectedUnit ? 'full' : 'half'}"><div class="chart-title">🍩 Communications${unitLabel}</div><div class="chart-wrap"><canvas id="chart-cats"></canvas></div>
+      <div class="insight"><strong>Insight:</strong> ${catLabels[0]}: <strong>${catValues[0]}</strong> (${((catValues[0]/Math.max(totalMsgs,1))*100).toFixed(0)}%).
+      ${catLabels.length>1 ? `<strong>${catLabels[1]}</strong>: ${catValues[1]}.` : ''}
+      ${selectedUnit ? `<br><strong>${selectedUnit}</strong> focuses on ${catLabels.slice(0,3).join(', ')}.` : ''}</div></div>`;
 
-    // ── CHART: Personnel Distribution ─────
-    html += `<div class="chart-card half">
-      <div class="chart-title">👥 Personnel by Unit</div>
-      <div class="chart-wrap"><canvas id="chart-personnel"></canvas></div>
-      <div class="insight success">
-        <strong>Insight:</strong> <strong>${s.totalPersonnel} personnel</strong> deployed across <strong>${Object.keys(perTeam).length} units</strong>. ${s.onlineNow} currently active in the field.
-      </div>
-    </div>`;
+    if (!selectedUnit) {
+      html += `<div class="chart-card half"><div class="chart-title">👥 Personnel by Unit</div><div class="chart-wrap"><canvas id="chart-personnel"></canvas></div>
+        <div class="insight success"><strong>Insight:</strong> <strong>${s.totalPersonnel} personnel</strong> across <strong>${Object.keys(perTeam).length} units</strong>. ${s.onlineNow} active.</div></div>`;
+    }
   }
 
-  // ── PHOTO GALLERY ───────────────────────
+  // Photo gallery
   if (photos.length > 0) {
-    html += `<div class="chart-card full">
-      <div class="chart-title">📸 Operations Photos (${photos.length})</div>
-      <div class="photo-grid">`;
-    photos.slice(0, 12).forEach(p => {
-      const match = (p.url||'').match(/[?&]id=([a-zA-Z0-9_-]+)/);
-      const embed = match ? 'https://lh3.googleusercontent.com/d/'+match[1] : p.url;
-      html += `<div class="photo-thumb" onclick="openPhoto('${embed}','${p.url}')" title="${p.sender} · ${p.team}">
-        <img src="${embed}" loading="lazy" onerror="this.parentElement.style.display='none'">
-        <div class="photo-meta">${p.sender} · ${p.time||''}</div>
-      </div>`;
+    html += `<div class="chart-card full"><div class="chart-title">📸 Operations Photos${unitLabel} (${photos.length})</div><div class="photo-grid">`;
+    photos.slice(0,12).forEach(p => {
+      const m = (p.url||'').match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      const e = m ? 'https://lh3.googleusercontent.com/d/'+m[1] : p.url;
+      html += `<div class="photo-thumb" onclick="openPhoto('${e}','${p.url}')" title="${p.sender} · ${p.team}"><img src="${e}" loading="lazy" onerror="this.parentElement.style.display='none'"><div class="photo-meta">${p.sender} · ${p.time||''}</div></div>`;
     });
-    html += `</div>
-      <div class="insight">
-        <strong>Insight:</strong> <strong>${photos.length} photo reports</strong> submitted. Photos provide visual documentation of field conditions, incidents, and task completion.
-        ${photos.length > 6 ? 'Showing latest 12 of ' + photos.length + ' photos.' : ''}
-      </div>
-    </div>`;
+    html += `</div><div class="insight"><strong>Insight:</strong> <strong>${photos.length} photos</strong> submitted${selectedUnit?' by '+selectedUnit:''}. ${photos.length>6?'Showing 12 of '+photos.length+'.':''}</div></div>`;
+  } else if (selectedUnit) {
+    html += `<div class="chart-card full"><div class="chart-title">📸 Operations Photos${unitLabel}</div><div class="empty-state">No photos submitted by ${selectedUnit} in this period.</div></div>`;
   }
 
-  // ── NARRATIVE SUMMARY ───────────────────
-  html += `<div class="narrative">
-    <h3>📝 OPERATIONS NARRATIVE</h3>
-    <p>
-      <strong>Period:</strong> ${document.getElementById('f-date-from').value || 'All time'} to ${document.getElementById('f-date-to').value || 'present'}<br>
-      <strong>Total Personnel Deployed:</strong> ${s.totalPersonnel} across ${Object.keys(perTeam).length} units<br>
-      <strong>Total Messages Exchanged:</strong> ${s.totalMessages}<br>
-      <strong>Photo Reports Submitted:</strong> ${s.totalPhotos}<br>
-      <strong>Tasks Accomplished:</strong> ${totalTasks}<br>
-      <strong>Incidents Logged:</strong> ${totalIncs}<br>
-      <strong>Approvals Granted:</strong> ${s.approvalsApproved} | <strong>Rejected:</strong> ${s.approvalsRejected}
-    </p>
-    <p>
-      During this reporting period, the Operations Personnel Monitor tracked <strong>${s.totalMessages} communications</strong> across the terminal operations.
-      ${topUnit && topUnit.tasks > 0
-        ? `<strong>${topUnit.team}</strong> was the most active unit with <strong>${topUnit.tasks} tasks accomplished</strong>. `
-        : 'Units are encouraged to log task completions via the personnel app for better tracking. '}
-      ${totalIncs > 0
-        ? `<strong>${totalIncs} incidents</strong> were logged, requiring command attention and follow-up. `
-        : 'No incidents were reported during this period. '}
-      ${s.totalPhotos > 0
-        ? `<strong>${s.totalPhotos} photo reports</strong> were submitted from the field, providing visual documentation of operations. `
-        : ''}
-      The system maintained <strong>${s.onlineNow} active personnel</strong> monitoring at the time of this report.
-    </p>
-  </div>`;
+  // Narrative
+  html += `<div class="narrative"><h3>📝 ${selectedUnit ? selectedUnit + ' — ' : ''}OPERATIONS NARRATIVE</h3>
+    <p><strong>Period:</strong> ${dateFrom} → ${dateTo}<br>
+    ${selectedUnit ? `<strong>Unit:</strong> ${selectedUnit}<br><strong>Staff:</strong> ${perTeam[selectedUnit]||0}<br>` : `<strong>Personnel:</strong> ${s.totalPersonnel} across ${Object.keys(perTeam).length} units<br>`}
+    <strong>Messages:</strong> ${totalMsgs} · <strong>Photos:</strong> ${totalPhotos} · <strong>Tasks:</strong> ${totalTasks} · <strong>Incidents:</strong> ${totalIncs}</p>
+    <p>${selectedUnit ? `<strong>${selectedUnit}</strong>` : 'OPM'} tracked <strong>${totalMsgs} communications</strong>${selectedUnit ? '' : ' across all operations'}.
+    ${topUnit && topUnit.tasks>0 ? `<strong>${topUnit.team}</strong> led with <strong>${topUnit.tasks} tasks</strong>. ` : ''}
+    ${totalIncs>0 ? `<strong>${totalIncs} incidents</strong> logged and documented. ` : 'No incidents reported. '}
+    ${totalPhotos>0 ? `<strong>${totalPhotos} photo reports</strong> document field conditions.` : ''}</p></div>`;
 
-  // ── FULL MESSAGE LOG ────────────────────
+  // Message log
   if (all.length > 0) {
-    html += `<div class="msg-log">
-      <div class="chart-title" style="margin-bottom:12px;">📋 Complete Message Log (${all.length})</div>
-      ${all.slice().reverse().slice(0, 100).map(m => `
-        <div class="msg-log-row">
-          <span class="msg-log-time">${(m.time||'').substring(0,19)}</span>
-          <span class="msg-log-sender">${m.sender||''}${m.team?' ['+m.team+']':''}</span>
-          <span class="msg-log-body">${(m.body||'').substring(0,120)}${m.photo?' 📷':''}</span>
-        </div>`).join('')}
-      ${all.length > 100 ? '<div style="text-align:center;padding:8px;color:var(--text-dim);">Showing latest 100 of ' + all.length + ' messages</div>' : ''}
-    </div>`;
+    html += `<div class="msg-log"><div class="chart-title" style="margin-bottom:12px;">📋 Message Log${unitLabel} (${all.length})</div>
+      ${all.slice().reverse().slice(0,100).map(m => `<div class="msg-log-row"><span class="msg-log-time">${(m.time||'').substring(0,19)}</span><span class="msg-log-sender">${m.sender||''}${m.team?' ['+m.team+']':''}</span><span class="msg-log-body">${(m.body||'').substring(0,120)}${m.photo?' 📷':''}</span></div>`).join('')}
+      ${all.length>100 ? '<div style="text-align:center;padding:8px;color:var(--text-dim);">Latest 100 of '+all.length+' messages</div>' : ''}</div>`;
   }
 
   document.getElementById('dash-content').innerHTML = html;
-
-  // ── Render Charts ────────────────────────
-  setTimeout(() => renderCharts(unitNames, unitTasks, unitMsgs, unitIncs, dailyLabels, dailyMsgs, dailyPhotos, catLabels, catValues, perTeam), 200);
+  document.getElementById('dash-title').innerHTML = `${selectedUnit || cfg.eventName || 'Operations Summary'} <span>// ${selectedUnit ? 'Unit Report' : cfg.commander || 'Report'}</span>`;
+  setTimeout(() => renderCharts(unitNames, unitTasks, unitMsgs, unitIncs, dailyLabels, dailyMsgs, dailyPhotos, catLabels, catValues, perTeam, selectedUnit), 200);
 }
 
-// ═══════════ CHARTS ═══════════
-function renderCharts(unitNames, unitTasks, unitMsgs, unitIncs, dailyLabels, dailyMsgs, dailyPhotos, catLabels, catValues, perTeam) {
-  const chartColors = ['#00e5ff','#00ff88','#ff6b35','#ffd166','#a29bfe','#fd79a8','#55efc4'];
-
-  // Tasks per Unit (Bar)
+function renderCharts(unitNames, unitTasks, unitMsgs, unitIncs, dailyLabels, dailyMsgs, dailyPhotos, catLabels, catValues, perTeam, selectedUnit) {
+  const colors = ['#00e5ff','#00ff88','#ff6b35','#ffd166','#a29bfe','#fd79a8','#55efc4'];
   const el1 = document.getElementById('chart-tasks');
-  if (el1) {
-    chartInstances.tasks = new Chart(el1, {
-      type: 'bar',
-      data: {
-        labels: unitNames,
-        datasets: [
-          { label: 'Tasks', data: unitTasks, backgroundColor: chartColors.slice(0,unitNames.length), borderWidth: 0, borderRadius: 4 },
-          { label: 'Messages', data: unitMsgs, backgroundColor: chartColors.slice(0,unitNames.length).map(c=>c+'44'), borderWidth: 0, borderRadius: 4 }
-        ]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { labels: { color: '#6a80b0', font: { family: 'Share Tech Mono', size: 10 } } } },
-        scales: {
-          x: { ticks: { color: '#6a80b0', font: { size: 9 }, maxRotation: 45 }, grid: { color: '#1e326020' } },
-          y: { ticks: { color: '#6a80b0', font: { size: 9 } }, grid: { color: '#1e326030' }, beginAtZero: true }
-        }
-      }
-    });
-  }
+  if (el1) chartInstances.tasks = new Chart(el1, { type:'bar', data:{ labels:unitNames, datasets:[
+    { label:'Tasks', data:unitTasks, backgroundColor:colors.slice(0,unitNames.length), borderWidth:0, borderRadius:4 },
+    { label:'Messages', data:unitMsgs, backgroundColor:colors.slice(0,unitNames.length).map(c=>c+'44'), borderWidth:0, borderRadius:4 }
+  ]}, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:'#6a80b0', font:{ family:'Share Tech Mono', size:10 } } } }, scales:{ x:{ ticks:{ color:'#6a80b0', font:{ size:9 }, maxRotation:45 }, grid:{ color:'#1e326020' } }, y:{ ticks:{ color:'#6a80b0', font:{ size:9 } }, grid:{ color:'#1e326030' }, beginAtZero:true } } } });
 
-  // Incidents per Unit (Bar)
   const el2 = document.getElementById('chart-incidents');
-  if (el2) {
-    chartInstances.incidents = new Chart(el2, {
-      type: 'bar',
-      data: {
-        labels: unitNames,
-        datasets: [{ label: 'Incidents', data: unitIncs, backgroundColor: ['#ffaa00','#ff7744','#ff4465','#ffaa00','#ff7744','#ff4465','#ffaa00'], borderWidth: 0, borderRadius: 4 }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { labels: { color: '#6a80b0', font: { family: 'Share Tech Mono', size: 10 } } } },
-        scales: {
-          x: { ticks: { color: '#6a80b0', font: { size: 9 }, maxRotation: 45 }, grid: { color: '#1e326020' } },
-          y: { ticks: { color: '#6a80b0', font: { size: 9 } }, grid: { color: '#1e326030' }, beginAtZero: true }
-        }
-      }
-    });
-  }
+  if (el2) chartInstances.incidents = new Chart(el2, { type:'bar', data:{ labels:unitNames, datasets:[{ label:'Incidents', data:unitIncs, backgroundColor:['#ffaa00','#ff7744','#ff4465','#ffaa00','#ff7744','#ff4465','#ffaa00'], borderWidth:0, borderRadius:4 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:'#6a80b0', font:{ family:'Share Tech Mono', size:10 } } } }, scales:{ x:{ ticks:{ color:'#6a80b0', font:{ size:9 }, maxRotation:45 }, grid:{ color:'#1e326020' } }, y:{ ticks:{ color:'#6a80b0', font:{ size:9 } }, grid:{ color:'#1e326030' }, beginAtZero:true } } } });
 
-  // Daily Activity (Line)
   const el3 = document.getElementById('chart-daily');
-  if (el3) {
-    chartInstances.daily = new Chart(el3, {
-      type: 'line',
-      data: {
-        labels: dailyLabels,
-        datasets: [
-          { label: 'Messages', data: dailyMsgs, borderColor: '#00e5ff', backgroundColor: '#00e5ff20', tension: .3, fill: true, pointRadius: 4 },
-          { label: 'Photos', data: dailyPhotos, borderColor: '#00ff88', backgroundColor: '#00ff8820', tension: .3, fill: true, pointRadius: 4 }
-        ]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { labels: { color: '#6a80b0', font: { family: 'Share Tech Mono', size: 10 } } } },
-        scales: {
-          x: { ticks: { color: '#6a80b0', font: { size: 8 }, maxRotation: 45 }, grid: { color: '#1e326020' } },
-          y: { ticks: { color: '#6a80b0', font: { size: 9 } }, grid: { color: '#1e326030' }, beginAtZero: true }
-        }
-      }
-    });
-  }
+  if (el3) chartInstances.daily = new Chart(el3, { type:'line', data:{ labels:dailyLabels, datasets:[
+    { label:'Messages', data:dailyMsgs, borderColor:'#00e5ff', backgroundColor:'#00e5ff20', tension:.3, fill:true, pointRadius:4 },
+    { label:'Photos', data:dailyPhotos, borderColor:'#00ff88', backgroundColor:'#00ff8820', tension:.3, fill:true, pointRadius:4 }
+  ]}, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:'#6a80b0', font:{ family:'Share Tech Mono', size:10 } } } }, scales:{ x:{ ticks:{ color:'#6a80b0', font:{ size:8 }, maxRotation:45 }, grid:{ color:'#1e326020' } }, y:{ ticks:{ color:'#6a80b0', font:{ size:9 } }, grid:{ color:'#1e326030' }, beginAtZero:true } } } });
 
-  // Categories (Pie)
   const el4 = document.getElementById('chart-cats');
-  if (el4) {
-    chartInstances.cats = new Chart(el4, {
-      type: 'doughnut',
-      data: {
-        labels: catLabels,
-        datasets: [{ data: catValues, backgroundColor: chartColors.slice(0,catLabels.length), borderWidth: 2, borderColor: '#0c1526' }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { color: '#6a80b0', font: { family: 'Share Tech Mono', size: 9 }, padding: 12 } } }
-      }
-    });
-  }
+  if (el4) chartInstances.cats = new Chart(el4, { type:'doughnut', data:{ labels:catLabels, datasets:[{ data:catValues, backgroundColor:colors.slice(0,catLabels.length), borderWidth:2, borderColor:'#0c1526' }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ color:'#6a80b0', font:{ family:'Share Tech Mono', size:9 }, padding:12 } } } } });
 
-  // Personnel per Team (Pie)
   const el5 = document.getElementById('chart-personnel');
-  if (el5) {
-    const pLabels = Object.keys(perTeam);
-    const pValues = Object.values(perTeam);
-    chartInstances.personnel = new Chart(el5, {
-      type: 'doughnut',
-      data: {
-        labels: pLabels,
-        datasets: [{ data: pValues, backgroundColor: chartColors.slice(0,pLabels.length), borderWidth: 2, borderColor: '#0c1526' }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { color: '#6a80b0', font: { family: 'Share Tech Mono', size: 9 }, padding: 12 } } }
-      }
-    });
-  }
+  if (el5) { const pl = Object.keys(perTeam), pv = Object.values(perTeam); chartInstances.personnel = new Chart(el5, { type:'doughnut', data:{ labels:pl, datasets:[{ data:pv, backgroundColor:colors.slice(0,pl.length), borderWidth:2, borderColor:'#0c1526' }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ color:'#6a80b0', font:{ family:'Share Tech Mono', size:9 }, padding:12 } } } } }); }
 }
 
-// ═══════════ PHOTO MODAL ═══════════
 function openPhoto(embed, fallback) {
-  const modal = document.getElementById('photo-modal');
-  const img   = document.getElementById('photo-modal-img');
-  img.src = embed;
-  img.onerror = () => { img.src = fallback; };
-  modal.classList.add('show');
+  const m = document.getElementById('photo-modal'), i = document.getElementById('photo-modal-img');
+  i.src = embed; i.onerror = () => { i.src = fallback; }; m.classList.add('show');
 }
-document.getElementById('photo-modal').addEventListener('click', function(e) {
-  if (e.target === this) this.classList.remove('show');
-});
+document.getElementById('photo-modal').addEventListener('click', function(e) { if (e.target===this) this.classList.remove('show'); });
 document.addEventListener('keydown', e => { if (e.key==='Escape') document.getElementById('photo-modal').classList.remove('show'); });
 
-// ═══════════ INIT ═══════════
-document.addEventListener('DOMContentLoaded', () => {
-  // Set today as default
-  setToday();
-});
+document.addEventListener('DOMContentLoaded', () => { populateUnitDropdown(); setToday(); });
 </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1acec83ee6f85c1',t:'MTc4Mzk5NDMyMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
