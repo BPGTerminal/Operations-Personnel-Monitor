@@ -426,6 +426,15 @@ body {
 </div>
 
 <script src="opm-core.js"></script>
+
+<script>
+// AbortController polyfill for older browsers
+if (typeof AbortController === "undefined") {
+  window.AbortController = function(){ this.signal = { aborted: false }; };
+  AbortController.prototype.abort = function(){ this.signal.aborted = true; };
+  console.warn("[OPM] AbortController polyfill loaded");
+}
+</script>
 <script>
 // ============================================================
 // PERSONNEL APP — State
@@ -477,87 +486,94 @@ async function connectSetup() {
 
 // ============================================================
 // SETTINGS LOADING
-// ============================================================
+// ═══════════════════════════════════════════════════════════
+
+// Cache key for teams
+var _teamsCache = null;
+try {
+  _teamsCache = JSON.parse(localStorage.getItem('opm_teams_cache') || 'null');
+} catch(e) { _teamsCache = null; }
+
 async function loadSettings() {
-  const sel = document.getElementById('l-team');
-  const evd = document.getElementById('event-name-disp');
-  const cfg = OPM.getConfig();
+  var sel = document.getElementById('l-team');
+  var evd = document.getElementById('event-name-disp');
+  var cfg = OPM.getConfig();
 
-  sel.innerHTML = '<option value="">⏳ Loading teams...</option>';
-  evd.textContent = 'LOADING...';
-
-  let teams = null;
-
-  // Try CSV first (fastest)
-  if (cfg.settingsCsvUrl) {
-    try {
-      const res = await fetch(cfg.settingsCsvUrl + '&t=' + Date.now(), { cache: 'no-store' });
-      const csv = await res.text();
-      const parsed = parseCSV(csv);
-      if (parsed.teams) {
-        teams = typeof parsed.teams === 'string' ? JSON.parse(parsed.teams) : parsed.teams;
-        if (teams.length) {
-          OPM.saveConfig({ ...parsed, teams });
-        }
-      }
-    } catch (e) { console.warn('[OPM] CSV failed:', e.message); }
-  }
-
-  // Try Apps Script fallback
-  if (!teams && cfg.sheetUrl) {
-    try {
-      const res = await fetch(cfg.sheetUrl + '?action=getSettings&t=' + Date.now(), { cache: 'no-store' });
-      const data = await res.json();
-      if (data.settings && data.settings.teams) {
-        teams = typeof data.settings.teams === 'string' ? JSON.parse(data.settings.teams) : data.settings.teams;
-        if (teams.length) OPM.saveConfig({ ...data.settings, teams });
-      }
-    } catch (e) { console.warn('[OPM] Script failed:', e.message); }
-  }
-
-  // Use cached teams
-  if (!teams) {
-    const cached = OPM.getConfig();
-    teams = Array.isArray(cached.teams) ? cached.teams : [];
-  }
-
-  if (teams.length) {
-    populateTeams(teams);
-    evd.textContent = (OPM.getConfig().eventName || 'OPM').toUpperCase();
+  // STEP 0: Show cached teams INSTANTLY if available (no fetch delay)
+  if (_teamsCache && _teamsCache.length) {
+    populateTeams(_teamsCache);
+    evd.textContent = (cfg.eventName || 'OPM').toUpperCase();
     document.getElementById('config-error').style.display = 'none';
   } else {
-    sel.innerHTML = '<option value="">⚠ No teams configured</option>';
-    evd.textContent = 'NOT CONFIGURED';
+    sel.innerHTML = '<option value="">Loading teams...</option>';
+    evd.textContent = 'CONNECTING...';
+    // Show a retry hint after 5 seconds if still loading
+    setTimeout(function(){
+      if (document.getElementById('l-team').value === '' && document.getElementById('l-team').options.length <= 1) {
+        sel.innerHTML = '<option value="">No teams loaded — tap RETRY below</option>';
+        document.getElementById('config-error').style.display = 'block';
+        document.getElementById('config-error').innerHTML = '<div style="color:var(--warning);font-family:var(--font-mono);font-size:11px;margin-bottom:6px;">⚠ Cannot reach server</div><button class="btn btn-warning btn-sm" onclick="loadSettings()">🔄 RETRY</button>';
+      }
+    }, 8000);
+  }
+
+  var teams = null;
+  var eventName = null;
+
+  // STEP 1: Try CSV (fastest) with 8s timeout
+  if (cfg.settingsCsvUrl) {
+    try {
+      var controller = new AbortController();
+      var timeout = setTimeout(function(){ controller.abort(); }, 8000);
+      var res = await fetch(cfg.settingsCsvUrl + '&t=' + Date.now(), { cache: 'no-store', signal: controller.signal });
+      clearTimeout(timeout);
+      var csv = await res.text();
+      var parsed = parseCSV(csv);
+      if (parsed.teams) {
+        teams = typeof parsed.teams === 'string' ? JSON.parse(parsed.teams) : parsed.teams;
+        if (teams.length) { eventName = parsed.eventName; OPM.saveConfig({ teams: teams, eventName: eventName }); }
+      }
+    } catch(e) { console.warn('[OPM] CSV try:', e.message); }
+  }
+
+  // STEP 2: Try Apps Script with 8s timeout
+  if (!teams && cfg.sheetUrl) {
+    try {
+      var c2 = new AbortController();
+      var t2 = setTimeout(function(){ c2.abort(); }, 8000);
+      var r2 = await fetch(cfg.sheetUrl + '?action=getSettings&t=' + Date.now(), { cache: 'no-store', signal: c2.signal });
+      clearTimeout(t2);
+      var d2 = await r2.json();
+      if (d2.settings && d2.settings.teams) {
+        teams = typeof d2.settings.teams === 'string' ? JSON.parse(d2.settings.teams) : d2.settings.teams;
+        if (teams.length) { eventName = d2.settings.eventName; OPM.saveConfig({ teams: teams, eventName: eventName }); }
+      }
+    } catch(e) { console.warn('[OPM] Script try:', e.message); }
+  }
+
+  // STEP 3: Use cached teams from localStorage
+  if (!teams || !teams.length) {
+    var cached = OPM.getConfig();
+    teams = Array.isArray(cached.teams) ? cached.teams : _teamsCache || [];
+  }
+
+  // STEP 4: Update UI with whatever we have
+  if (teams && teams.length) {
+    populateTeams(teams);
+    evd.textContent = (eventName || cfg.eventName || 'OPM').toUpperCase();
+    document.getElementById('config-error').style.display = 'none';
+    // Save to cache for instant next load
+    _teamsCache = teams;
+    try { localStorage.setItem('opm_teams_cache', JSON.stringify(teams)); } catch(e) {}
+  } else {
+    sel.innerHTML = '<option value="">No teams - check connection</option>';
+    evd.textContent = 'OFFLINE';
     document.getElementById('config-error').style.display = 'block';
   }
 }
 
-function parseCSV(text) {
-  const cfg = {};
-  text.trim().split('\n').forEach(line => {
-    const firstComma = line.indexOf(',');
-    if (firstComma < 0) return;
-    const key = line.substring(0, firstComma).replace(/"/g, '').trim();
-    let val = line.substring(firstComma + 1).trim();
-    if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1).replace(/""/g, '"');
-    if (!key || key === 'Key') return;
-    cfg[key] = val;
-  });
-  return cfg;
-}
-
-function populateTeams(teams) {
-  const sel = document.getElementById('l-team');
-  sel.innerHTML = '<option value="">— Select your team —</option>';
-  teams.forEach(t => {
-    const o = document.createElement('option');
-    o.value = t.name;
-    o.textContent = t.name;
-    sel.appendChild(o);
-  });
-}
-
-// ============================================================
+// ═══════════════════════════════════════════════════════════
+// GPS// ============================================================
 // GPS
 // ============================================================
 function setupGPS() {
@@ -1089,45 +1105,45 @@ async function restoreSession() {
 // ============================================================
 // INITIALIZATION
 // ============================================================
-document.addEventListener('DOMContentLoaded', async () => {
-  const devId = OPM.getDeviceId();
+document.addEventListener('DOMContentLoaded', function() {
+  var devId = OPM.getDeviceId();
   document.getElementById('device-id-disp').textContent = devId.slice(-8);
-  document.getElementById('l-code').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-  document.getElementById('msg-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendMsg(); });
+  document.getElementById('l-code').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+  document.getElementById('msg-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') sendMsg(); });
 
-  const cfg = OPM.getConfig();
+  var cfg = OPM.getConfig();
   if (!cfg.sheetUrl || !cfg.settingsCsvUrl) {
     showSetup();
     return;
   }
 
-  // Load teams with retry
-  await loadSettings();
-  const teams = Array.from(document.getElementById('l-team').options).filter(o => o.value);
-  if (teams.length <= 1 && !document.getElementById('l-team').innerHTML.includes('Select')) {
-    await new Promise(r => setTimeout(r, 2000));
-    await loadSettings();
-  }
-
+  // Load teams IMMEDIATELY from cache, then refresh in background
+  loadSettings().catch(function(){});
   setupGPS();
-  setInterval(loadSettings, 60000);
+  setInterval(function(){ loadSettings().catch(function(){}); }, 60000);
 
-  // Auto-enter if already approved
-  const pending = JSON.parse(localStorage.getItem('opm_pending') || 'null');
-  if (pending && pending.devId) {
+  // Auto-login check in background (don't block the login page)
+  setTimeout(async function() {
+    var pending = JSON.parse(localStorage.getItem('opm_pending') || 'null');
+    if (!pending || !pending.devId) return;
     me = pending;
     try {
-      const res = await fetch(OPM.SHEET_URL(), {
-        method: 'POST', body: JSON.stringify({ action: 'checkApproval', deviceId: pending.devId })
+      var ctrl = new AbortController();
+      var t = setTimeout(function(){ ctrl.abort(); }, 5000);
+      var res = await fetch(OPM.SHEET_URL(), {
+        method: 'POST', body: JSON.stringify({ action: 'checkApproval', deviceId: pending.devId }),
+        signal: ctrl.signal
       });
-      const data = await res.json();
+      clearTimeout(t);
+      var data = await res.json();
       if (data.status === 'APPROVED') { enterApp(); return; }
       if (data.status === 'PENDING') { showWaiting(); return; }
       if (data.status === 'REJECTED') { localStorage.removeItem('opm_pending'); showRejected(); return; }
     } catch(e) {
+      // Server unreachable — enter anyway if we have a session
       enterApp(); return;
     }
-  }
+  }, 500);
 });
 
 </script>
@@ -1146,6 +1162,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1aeb127ee317a53',t:'MTc4NDAxMjg2Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
-</body>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1aec0c3afbb84a8',t:'MTc4NDAxMzUwMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
