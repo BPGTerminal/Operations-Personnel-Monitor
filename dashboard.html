@@ -50,6 +50,15 @@ body { min-height: 100vh; display: flex; flex-direction: column; overflow-y: aut
 .narrative { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 16px; grid-column: 1 / -1; }
 .narrative h3 { font-family: var(--font-mono); font-size: 11px; color: var(--accent); letter-spacing: 2px; margin-bottom: 8px; }
 .narrative p { font-size: var(--font-sm); color: var(--text-secondary); line-height: 1.7; margin-bottom: 8px; }
+.narrative-edit {
+  width: 100%; min-height: 180px; background: var(--bg-surface);
+  border: 1px solid var(--border-color); color: var(--text-primary);
+  font-family: var(--font-sans); font-size: var(--font-sm);
+  padding: 12px; line-height: 1.7; resize: vertical;
+  border-radius: var(--radius); outline: none;
+}
+.narrative-edit:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
+.narrative-actions { display: flex; gap: 8px; margin-top: 10px; }
 
 .msg-log { grid-column: 1 / -1; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 16px; max-height: 450px; overflow-y: auto; }
 .msg-log-row { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.03); font-size: var(--font-xs); }
@@ -292,15 +301,25 @@ function buildDashboard(data) {
     html += `<div class="chart-card full"><div class="chart-title">📸 Operations Photos${unitLabel}</div><div class="empty-state">No photos submitted by ${selectedUnit} in this period.</div></div>`;
   }
 
-  // Narrative
-  html += `<div class="narrative"><h3>📝 ${selectedUnit ? selectedUnit + ' — ' : ''}OPERATIONS NARRATIVE</h3>
-    <p><strong>Period:</strong> ${dateFrom} → ${dateTo}<br>
-    ${selectedUnit ? `<strong>Unit:</strong> ${selectedUnit}<br><strong>Staff:</strong> ${perTeam[selectedUnit]||0}<br>` : `<strong>Personnel:</strong> ${s.totalPersonnel} across ${Object.keys(perTeam).length} units<br>`}
+  // Narrative (EDITABLE)
+  const narrativeAuto = `${selectedUnit ? selectedUnit : 'OPM'} tracked ${totalMsgs} communications${selectedUnit ? '' : ' across all operations'}.
+${topUnit && topUnit.tasks>0 ? `${topUnit.team} led with ${topUnit.tasks} tasks. ` : ''}${totalIncs>0 ? `${totalIncs} incidents logged and documented. ` : 'No incidents reported. '}${totalPhotos>0 ? `${totalPhotos} photo reports document field conditions.` : ''}`;
+
+  html += `<div class="narrative" id="narrative-block">
+    <div class="flex justify-between items-center" style="margin-bottom:8px;">
+      <h3 style="margin-bottom:0;">📝 ${selectedUnit ? selectedUnit + ' — ' : ''}OPERATIONS NARRATIVE</h3>
+      <span style="font-family:var(--font-mono);font-size:8px;color:var(--text-dim);">✏️ EDITABLE — Click text to edit, then SAVE before printing</span>
+    </div>
+    <p style="margin-bottom:6px;"><strong>Period:</strong> ${dateFrom} → ${dateTo}<br>
+    ${selectedUnit ? '<strong>Unit:</strong> ' + selectedUnit + '<br><strong>Staff:</strong> ' + (perTeam[selectedUnit]||0) + '<br>' : '<strong>Personnel:</strong> ' + s.totalPersonnel + ' across ' + Object.keys(perTeam).length + ' units<br>'}
     <strong>Messages:</strong> ${totalMsgs} · <strong>Photos:</strong> ${totalPhotos} · <strong>Tasks:</strong> ${totalTasks} · <strong>Incidents:</strong> ${totalIncs}</p>
-    <p>${selectedUnit ? `<strong>${selectedUnit}</strong>` : 'OPM'} tracked <strong>${totalMsgs} communications</strong>${selectedUnit ? '' : ' across all operations'}.
-    ${topUnit && topUnit.tasks>0 ? `<strong>${topUnit.team}</strong> led with <strong>${topUnit.tasks} tasks</strong>. ` : ''}
-    ${totalIncs>0 ? `<strong>${totalIncs} incidents</strong> logged and documented. ` : 'No incidents reported. '}
-    ${totalPhotos>0 ? `<strong>${totalPhotos} photo reports</strong> document field conditions.` : ''}</p></div>`;
+    <textarea class="narrative-edit" id="narrative-text" placeholder="Edit the operations narrative here...">${narrativeAuto}</textarea>
+    <div class="narrative-actions">
+      <button class="btn btn-success btn-sm" onclick="saveNarrative()">💾 SAVE NARRATIVE</button>
+      <button class="btn btn-sm" onclick="resetNarrative()">↺ RESET</button>
+      <span id="narrative-saved" style="display:none;font-family:var(--font-mono);font-size:10px;color:var(--success);align-self:center;">✓ SAVED</span>
+    </div>
+  </div>`;
 
   // Message log
   if (all.length > 0) {
@@ -310,6 +329,7 @@ function buildDashboard(data) {
   }
 
   document.getElementById('dash-content').innerHTML = html;
+  setTimeout(() => { const nt = document.getElementById("narrative-text"); if (nt && !nt.dataset.loaded) { _originalNarrative = nt.value; const cfg = OPM.getConfig(); const unit = document.getElementById("f-unit").value || "ALL"; const df = document.getElementById("f-date-from").value || "any"; const dt = document.getElementById("f-date-to").value || "any"; const key = "nar_" + unit.replace(/[^a-z0-9]/gi,"_") + "_" + df + "_" + dt; if (cfg[key]) { nt.value = cfg[key]; } nt.dataset.loaded = "1"; } }, 300);
   document.getElementById('dash-title').innerHTML = `${selectedUnit || cfg.eventName || 'Operations Summary'} <span>// ${selectedUnit ? 'Unit Report' : cfg.commander || 'Report'}</span>`;
   setTimeout(() => renderCharts(unitNames, unitTasks, unitMsgs, unitIncs, dailyLabels, dailyMsgs, dailyPhotos, catLabels, catValues, perTeam, selectedUnit), 200);
 }
@@ -345,8 +365,34 @@ function openPhoto(embed, fallback) {
 document.getElementById('photo-modal').addEventListener('click', function(e) { if (e.target===this) this.classList.remove('show'); });
 document.addEventListener('keydown', e => { if (e.key==='Escape') document.getElementById('photo-modal').classList.remove('show'); });
 
+
+// ═══════════ EDITABLE NARRATIVE ═══════════
+let _originalNarrative = "";
+
+function saveNarrative() {
+  const text = document.getElementById("narrative-text").value.trim();
+  if (!text) { OPM.toast("Narrative cannot be empty", "warning"); return; }
+  const cfg = OPM.getConfig();
+  const unit = document.getElementById("f-unit").value || "ALL";
+  const df = document.getElementById("f-date-from").value || "any";
+  const dt = document.getElementById("f-date-to").value || "any";
+  const key = "nar_" + unit.replace(/[^a-z0-9]/gi,"_") + "_" + df + "_" + dt;
+  cfg[key] = text;
+  OPM.saveConfig(cfg);
+  document.getElementById("narrative-saved").style.display = "inline";
+  setTimeout(() => { document.getElementById("narrative-saved").style.display = "none"; }, 2000);
+  OPM.toast("Narrative saved", "success");
+}
+
+function resetNarrative() {
+  if (_originalNarrative) {
+    document.getElementById("narrative-text").value = _originalNarrative;
+    OPM.toast("Narrative reset to auto-generated text", "info");
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => { populateUnitDropdown(); setToday(); });
 </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1acec83ee6f85c1',t:'MTc4Mzk5NDMyMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1adaf7b2be8dd3a',t:'MTc4NDAwMjMwOA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
