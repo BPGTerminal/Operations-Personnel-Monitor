@@ -4,297 +4,66 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>OPM — Personnel</title>
-
-<!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#00e5ff">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-
-<!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
-
-<!-- OPM Styles -->
 <link rel="stylesheet" href="opm-core.css">
-
 <style>
-/* ── Personnel-specific styles ─────────────────────── */
-body {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  overflow-y: auto;
-}
-
-.screen {
-  width: 100%;
-  max-width: 520px;
-  padding: 24px 20px 40px;
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-}
-.screen.active { display: flex; }
-
-/* Brand */
-.brand-tag {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--accent);
-  opacity: .7;
-  letter-spacing: 3px;
-}
-.brand-badge {
-  background: var(--accent);
-  color: #000;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 700;
-  padding: 5px 18px;
-  letter-spacing: 2px;
-}
-.app-title {
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: 3px;
-  color: #fff;
-  text-transform: uppercase;
-  text-align: center;
-}
-.app-sub {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-dim);
-  letter-spacing: 2px;
-}
-.event-name {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: var(--danger);
-  letter-spacing: 2px;
-  text-align: center;
-  min-height: 20px;
-}
-
-/* Login fields */
-.login-fields {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-#login-btn {
-  width: 100%;
-  background: var(--accent);
-  color: #000;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 3px;
-  padding: 18px;
-  border: none;
-  cursor: pointer;
-  margin-top: 8px;
-  transition: opacity var(--transition-fast);
-}
-#login-btn:active { opacity: .8; }
-
-/* Waiting / Rejected screens */
-.waiting-icon { font-size: 64px; animation: pulse 2s infinite; }
-.status-title {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 2px;
-}
-.status-name { font-size: 22px; font-weight: 700; color: var(--accent); }
-.status-detail { font-size: 14px; color: var(--text-dim); }
-
-/* Main App Screen */
-.app-header-bar {
-  background: var(--bg-panel);
-  border-bottom: 1px solid var(--border-color);
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-.app-name { font-size: 16px; font-weight: 700; color: var(--accent); }
-.app-detail { font-family: var(--font-mono); font-size: 9px; color: var(--text-dim); }
-
-.status-bar {
-  background: var(--accent-dim);
-  border-bottom: 1px solid var(--border-color);
-  padding: 4px 16px;
-  font-family: var(--font-mono);
-  font-size: 9px;
-  color: var(--text-dim);
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.loc-bar {
-  background: var(--accent-dim);
-  border-bottom: 1px solid var(--border-color);
-  padding: 4px 8px;
-  display: none;
-  gap: 6px;
-  width: 100%;
-}
-
-.msg-list {
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-height: 200px;
-  flex: 1;
-  width: 100%;
-}
-
-.msg-item {
-  background: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  padding: 8px 10px;
-  animation: slideUp .3s ease;
-  border-radius: 3px;
-}
-.msg-item.system { border-color: rgba(0,229,255,.2); background: rgba(0,229,255,.04); }
-.msg-item.broadcast { border-color: rgba(255,170,0,.3); background: rgba(255,170,0,.05); }
-.msg-item .sender { font-family: var(--font-mono); font-size: 9px; color: var(--accent); letter-spacing: 1px; }
-.msg-item .body { font-size: 15px; color: #fff; margin-top: 2px; }
-.msg-item .time { font-family: var(--font-mono); font-size: 8px; color: var(--text-dim); margin-top: 2px; }
-.msg-item .photo { max-width: 100%; margin-top: 6px; cursor: pointer; border-radius: 3px; }
-.msg-item .join-btn {
-  display: block;
-  margin-top: 6px;
-  padding: 8px 12px;
-  background: var(--success-dim);
-  border: 1px solid var(--success);
-  color: var(--success);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-decoration: none;
-  text-align: center;
-  border-radius: 3px;
-}
-
-.compose-bar {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 520px;
-  background: var(--bg-panel);
-  border-top: 1px solid var(--border-color);
-  padding: 8px;
-  display: none;
-}
-.compose-row { display: flex; gap: 6px; }
-.compose-row input {
-  flex: 1;
-  padding: 10px 12px;
-  font-size: 16px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  outline: none;
-  border-radius: 3px;
-}
-
-.photo-btn {
-  background: transparent;
-  border: 1px solid var(--border-color);
-  color: var(--text-dim);
-  font-size: 20px;
-  padding: 0 12px;
-  cursor: pointer;
-  border-radius: 3px;
-}
-.photo-btn:active { border-color: var(--accent); color: var(--accent); }
-
-#meet-fab {
-  position: fixed;
-  bottom: 72px;
-  right: 16px;
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  background: var(--success);
-  color: #000;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  box-shadow: 0 2px 12px rgba(0,229,255,.4);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  transition: all var(--transition-fast);
-}
-#meet-fab.active { background: #ff4444; animation: pulse 1s infinite; }
-#meet-fab:active { transform: scale(.9); }
-
-/* Setup Wizard */
-.setup-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 99999;
-  background: var(--bg-base);
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-mono);
-  padding: 20px;
-  overflow-y: auto;
-}
-.setup-overlay .setup-title { font-size: 22px; font-weight: 700; color: var(--accent); letter-spacing: 3px; margin-bottom: 4px; }
-.setup-overlay .setup-sub { font-size: 9px; color: rgba(0,229,255,.4); letter-spacing: 2px; margin-bottom: 24px; }
-.setup-overlay .setup-card {
-  background: var(--accent-dim);
-  border: 1px solid rgba(0,229,255,.2);
-  border-radius: 4px;
-  padding: 20px;
-  width: 100%;
-  max-width: 420px;
-}
-
-/* GPS indicator */
-.gps-quality {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 4px;
-}
-.gps-quality.poor { background: var(--danger); }
-.gps-quality.fair { background: var(--warning); }
-.gps-quality.good { background: var(--success); }
-
-/* Config error */
-.config-error {
-  background: var(--danger-dim);
-  border: 1px solid var(--danger);
-  border-radius: 4px;
-  padding: 14px;
-  margin: 12px 0;
-  text-align: center;
-}
+body{min-height:100vh;display:flex;flex-direction:column;align-items:center;overflow-y:auto;}
+.screen{width:100%;max-width:520px;padding:24px 20px 40px;display:none;flex-direction:column;align-items:center;gap:16px;}
+.screen.active{display:flex;}
+.brand-tag{font-family:var(--font-mono);font-size:11px;color:var(--accent);opacity:.7;letter-spacing:3px;}
+.brand-badge{background:var(--accent);color:#000;font-family:var(--font-mono);font-size:13px;font-weight:700;padding:5px 18px;letter-spacing:2px;}
+.app-title{font-size:28px;font-weight:700;letter-spacing:3px;color:#fff;text-transform:uppercase;text-align:center;}
+.app-sub{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);letter-spacing:2px;}
+.event-name{font-family:var(--font-mono);font-size:13px;color:var(--danger);letter-spacing:2px;text-align:center;min-height:20px;}
+#login-btn{width:100%;background:var(--accent);color:#000;font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:3px;padding:18px;border:none;cursor:pointer;margin-top:8px;}
+#login-btn:active{opacity:.8;}
+.waiting-icon{font-size:64px;animation:pulse 2s infinite;}
+.status-title{font-family:var(--font-mono);font-size:11px;letter-spacing:2px;}
+.status-name{font-size:22px;font-weight:700;color:var(--accent);}
+.status-detail{font-size:14px;color:var(--text-dim);}
+.app-header-bar{background:var(--bg-panel);border-bottom:1px solid var(--border-color);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;width:100%;}
+.app-name{font-size:16px;font-weight:700;color:var(--accent);}
+.app-detail{font-family:var(--font-mono);font-size:9px;color:var(--text-dim);}
+.status-bar{background:var(--accent-dim);border-bottom:1px solid var(--border-color);padding:4px 16px;font-family:var(--font-mono);font-size:9px;color:var(--text-dim);display:flex;justify-content:space-between;width:100%;}
+.loc-bar{background:var(--accent-dim);border-bottom:1px solid var(--border-color);padding:4px 8px;display:none;gap:6px;width:100%;}
+.msg-list{padding:8px;display:flex;flex-direction:column;gap:6px;min-height:200px;flex:1;width:100%;}
+.msg-item{background:var(--bg-panel);border:1px solid var(--border-color);padding:8px 10px;animation:slideUp .3s ease;border-radius:3px;}
+.msg-item.system{border-color:rgba(0,229,255,.2);background:rgba(0,229,255,.04);}
+.msg-item.broadcast{border-color:rgba(255,170,0,.3);background:rgba(255,170,0,.05);}
+.msg-sender{font-family:var(--font-mono);font-size:9px;color:var(--accent);letter-spacing:1px;}
+.msg-body{font-size:15px;color:#fff;margin-top:2px;}
+.msg-time{font-family:var(--font-mono);font-size:8px;color:var(--text-dim);margin-top:2px;}
+.msg-photo{max-width:100%;margin-top:6px;cursor:pointer;border-radius:3px;}
+.join-btn{display:block;margin-top:6px;padding:8px 12px;background:var(--success-dim);border:1px solid var(--success);color:var(--success);font-family:var(--font-mono);font-size:11px;letter-spacing:1px;text-decoration:none;text-align:center;border-radius:3px;}
+.compose-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:var(--bg-panel);border-top:1px solid var(--border-color);padding:8px;display:none;}
+.compose-row{display:flex;gap:6px;}
+.compose-row input{flex:1;padding:10px 12px;font-size:16px;background:var(--bg-surface);border:1px solid var(--border-color);color:var(--text-primary);outline:none;border-radius:3px;}
+.photo-btn{background:transparent;border:1px solid var(--border-color);color:var(--text-dim);font-size:20px;padding:0 12px;cursor:pointer;border-radius:3px;}
+.photo-btn:active{border-color:var(--accent);color:var(--accent);}
+#meet-fab{position:fixed;bottom:72px;right:16px;width:54px;height:54px;border-radius:50%;background:var(--success);color:#000;border:none;font-size:24px;cursor:pointer;box-shadow:0 2px 12px rgba(0,229,255,.4);display:none;align-items:center;justify-content:center;z-index:100;}
+#meet-fab.active{background:#ff4444;animation:pulse 1s infinite;}
+#meet-fab:active{transform:scale(.9);}
+.setup-overlay{position:fixed;inset:0;z-index:99999;background:var(--bg-base);display:none;flex-direction:column;align-items:center;justify-content:center;font-family:var(--font-mono);padding:20px;overflow-y:auto;}
+.setup-title{font-size:22px;font-weight:700;color:var(--accent);letter-spacing:3px;margin-bottom:4px;}
+.setup-sub{font-size:9px;color:rgba(0,229,255,.4);letter-spacing:2px;margin-bottom:24px;}
+.setup-card{background:var(--accent-dim);border:1px solid rgba(0,229,255,.2);border-radius:4px;padding:20px;width:100%;max-width:420px;}
+.gps-quality{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;}
+.gps-quality.poor{background:var(--danger);}
+.gps-quality.fair{background:var(--warning);}
+.gps-quality.good{background:var(--success);}
+.retry-box{background:var(--warning-dim);border:1px solid var(--warning);border-radius:4px;padding:12px;margin:10px 0;text-align:center;}
 </style>
 </head>
 <body>
 
-<!-- ═══════════ SETUP WIZARD ═══════════ -->
+<!-- SETUP WIZARD -->
 <div class="setup-overlay" id="setup-overlay">
   <div style="font-size:40px;margin-bottom:6px;">⚙️</div>
   <div class="setup-title">OPM SETUP</div>
@@ -310,83 +79,56 @@ body {
     </div>
     <button class="btn btn-primary btn-block btn-lg" onclick="connectSetup()">CONNECT MY EOC ▶</button>
     <div id="sw-err" style="font-size:10px;color:var(--danger);min-height:14px;text-align:center;margin-top:8px;"></div>
-    <div style="font-size:9px;color:rgba(255,255,255,.18);text-align:center;margin-top:12px;line-height:1.6;">
-      Get these URLs from your Google Sheet deployment.
-    </div>
   </div>
 </div>
 
-<!-- ═══════════ LOGIN SCREEN ═══════════ -->
+<!-- LOGIN -->
 <div id="login-screen" class="screen active">
   <div class="brand-tag">-=pagong=-</div>
   <div class="brand-badge">OPM</div>
   <div class="app-title">Operations Personnel Monitor</div>
   <div class="app-sub">Personnel Check-In</div>
-  <div class="event-name" id="event-name-disp">Loading...</div>
+  <div class="event-name" id="event-name-disp">READY</div>
 
-  <div class="login-fields">
-    <div class="field-group">
-      <label class="field-label">Your Full Name</label>
-      <input class="input" type="text" id="l-name" placeholder="e.g. Ofc. Juan Dela Cruz" autocomplete="off">
-    </div>
-    <div class="field-group">
-      <label class="field-label">Your Team</label>
-      <select class="select" id="l-team">
-        <option value="">— Select your team —</option>
-      </select>
-    </div>
-    <div class="field-group">
-      <label class="field-label">Assigned Post / Position</label>
-      <input class="input" type="text" id="l-post" placeholder="e.g. North Gate, Main Stage..." autocomplete="off">
-    </div>
-    <div class="field-group">
-      <label class="field-label">Team Access Code</label>
-      <input class="input" type="password" id="l-code" placeholder="Enter your team's code">
-    </div>
+  <div class="field-group w-full"><label class="field-label">Your Full Name</label><input class="input" type="text" id="l-name" placeholder="e.g. Ofc. Juan Dela Cruz" autocomplete="off"></div>
+  <div class="field-group w-full"><label class="field-label">Your Team</label><select class="select" id="l-team"><option value="">— Select your team —</option></select></div>
+  <div class="field-group w-full"><label class="field-label">Assigned Post / Position</label><input class="input" type="text" id="l-post" placeholder="e.g. North Gate, Main Stage..." autocomplete="off"></div>
+  <div class="field-group w-full"><label class="field-label">Team Access Code</label><input class="input" type="password" id="l-code" placeholder="Enter your team's code"></div>
+
+  <div class="retry-box" id="retry-box" style="display:none;">
+    <div style="color:var(--warning);font-family:var(--font-mono);font-size:10px;margin-bottom:6px;">⚠ Teams not loading?</div>
+    <button class="btn btn-warning btn-sm" onclick="loadTeamsNow()">🔄 RETRY</button>
   </div>
 
   <button id="login-btn" onclick="doLogin()">REQUEST ACCESS ▶</button>
-  <div class="config-error" id="config-error" style="display:none;">
-    <div style="color:var(--danger);font-family:var(--font-mono);font-size:11px;margin-bottom:6px;">⚠ APP NOT CONFIGURED</div>
-    <button class="btn btn-danger btn-sm" onclick="showSetup()">⚙ ENTER SERVER URLS</button>
-  </div>
-  <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim);text-align:center;margin-top:8px;">
-    DEVICE: <span id="device-id-disp" class="text-accent"></span>
-  </div>
+  <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim);text-align:center;margin-top:8px;">DEVICE: <span id="device-id-disp" class="text-accent"></span></div>
 </div>
 
-<!-- ═══════════ WAITING SCREEN ═══════════ -->
+<!-- WAITING -->
 <div id="waiting-screen" class="screen" style="text-align:center;padding:60px 24px;">
   <div class="waiting-icon">⏳</div>
   <div class="status-title text-warning">AWAITING APPROVAL</div>
   <div class="status-name" id="wait-name"></div>
   <div class="status-detail" id="wait-detail"></div>
-  <div style="font-size:13px;color:var(--text-dim);margin-top:8px;">
-    Commander is reviewing your request...<br>This screen will update automatically.
-  </div>
+  <div style="font-size:13px;color:var(--text-dim);margin-top:8px;">Commander is reviewing your request...</div>
   <button class="btn btn-sm" onclick="showLogin()">← BACK TO LOGIN</button>
 </div>
 
-<!-- ═══════════ REJECTED SCREEN ═══════════ -->
+<!-- REJECTED -->
 <div id="rejected-screen" class="screen" style="text-align:center;padding:60px 24px;">
   <div style="font-size:64px;">❌</div>
   <div class="status-title text-danger">ACCESS DENIED</div>
-  <div style="font-size:15px;color:var(--text-dim);">
-    Your request was rejected by the Commander.<br>Contact your supervisor or try again.
-  </div>
+  <div style="font-size:15px;color:var(--text-dim);">Your request was rejected by the Commander.</div>
   <button class="btn btn-sm" onclick="showLogin()">↩ TRY AGAIN</button>
 </div>
 
-<!-- ═══════════ MAIN APP SCREEN ═══════════ -->
+<!-- MAIN APP -->
 <div id="app-screen" class="screen" style="padding:0 0 80px;">
   <div class="app-header-bar">
     <div class="flex items-center gap-sm">
       <span class="brand-tag" style="font-size:8px;">-=pagong=-</span>
       <span class="brand-badge" style="font-size:10px;padding:2px 8px;">OPM</span>
-      <div>
-        <div class="app-name" id="app-name">PERSONNEL</div>
-        <div class="app-detail" id="app-detail">Loading...</div>
-      </div>
+      <div><div class="app-name" id="app-name">PERSONNEL</div><div class="app-detail" id="app-detail">---</div></div>
     </div>
     <div class="flex items-center gap-sm">
       <span style="color:var(--success);font-size:14px;" id="status-icon">●</span>
@@ -394,695 +136,398 @@ body {
       <button onclick="doLogout()" class="btn btn-danger btn-sm">⏏ OUT</button>
     </div>
   </div>
-  <div class="status-bar">
-    <span id="gps-status">📍 GPS: waiting...</span>
-    <span id="last-sync">SYNC: --</span>
-  </div>
+  <div class="status-bar"><span id="gps-status">📍 GPS: ---</span><span id="last-sync">SYNC: --</span></div>
   <div class="loc-bar" id="loc-bar">
     <button onclick="sendLocation(true)" class="btn btn-sm flex-1" id="loc-btn">📍 SEND LOCATION</button>
     <button onclick="reCheckIn()" class="btn btn-success btn-sm flex-1" id="checkin-btn">✅ RE-CHECK IN</button>
   </div>
-  <div class="msg-list" id="msg-list">
-    <div style="padding:24px;text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">No messages yet.</div>
-  </div>
+  <div class="msg-list" id="msg-list"><div style="padding:24px;text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">No messages yet.</div></div>
 </div>
 
-<!-- ═══════════ COMPOSE BAR ═══════════ -->
+<!-- COMPOSE -->
 <div class="compose-bar" id="compose-bar">
   <div class="compose-row">
-    <button class="photo-btn" onclick="takePhoto()" title="Attach photo">📷</button>
+    <button class="photo-btn" onclick="takePhoto()">📷</button>
     <input type="text" id="msg-input" placeholder="Type message...">
     <button class="btn btn-primary btn-sm" onclick="sendMsg()">SEND</button>
   </div>
 </div>
 
-<button id="meet-fab" onclick="joinMeet()" title="Join video call">🎥</button>
+<button id="meet-fab" onclick="joinMeet()">🎥</button>
 <input type="file" id="photo-input" accept="image/*" capture="environment" onchange="handlePhoto(event)" style="display:none;">
 
-<!-- ═══════════ FOOTER ═══════════ -->
 <div style="text-align:center;padding:16px 0 80px;font-family:var(--font-mono);">
   <div style="font-size:9px;color:var(--accent);letter-spacing:2px;opacity:.8;">-=pagong=-</div>
   <div style="font-size:8px;color:var(--text-dim);opacity:.75;margin-top:4px;">© 2026 · OPM · OPERATIONS PERSONNEL MONITOR</div>
 </div>
 
 <script src="opm-core.js"></script>
-
 <script>
 // ============================================================
-// PERSONNEL APP — State
+// SIMPLE STATE
 // ============================================================
-let me = null;
-let currentLat = null, currentLng = null;
-let fetchTimer = null, locTimer = null, approvalTimer = null;
-let meetUrl = null;
+var me = null;
+var curLat = null, curLng = null;
+var fetchTimer = null, locTimer = null, approvalTimer = null;
+var meetUrl = null;
+var FALLBACK_TEAMS = [
+  {name:'ADMINISTRATIVE UNIT',code:'ADMIN26',color:'#00e5ff'},
+  {name:'OPERATIONS UNIT',code:'OPS26',color:'#00ff88'},
+  {name:'UTILITY UNIT',code:'UTIL26',color:'#ff6b35'},
+  {name:'SAFETY & SECURITY',code:'SEC26',color:'#ffd166'},
+  {name:'TASK FORCE',code:'TF26',color:'#a29bfe'}
+];
+
+// ============================================================
+// LOAD TEAMS — ALWAYS SHOWS SOMETHING
+// ============================================================
+function loadTeamsNow() {
+  var sel = document.getElementById('l-team');
+  var evd = document.getElementById('event-name-disp');
+  var cfg = OPM.getConfig();
+
+  // STEP 1: Try cached teams from localStorage
+  var cached = null;
+  try { cached = JSON.parse(localStorage.getItem('opm_teams_cache')); } catch(e) {}
+  if (!cached || !cached.length) {
+    try { cached = cfg.teams; } catch(e) {}
+  }
+  if (cached && cached.length) {
+    populateTeams(cached);
+    evd.textContent = (cfg.eventName||'OPM').toUpperCase();
+    document.getElementById('retry-box').style.display = 'none';
+    // Background refresh
+    fetchTeamsFromServer();
+    return;
+  }
+
+  // STEP 2: No cache — show fallback teams IMMEDIATELY
+  populateTeams(FALLBACK_TEAMS);
+  evd.textContent = (cfg.eventName||'OPM').toUpperCase();
+  document.getElementById('retry-box').style.display = 'none';
+
+  // Background: try server
+  fetchTeamsFromServer();
+}
+
+function populateTeams(teams) {
+  var sel = document.getElementById('l-team');
+  sel.innerHTML = '<option value="">— Select your team —</option>';
+  (teams||[]).forEach(function(t){
+    var o = document.createElement('option');
+    o.value = t.name; o.textContent = t.name;
+    sel.appendChild(o);
+  });
+}
+
+function parseCSV(text) {
+  var cfg = {};
+  text.trim().split('\n').forEach(function(line){
+    var idx = line.indexOf(',');
+    if (idx<0) return;
+    var key = line.substring(0,idx).replace(/"/g,'').trim();
+    var val = line.substring(idx+1).trim();
+    if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1,-1).replace(/""/g,'"');
+    if (key && key!=='Key') cfg[key]=val;
+  });
+  return cfg;
+}
+
+async function fetchTeamsFromServer() {
+  var cfg = OPM.getConfig();
+  var teams = null;
+  var eventName = null;
+
+  if (cfg.settingsCsvUrl) {
+    try {
+      var r = await fetch(cfg.settingsCsvUrl+'&t='+Date.now());
+      var p = parseCSV(await r.text());
+      if (p.teams) {
+        teams = typeof p.teams==='string' ? JSON.parse(p.teams) : p.teams;
+        if (teams&&teams.length) eventName=p.eventName;
+      }
+    } catch(e) {}
+  }
+  if (!teams && cfg.sheetUrl) {
+    try {
+      var r2 = await fetch(cfg.sheetUrl+'?action=getSettings&t='+Date.now());
+      var d2 = await r2.json();
+      if (d2.settings&&d2.settings.teams) {
+        teams = typeof d2.settings.teams==='string' ? JSON.parse(d2.settings.teams) : d2.settings.teams;
+        if (teams&&teams.length) eventName=d2.settings.eventName;
+      }
+    } catch(e) {}
+  }
+  if (teams && teams.length) {
+    populateTeams(teams);
+    if (eventName) document.getElementById('event-name-disp').textContent = eventName.toUpperCase();
+    try { localStorage.setItem('opm_teams_cache',JSON.stringify(teams)); } catch(e) {}
+    OPM.saveConfig({teams:teams,eventName:eventName||cfg.eventName});
+  }
+}
 
 // ============================================================
 // SETUP WIZARD
 // ============================================================
 function showSetup() {
-  const cfg = OPM.getConfig();
-  const su = document.getElementById('sw-sheet-url');
-  const cu = document.getElementById('sw-csv-url');
-  if (su && cfg.sheetUrl) su.value = cfg.sheetUrl;
-  if (cu && cfg.settingsCsvUrl) cu.value = cfg.settingsCsvUrl;
+  var cfg = OPM.getConfig();
+  document.getElementById('sw-sheet-url').value = cfg.sheetUrl||'';
+  document.getElementById('sw-csv-url').value = cfg.settingsCsvUrl||'';
   document.getElementById('setup-overlay').style.display = 'flex';
 }
-
 async function connectSetup() {
-  const sheetUrl = (document.getElementById('sw-sheet-url').value || '').trim();
-  const csvUrl = (document.getElementById('sw-csv-url').value || '').trim();
-  const err = document.getElementById('sw-err');
-
-  if (!sheetUrl || !sheetUrl.includes('script.google.com')) {
-    err.textContent = '✗ Please enter a valid Apps Script URL'; return;
-  }
-  if (!csvUrl || !csvUrl.includes('docs.google.com')) {
-    err.textContent = '✗ Please enter a valid Settings CSV URL'; return;
-  }
-
-  err.style.color = 'var(--success)';
-  err.textContent = '⏳ Saving and connecting...';
-
-  OPM.saveConfig({ sheetUrl, settingsCsvUrl: csvUrl });
-  localStorage.setItem('opm_setup_done', '1');
-
-  err.textContent = '✅ Connected! Loading your settings...';
-
-  setTimeout(async () => {
-    document.getElementById('setup-overlay').style.display = 'none';
-    document.getElementById('config-error').style.display = 'none';
-    await loadSettings();
-    setupGPS();
-  }, 800);
+  var sheetUrl = document.getElementById('sw-sheet-url').value.trim();
+  var csvUrl = document.getElementById('sw-csv-url').value.trim();
+  var err = document.getElementById('sw-err');
+  if (!sheetUrl||!sheetUrl.includes('script.google.com')) { err.textContent='Enter valid Apps Script URL'; return; }
+  if (!csvUrl||!csvUrl.includes('docs.google.com')) { err.textContent='Enter valid CSV URL'; return; }
+  err.style.color='var(--success)'; err.textContent='Saving...';
+  OPM.saveConfig({sheetUrl:sheetUrl,settingsCsvUrl:csvUrl});
+  localStorage.setItem('opm_setup_done','1');
+  err.textContent='Connected!';
+  setTimeout(function(){
+    document.getElementById('setup-overlay').style.display='none';
+    loadTeamsNow();
+    startGPS();
+  },800);
 }
 
 // ============================================================
-// SETTINGS LOADING
-// ═══════════════════════════════════════════════════════════
-
-// Cache key for teams
-var _teamsCache = null;
-try {
-  _teamsCache = JSON.parse(localStorage.getItem('opm_teams_cache') || 'null');
-} catch(e) { _teamsCache = null; }
-
-async function loadSettings() {
-  var sel = document.getElementById('l-team');
-  var evd = document.getElementById('event-name-disp');
-  var cfg = OPM.getConfig();
-
-  // Instant: use cached teams so the dropdown is NEVER empty
-  var cached = null;
-  try { cached = JSON.parse(localStorage.getItem('opm_teams_cache') || 'null'); } catch(e) {}
-  if (!cached || !cached.length) {
-    cached = Array.isArray(cfg.teams) ? cfg.teams : null;
-  }
-  if (cached && cached.length) {
-    populateTeams(cached);
-    evd.textContent = (cfg.eventName || 'OPM').toUpperCase();
-  } else {
-    // Last resort: show fallback teams so user isn't stuck
-    populateTeams([{name:'ADMINISTRATIVE UNIT',code:'ADMIN'},{name:'OPERATIONS UNIT',code:'OPS'},{name:'UTILITY UNIT',code:'UTIL'},{name:'SAFETY & SECURITY',code:'SEC'},{name:'TASK FORCE',code:'TF'}]);
-    evd.textContent = (cfg.eventName || 'OFFLINE MODE').toUpperCase();
-  }
-
-  // Background: try to fetch fresh teams (non-blocking, quick timeout)
-  var teams = null;
-  var eventName = null;
-
-  // Try CSV quickly
-  if (cfg.settingsCsvUrl) {
-    try {
-      var res = await fetch(cfg.settingsCsvUrl + '&t=' + Date.now());
-      var csv = await res.text();
-      var parsed = parseCSV(csv);
-      if (parsed.teams) {
-        teams = typeof parsed.teams === 'string' ? JSON.parse(parsed.teams) : parsed.teams;
-        if (teams && teams.length) eventName = parsed.eventName;
-      }
-    } catch(e) { /* silent */ }
-  }
-
-  // Try Apps Script
-  if (!teams && cfg.sheetUrl) {
-    try {
-      var r2 = await fetch(cfg.sheetUrl + '?action=getSettings&t=' + Date.now());
-      var d2 = await r2.json();
-      if (d2.settings && d2.settings.teams) {
-        teams = typeof d2.settings.teams === 'string' ? JSON.parse(d2.settings.teams) : d2.settings.teams;
-        if (teams && teams.length) eventName = d2.settings.eventName;
-      }
-    } catch(e) { /* silent */ }
-  }
-
-  // If we got fresh teams, update UI and cache
-  if (teams && teams.length) {
-    populateTeams(teams);
-    if (eventName) evd.textContent = eventName.toUpperCase();
-    try { localStorage.setItem('opm_teams_cache', JSON.stringify(teams)); } catch(e) {}
-    // Also update config
-    OPM.saveConfig({ teams: teams, eventName: eventName || cfg.eventName });
-  }
-}
-
-// ============================================================
-// GPS// ============================================================
 // GPS
 // ============================================================
-function setupGPS() {
-  if (!navigator.geolocation) {
-    document.getElementById('gps-status').innerHTML = '<span style="color:var(--danger);">📍 GPS NOT SUPPORTED</span>';
-    document.getElementById('gps-status').title = 'This device does not support GPS. Your location will be estimated at the event center.';
-    return;
-  }
-
-  // Try to get position — retry up to 5 times with increasing timeout
-  let attempts = 0;
-  const maxAttempts = 5;
-
-  function tryGetPosition() {
+function startGPS() {
+  if (!navigator.geolocation) { document.getElementById('gps-status').innerHTML='<span style="color:var(--danger);">📍 NO GPS</span>'; return; }
+  var attempts=0;
+  function tryGet() {
     attempts++;
-    document.getElementById('gps-status').innerHTML = '<span style="color:var(--warning);">📍 GPS: searching... (' + attempts + '/' + maxAttempts + ')</span>';
-
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        currentLat = pos.coords.latitude.toFixed(6);
-        currentLng = pos.coords.longitude.toFixed(6);
-        updateGpsDisplay(pos.coords.accuracy);
-        // Send location immediately once we get it
-        if (me) sendLocation(false);
-      },
-      err => {
-        console.log('[OPM] GPS attempt ' + attempts + ':', err.message);
-        if (attempts < maxAttempts) {
-          setTimeout(tryGetPosition, 5000); // retry every 5s
-        } else {
-          document.getElementById('gps-status').innerHTML =
-            '<span style="color:#ffaa00;" title="GPS unavailable. Try tapping SEND LOCATION, or move to an open area.">📍 GPS: unavailable</span>';
-        }
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
+    document.getElementById('gps-status').innerHTML='<span style="color:var(--warning);">📍 searching ('+attempts+'/5)</span>';
+    navigator.geolocation.getCurrentPosition(function(pos){
+      curLat=pos.coords.latitude.toFixed(6);
+      curLng=pos.coords.longitude.toFixed(6);
+      var q=(pos.coords.accuracy<30)?'good':(pos.coords.accuracy<100)?'fair':'poor';
+      document.getElementById('gps-status').innerHTML='<span class="gps-quality '+q+'"></span>📍 '+curLat+', '+curLng;
+      if (me) sendLocation(false);
+    },function(e){
+      if (attempts<5) setTimeout(tryGet,5000);
+      else document.getElementById('gps-status').innerHTML='<span style="color:#ffaa00;">📍 unavailable</span>';
+    },{enableHighAccuracy:true,timeout:15000,maximumAge:0});
   }
-
-  tryGetPosition();
-
-  // Also watch for position updates
-  navigator.geolocation.watchPosition(
-    pos => {
-      currentLat = pos.coords.latitude.toFixed(6);
-      currentLng = pos.coords.longitude.toFixed(6);
-      updateGpsDisplay(pos.coords.accuracy);
-    },
-    err => {
-      // Silent — getCurrentPosition handles the user-facing messages
-    },
-    { enableHighAccuracy: true, maximumAge: 30000, timeout: 30000 }
-  );
-}
-
-function updateGpsDisplay(accuracy) {
-  let quality = 'good';
-  let icon = '🟢';
-  if (accuracy > 30) { quality = 'fair'; icon = '🟡'; }
-  if (accuracy > 100) { quality = 'poor'; icon = '🔴'; }
-  document.getElementById('gps-status').innerHTML =
-    `<span class="gps-quality ${quality}"></span>📍 ${currentLat}, ${currentLng}`;
+  tryGet();
+  navigator.geolocation.watchPosition(function(pos){
+    curLat=pos.coords.latitude.toFixed(6);
+    curLng=pos.coords.longitude.toFixed(6);
+    document.getElementById('gps-status').innerHTML='<span class="gps-quality good"></span>📍 '+curLat+', '+curLng;
+  },function(){},{enableHighAccuracy:true,maximumAge:30000});
 }
 
 // ============================================================
 // LOGIN
 // ============================================================
 async function doLogin() {
-  const name = document.getElementById('l-name').value.trim();
-  const team = document.getElementById('l-team').value;
-  const post = document.getElementById('l-post').value.trim();
-  const code = document.getElementById('l-code').value.trim();
+  var name=document.getElementById('l-name').value.trim();
+  var team=document.getElementById('l-team').value;
+  var post=document.getElementById('l-post').value.trim();
+  var code=document.getElementById('l-code').value.trim();
+  if (!name||!team||!post||!code) { alert('Fill all fields.'); return; }
+  var btn=document.getElementById('login-btn'); btn.textContent='CHECKING...'; btn.disabled=true;
 
-  if (!name || !team || !post || !code) {
-    OPM.toast('Please fill in all fields', 'warning'); return;
-  }
+  var cfg=OPM.getConfig();
+  var teams=cfg.teams||FALLBACK_TEAMS;
+  var tObj=teams.find(function(t){return t.name===team;});
+  if (tObj&&tObj.code&&tObj.code.toUpperCase()!==code.toUpperCase()) { alert('Wrong access code.'); btn.textContent='REQUEST ACCESS ▶'; btn.disabled=false; return; }
 
-  const btn = document.getElementById('login-btn');
-  btn.textContent = '⏳ CHECKING...';
-  btn.disabled = true;
-
-  // Verify access code
-  const cfg = OPM.getConfig();
-  const teams = Array.isArray(cfg.teams) ? cfg.teams : [];
-  const teamObj = teams.find(t => t.name === team);
-
-  if (teamObj && teamObj.code && teamObj.code.toUpperCase() !== code.toUpperCase()) {
-    OPM.toast('Wrong access code for ' + team, 'error');
-    btn.textContent = 'REQUEST ACCESS ▶';
-    btn.disabled = false;
-    return;
-  }
-
-  btn.textContent = '⏳ REQUESTING...';
-
+  btn.textContent='REQUESTING...';
   try {
-    const devId = OPM.getDeviceId();
-    const url = OPM.SHEET_URL();
-
-    // Check existing approval
-    const checkRes = await fetch(url, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'checkApproval', deviceId: devId })
-    });
-    const checkData = await checkRes.json();
-
-    if (checkData.status === 'APPROVED') {
-      me = { devId, name, team, post, color: teamObj?.color || '#00e5ff' };
-      localStorage.setItem('opm_pending', JSON.stringify({ ...me, requested: Date.now() }));
-      await fetch(url, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'checkIn', deviceId: devId, name, team, post, lat: '', lng: '' })
-      });
-      enterApp();
-      return;
-    }
-
+    var devId=OPM.getDeviceId();
+    var url=OPM.SHEET_URL();
+    // Check if already approved
+    var cr=await fetch(url,{method:'POST',body:JSON.stringify({action:'checkApproval',deviceId:devId})});
+    var cd=await cr.json();
+    if (cd.status==='APPROVED') { me={devId:devId,name:name,team:team,post:post,color:tObj?tObj.color:'#00e5ff'}; localStorage.setItem('opm_pending',JSON.stringify(me)); enterApp(); return; }
     // Request approval
-    const res = await fetch(url, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'requestApproval', deviceId: devId, name, team, post })
-    });
-    const data = await res.json();
-
-    me = { devId, name, team, post, color: teamObj?.color || '#00e5ff' };
-    localStorage.setItem('opm_pending', JSON.stringify({ ...me, requested: Date.now() }));
-
-    if (data.status === 'APPROVED') enterApp();
-    else if (data.status === 'REJECTED') showRejected();
+    var rr=await fetch(url,{method:'POST',body:JSON.stringify({action:'requestApproval',deviceId:devId,name:name,team:team,post:post})});
+    var rd=await rr.json();
+    me={devId:devId,name:name,team:team,post:post,color:tObj?tObj.color:'#00e5ff'};
+    localStorage.setItem('opm_pending',JSON.stringify(me));
+    if (rd.status==='APPROVED') enterApp();
+    else if (rd.status==='REJECTED') showRejected();
     else showWaiting();
-
-  } catch (e) {
-    OPM.toast('Cannot reach server — check connection', 'error');
-  }
-
-  btn.textContent = 'REQUEST ACCESS ▶';
-  btn.disabled = false;
+  } catch(e) { alert('Cannot reach server. Check connection.'); }
+  btn.textContent='REQUEST ACCESS ▶'; btn.disabled=false;
 }
 
 // ============================================================
-// SCREEN NAVIGATION
+// SCREENS
 // ============================================================
 function showLogin() {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById('login-screen').classList.add('active');
-  if (approvalTimer) { clearInterval(approvalTimer); approvalTimer = null; }
+  if (approvalTimer) { clearInterval(approvalTimer); approvalTimer=null; }
 }
-
 function showWaiting() {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById('waiting-screen').classList.add('active');
-  document.getElementById('wait-name').textContent = me.name;
-  document.getElementById('wait-detail').textContent = `${me.team} · ${me.post}`;
-  approvalTimer = setInterval(pollApproval, 5000);
+  document.getElementById('wait-name').textContent=me.name;
+  document.getElementById('wait-detail').textContent=me.team+' · '+me.post;
+  approvalTimer=setInterval(pollApproval,5000);
 }
-
 function showRejected() {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById('rejected-screen').classList.add('active');
-  if (approvalTimer) { clearInterval(approvalTimer); approvalTimer = null; }
+  if (approvalTimer) { clearInterval(approvalTimer); approvalTimer=null; }
 }
-
-async function pollApproval() {
-  if (!me) return;
-  try {
-    const res = await fetch(OPM.SHEET_URL(), {
-      method: 'POST',
-      body: JSON.stringify({ action: 'checkApproval', deviceId: me.devId })
-    });
-    const data = await res.json();
-    if (data.status === 'APPROVED') enterApp();
-    else if (data.status === 'REJECTED') showRejected();
-    // If still PENDING but we see ourselves in Personnel, auto-enter
-  } catch (e) {}
-
-  // Double-check: try to just go in if we're already in the Personnel sheet
-  if (!me) return;
-  try {
-    const checkRes = await fetch(OPM.SHEET_URL() + '?action=getAll&t=' + Date.now(), { cache: 'no-store' });
-    const checkData = await checkRes.json();
-    if (checkData.personnel) {
-      const found = checkData.personnel.find(p =>
-        (p.deviceId || p.id || '') === me.devId && p.online === true
-      );
-      if (found) enterApp();
-    }
-  } catch (e) {}
-}
-
-// ============================================================
-// APP ENTRY / EXIT
-// ============================================================
 function enterApp() {
-  if (approvalTimer) { clearInterval(approvalTimer); approvalTimer = null; }
-
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('app-screen').classList.add('active');
-  document.getElementById('app-screen').style.display = 'flex';
-  document.getElementById('loc-bar').style.display = 'flex';
-  document.getElementById('compose-bar').style.display = 'block';
-  document.getElementById('meet-fab').style.display = 'flex';
-
-  document.getElementById('app-name').textContent = me.name;
-  document.getElementById('app-detail').textContent = `${me.team} · ${me.post}`;
-
-  // Start GPS
-  setupGPS();
-
-  // Start location auto-send
-  const cfg = OPM.getConfig();
-  const intervalMs = (parseInt(cfg.locInterval) || 60) * 1000;
-  locTimer = setInterval(() => sendLocation(false), intervalMs);
-
-  // Initial check-in
+  if (approvalTimer) { clearInterval(approvalTimer); approvalTimer=null; }
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('app-screen').style.display='flex'; document.getElementById('app-screen').classList.add('active');
+  document.getElementById('loc-bar').style.display='flex';
+  document.getElementById('compose-bar').style.display='block';
+  document.getElementById('meet-fab').style.display='flex';
+  document.getElementById('app-name').textContent=me.name;
+  document.getElementById('app-detail').textContent=me.team+' · '+me.post;
+  startGPS();
+  var intervalMs=(parseInt(OPM.getConfig().locInterval)||60)*1000;
+  locTimer=setInterval(function(){sendLocation(false);},intervalMs);
   checkIn();
-
-  // Start polling
-  fetchUpdates();
-  fetchTimer = setInterval(fetchUpdates, 7000);
-
-  OPM.toast('Connected — you are now online', 'success');
+  fetchMsgs();
+  fetchTimer=setInterval(fetchMsgs,7000);
 }
-
 function doLogout() {
-  if (!confirm('Log out and return to login screen?')) return;
-
-  if (me) {
-    fetch(OPM.SHEET_URL(), {
-      method: 'POST',
-      body: JSON.stringify({ action: 'markOneOffline', deviceId: me.devId })
-    }).catch(() => {});
-  }
-
-  if (fetchTimer) { clearInterval(fetchTimer); fetchTimer = null; }
-  if (locTimer) { clearInterval(locTimer); locTimer = null; }
-
-  me = null;
-  meetUrl = null;
-
-  document.getElementById('app-screen').style.display = 'none';
-  document.getElementById('loc-bar').style.display = 'none';
-  document.getElementById('compose-bar').style.display = 'none';
-  document.getElementById('meet-fab').style.display = 'none';
+  if (!confirm('Log out?')) return;
+  if (me) { fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'markOneOffline',deviceId:me.devId})}).catch(function(){}); }
+  if (fetchTimer) { clearInterval(fetchTimer); fetchTimer=null; }
+  if (locTimer) { clearInterval(locTimer); locTimer=null; }
+  me=null; meetUrl=null;
+  document.getElementById('app-screen').style.display='none';
+  document.getElementById('loc-bar').style.display='none';
+  document.getElementById('compose-bar').style.display='none';
+  document.getElementById('meet-fab').style.display='none';
   document.getElementById('meet-fab').classList.remove('active');
-
   showLogin();
 }
 
 // ============================================================
-// CHECK-IN & LOCATION
+// POLLING
 // ============================================================
+async function pollApproval() {
+  if (!me) return;
+  try {
+    var r=await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'checkApproval',deviceId:me.devId})});
+    var d=await r.json();
+    if (d.status==='APPROVED') enterApp();
+    else if (d.status==='REJECTED') showRejected();
+  } catch(e) {}
+}
 async function checkIn() {
   try {
-    await fetch(OPM.SHEET_URL(), {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'checkIn',
-        deviceId: me.devId,
-        name: me.name,
-        team: me.team,
-        post: me.post,
-        lat: currentLat || '',
-        lng: currentLng || ''
-      })
-    });
-    document.getElementById('status-txt').textContent = 'ONLINE';
-    document.getElementById('status-icon').style.color = 'var(--success)';
-  } catch (e) {
-    document.getElementById('status-txt').textContent = 'OFFLINE';
-    document.getElementById('status-icon').style.color = 'var(--danger)';
-  }
+    await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'checkIn',deviceId:me.devId,name:me.name,team:me.team,post:me.post,lat:curLat||'',lng:curLng||''})});
+    document.getElementById('status-txt').textContent='ONLINE'; document.getElementById('status-icon').style.color='var(--success)';
+  } catch(e) { document.getElementById('status-txt').textContent='OFFLINE'; document.getElementById('status-icon').style.color='var(--danger)'; }
 }
-
 async function reCheckIn() {
-  const btn = document.getElementById('checkin-btn');
-  btn.textContent = '⏳ CHECKING IN...';
-  btn.disabled = true;
-  await checkIn();
-  await fetchUpdates();
-  btn.textContent = '✅ RE-CHECK IN';
-  btn.disabled = false;
+  var btn=document.getElementById('checkin-btn'); btn.textContent='CHECKING...'; btn.disabled=true;
+  await checkIn(); await fetchMsgs();
+  btn.textContent='✅ RE-CHECK IN'; btn.disabled=false;
 }
-
 async function sendLocation(manual) {
   if (!me) return;
-
-  const lat = currentLat || '';
-  const lng = currentLng || '';
-
-  if (!lat && manual) {
-    OPM.toast('GPS not ready — move to an open area and try again, or wait 30 seconds', 'warning', 5000);
-    // Retry GPS now
-    setupGPS();
-    return;
-  }
-
+  if (!curLat&&manual) { alert('GPS not ready.'); return; }
   try {
-    await fetch(OPM.SHEET_URL(), {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'updateLocation',
-        deviceId: me.devId,
-        lat: lat,
-        lng: lng,
-        noGps: !lat  // flag so backend/commander knows
-      })
-    });
-
-    if (lat) await checkIn();
-
-    if (manual) {
-      const btn = document.getElementById('loc-btn');
-      btn.textContent = lat ? '✓ LOCATION SENT' : '⚠ GPS UNAVAILABLE';
-      setTimeout(() => { btn.textContent = '📍 SEND LOCATION'; }, 2000);
-    }
-  } catch (e) {
-    if (manual) OPM.toast('Could not send location — check connection', 'error');
-  }
+    await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'updateLocation',deviceId:me.devId,lat:curLat||'',lng:curLng||''})});
+    if (curLat) await checkIn();
+    if (manual) { var b=document.getElementById('loc-btn'); b.textContent=curLat?'✓ SENT':'⚠ NO GPS'; setTimeout(function(){b.textContent='📍 SEND LOCATION';},2000); }
+  } catch(e) { if (manual) alert('Failed.'); }
 }
 
 // ============================================================
-// MESSAGES & UPDATES
+// MESSAGES
 // ============================================================
-async function fetchUpdates() {
+async function fetchMsgs() {
   try {
-    const res = await fetch(OPM.SHEET_URL() + '?action=getMessages&t=' + Date.now(), { cache: 'no-store' });
-    const data = await res.json();
-
-    document.getElementById('last-sync').textContent = 'SYNC: ' + OPM.formatTime();
-    document.getElementById('status-txt').textContent = 'ONLINE';
-    document.getElementById('status-icon').style.color = 'var(--success)';
-
-    if (data.messages) renderMessages(data.messages);
-  } catch (e) {
-    document.getElementById('status-txt').textContent = 'OFFLINE';
-    document.getElementById('status-icon').style.color = 'var(--danger)';
-  }
+    var r=await fetch(OPM.SHEET_URL()+'?action=getMessages&t='+Date.now());
+    var d=await r.json();
+    document.getElementById('last-sync').textContent='SYNC: '+OPM.formatTime();
+    document.getElementById('status-txt').textContent='ONLINE'; document.getElementById('status-icon').style.color='var(--success)';
+    if (d.messages) renderMsgs(d.messages);
+  } catch(e) { document.getElementById('status-txt').textContent='OFFLINE'; document.getElementById('status-icon').style.color='var(--danger)'; }
 }
-
-function renderMessages(msgs) {
-  const list = document.getElementById('msg-list');
-  if (!msgs || !msgs.length) {
-    list.innerHTML = '<div style="padding:24px;text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">No messages yet.</div>';
-    return;
-  }
-
-  // Only show active Meet FAB if link is from last 6 hours
-  const sixHoursAgo = Date.now() - (6 * 60 * 60 * 1000);
-  let foundActiveMeet = false;
-
-  const reversed = [...msgs].reverse();
-
-  // Scan newest-first to find latest Meet link and check if call was ended
-  for (const m of reversed) {
-    const meetMatch = (m.body || '').match(/(https:\/\/meet\.google\.com\/[\w-]+)/);
-    const body = (m.body || '').toLowerCase();
-
-    if (meetMatch) {
-      // Parse message timestamp
-      let msgTime = 0;
-      try {
-        const d = new Date(m.time);
-        if (!isNaN(d.getTime())) msgTime = d.getTime();
-        else {
-          const today = new Date().toISOString().substring(0,10);
-          const d2 = new Date(today + 'T' + (m.time||''));
-          if (!isNaN(d2.getTime())) msgTime = d2.getTime();
-        }
-      } catch(e) {}
-
-      if (msgTime > sixHoursAgo) {
-        meetUrl = meetMatch[1];
-        foundActiveMeet = true;
-      }
-      break; // only care about most recent Meet link
-    }
-
-    // If newest message says call ended, clear
-    if (m.type === 'system' && (body.includes('ended') || body.includes('call ended'))) {
-      meetUrl = null;
+function renderMsgs(msgs) {
+  var list=document.getElementById('msg-list');
+  if (!msgs||!msgs.length) { list.innerHTML='<div style="padding:24px;text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">No messages yet.</div>'; return; }
+  var rev=[].concat(msgs).reverse();
+  // Find active Meet (last 6 hours)
+  var cutoff=Date.now()-6*60*60*1000;
+  var activeMeet=null;
+  for (var i=0;i<rev.length;i++) {
+    var m=rev[i];
+    if (m.body&&m.type==='system'&&m.body.toLowerCase().indexOf('ended')>=0) break;
+    var mm=(m.body||'').match(/(https:\/\/meet\.google\.com\/[\w-]+)/);
+    if (mm) {
+      var mt=0;
+      try { var dd=new Date(m.time||''); if (!isNaN(dd.getTime())) mt=dd.getTime(); } catch(e) {}
+      if (mt>cutoff) activeMeet=mm[1];
       break;
     }
   }
+  if (activeMeet) { meetUrl=activeMeet; document.getElementById('meet-fab').classList.add('active'); }
+  else { meetUrl=null; document.getElementById('meet-fab').classList.remove('active'); }
 
-  if (foundActiveMeet) {
-    document.getElementById('meet-fab').classList.add('active');
-  } else {
-    meetUrl = null;
-    document.getElementById('meet-fab').classList.remove('active');
-  }
-
-  list.innerHTML = reversed.map(m => {
-    const cls = m.type === 'broadcast' ? 'broadcast' : m.type === 'system' ? 'system' : '';
-    const meetMatch = (m.body || '').match(/(https:\/\/meet\.google\.com\/[\w-]+)/);
-    let msgTime = 0;
-    try { const d = new Date(m.time); if (!isNaN(d.getTime())) msgTime = d.getTime(); }
-    catch(e) {}
-    const isRecentMeet = meetMatch && foundActiveMeet && msgTime > sixHoursAgo;
-
-    return '<div class="msg-item ${cls}"><div class="sender">${m.sender || ''}${m.post ? ' &middot; ' + m.post : ''}</div><div class="body">${(m.body || '').replace(/(https:\/\/meet\.google\.com\/[\w-]+)/g, '')}</div>${m.photoUrl ? '<img class="photo" src="${m.photoUrl}" onclick="window.open(\'${m.photoUrl}\')" loading="lazy">' : ''}${isRecentMeet ? '<a href="${meetMatch[1]}" target="_blank" rel="noopener" class="join-btn">&blacktriangleright; JOIN VIDEO CALL</a>' : ''}<div class="time">${m.time || ''}</div></div>';
+  list.innerHTML=rev.map(function(m){
+    var cls=m.type==='broadcast'?'broadcast':m.type==='system'?'system':'';
+    var mm=(m.body||'').match(/(https:\/\/meet\.google\.com\/[\w-]+)/);
+    var bodyText=(m.body||'').replace(/(https:\/\/meet\.google\.com\/[\w-]+)/g,'');
+    var mt=0;
+    try { var dd2=new Date(m.time||''); if (!isNaN(dd2.getTime())) mt=dd2.getTime(); } catch(e) {}
+    var recentMeet=mm&&mt>cutoff&&activeMeet;
+    return '<div class="msg-item '+cls+'"><div class="msg-sender">'+(m.sender||'')+(m.post?' · '+m.post:'')+'</div><div class="msg-body">'+bodyText+'</div>'+(m.photoUrl?'<img class="msg-photo" src="'+m.photoUrl+'" onclick="window.open(\''+m.photoUrl+'\')">':'')+(recentMeet?'<a href="'+mm[1]+'" target="_blank" rel="noopener" class="join-btn">▶ JOIN VIDEO CALL</a>':'')+'<div class="msg-time">'+(m.time||'')+'</div></div>';
   }).join('');
-
-  list.scrollTop = 0;
 }
-
 async function sendMsg() {
-  const inp = document.getElementById('msg-input');
-  const body = inp.value.trim();
-  if (!body || !me) return;
-
-  inp.value = '';
+  var inp=document.getElementById('msg-input'); var body=inp.value.trim();
+  if (!body||!me) return; inp.value='';
   try {
-    await fetch(OPM.SHEET_URL(), {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'sendMessage',
-        sender: me.name,
-        team: me.team,
-        post: me.post,
-        body,
-        type: 'chat'
-      })
-    });
-    fetchUpdates();
-  } catch (e) {
-    inp.value = body;
-    OPM.toast('Send failed — check connection', 'error');
-  }
+    await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'sendMessage',sender:me.name,team:me.team,post:me.post,body:body,type:'chat'})});
+    fetchMsgs();
+  } catch(e) { inp.value=body; alert('Send failed.'); }
 }
 
 // ============================================================
 // PHOTO
 // ============================================================
-function takePhoto() {
-  document.getElementById('photo-input').click();
-}
-
+function takePhoto() { document.getElementById('photo-input').click(); }
 async function handlePhoto(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = async function (ev) {
-    const img = new Image();
-    img.onload = async function () {
-      const canvas = document.createElement('canvas');
-      const MAX = 800;
-      const scale = Math.min(MAX / img.width, MAX / img.height, 1);
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.65);
-
+  var file=e.target.files[0]; if (!file) return; e.target.value='';
+  var reader=new FileReader();
+  reader.onload=async function(ev) {
+    var img=new Image();
+    img.onload=async function(){
+      var c=document.createElement('canvas'); var M=800;
+      var s=Math.min(M/img.width,M/img.height,1);
+      c.width=img.width*s; c.height=img.height*s;
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      var du=c.toDataURL('image/jpeg',0.65);
       try {
-        const ur = await fetch(OPM.SHEET_URL(), {
-          method: 'POST',
-          body: JSON.stringify({ action: 'uploadPhoto', sender: me.name, photoData: dataUrl })
-        });
-        const ud = await ur.json();
-        await fetch(OPM.SHEET_URL(), {
-          method: 'POST',
-          body: JSON.stringify({
-            action: 'sendMessage',
-            sender: me.name,
-            team: me.team,
-            post: me.post,
-            body: '📸 Photo report',
-            type: 'photo',
-            photoUrl: ud.photoUrl,
-            photoLat: currentLat || '',
-            photoLng: currentLng || ''
-          })
-        });
-        fetchUpdates();
-        OPM.toast('Photo sent', 'success');
-      } catch (err) {
-        OPM.toast('Photo upload failed', 'error');
-      }
-    };
-    img.src = ev.target.result;
-  };
-  reader.readAsDataURL(file);
-  e.target.value = '';
+        var ur=await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'uploadPhoto',sender:me.name,photoData:du})});
+        var ud=await ur.json();
+        await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'sendMessage',sender:me.name,team:me.team,post:me.post,body:'📸 Photo',type:'photo',photoUrl:ud.photoUrl})});
+        fetchMsgs();
+      } catch(err) { alert('Upload failed.'); }
+    }; img.src=ev.target.result;
+  }; reader.readAsDataURL(file);
 }
 
 // ============================================================
-// VIDEO CALL
+// VIDEO
 // ============================================================
-function joinMeet() {
-  if (meetUrl) {
-    window.open(meetUrl, '_blank', 'noopener');
-  } else {
-    OPM.toast('No active video call', 'warning');
-  }
-}
+function joinMeet() { if (meetUrl) window.open(meetUrl,'_blank'); else alert('No active call.'); }
 
 // ============================================================
-// SESSION RESTORE
+// INIT — RUNS IMMEDIATELY, NEVER BLOCKS
 // ============================================================
-async function restoreSession() {
-  const pending = JSON.parse(localStorage.getItem('opm_pending') || 'null');
-  if (!pending) return false;
-
-  try {
-    if (pending.name) document.getElementById('l-name').value = pending.name;
-    if (pending.post) document.getElementById('l-post').value = pending.post;
-
-    const sel = document.getElementById('l-team');
-    if (pending.team) {
-      for (let o of sel.options) {
-        if (o.value === pending.team) { o.selected = true; break; }
-      }
-    }
-  } catch (e) {}
-
-  me = pending;
-  try {
-    const res = await fetch(OPM.SHEET_URL(), {
-      method: 'POST',
-      body: JSON.stringify({ action: 'checkApproval', deviceId: me.devId })
-    });
-    const data = await res.json();
-    if (data.status === 'REJECTED') { localStorage.removeItem('opm_pending'); showRejected(); return true; }
-    if (data.status === 'PENDING') { showWaiting(); return true; }
-  } catch (e) {}
-
-  return false;
-}
-
-// ============================================================
-// INITIALIZATION
-// ============================================================
-document.addEventListener('DOMContentLoaded', function() {
-  var devId = OPM.getDeviceId();
-  document.getElementById('device-id-disp').textContent = devId.slice(-8);
-  document.getElementById('l-code').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
-  document.getElementById('msg-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') sendMsg(); });
+(function initApp() {
+  document.getElementById('device-id-disp').textContent = OPM.getDeviceId().slice(-8);
+  document.getElementById('l-code').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+  document.getElementById('msg-input').addEventListener('keydown',function(e){if(e.key==='Enter')sendMsg();});
 
   var cfg = OPM.getConfig();
   if (!cfg.sheetUrl || !cfg.settingsCsvUrl) {
@@ -1090,53 +535,37 @@ document.addEventListener('DOMContentLoaded', function() {
     return;
   }
 
-  // NON-BLOCKING: show login instantly, load teams + GPS in background
-  loadSettings();
-  setupGPS();
-  setInterval(loadSettings, 60000);
+  // Teams load NOW (non-blocking — shows fallback if cache empty)
+  loadTeamsNow();
+  startGPS();
 
-  // Auto-login check after 1 second (don't block)
-  setTimeout(function() {
-    autoLogin();
-  }, 1000);
-});
-
-// Separate auto-login function (runs after page is ready)
-async function autoLogin() {
-  var pending = JSON.parse(localStorage.getItem('opm_pending') || 'null');
-  if (!pending || !pending.devId) return;
-  me = pending;
-  try {
-    var res = await fetch(OPM.SHEET_URL(), {
-      method: 'POST',
-      body: JSON.stringify({ action: 'checkApproval', deviceId: pending.devId })
-    });
-    var data = await res.json();
-    if (data.status === 'APPROVED') { enterApp(); }
-    else if (data.status === 'PENDING') { showWaiting(); }
-    else if (data.status === 'REJECTED') { localStorage.removeItem('opm_pending'); showRejected(); }
-  } catch(e) {
-    // Server unreachable — enter anyway if we have a session
-    enterApp();
+  // Auto-login check (only if session exists)
+  var pending = JSON.parse(localStorage.getItem('opm_pending')||'null');
+  if (pending && pending.devId) {
+    me = pending;
+    fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'checkApproval',deviceId:pending.devId})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if (d.status==='APPROVED') enterApp();
+        else if (d.status==='PENDING') showWaiting();
+        else if (d.status==='REJECTED') { localStorage.removeItem('opm_pending'); showRejected(); }
+      })
+      .catch(function(){ enterApp(); });
   }
-}
-
+})();
 </script>
 
-<!-- Service Worker -->
 <script>
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', async () => {
-    const keys = await caches.keys();
-    for (const key of keys) {
-      if (key !== 'opm-v3') { await caches.delete(key); }
-    }
+  window.addEventListener('load', async function() {
+    var keys = await caches.keys();
+    for (var i=0;i<keys.length;i++) { if (keys[i]!=='opm-v3') await caches.delete(keys[i]); }
     navigator.serviceWorker.register('./sw.js')
-      .then(r => console.log('[OPM] SW registered:', r.scope))
-      .catch(e => console.log('[OPM] SW failed:', e));
+      .then(function(r){console.log('[OPM] SW:',r.scope);})
+      .catch(function(e){console.log('[OPM] SW:',e);});
   });
 }
 </script>
-<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1aed00ffe6d64c8',t:'MTc4NDAxNDEyOA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1dfccd77bdddd99',t:'MTc4NDUyNzc5OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
 </html>
