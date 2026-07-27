@@ -868,18 +868,22 @@ function addSystemMessage(body) {
   });
 }
 
+function escapeHtml(value) {
+  return String(value || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 function renderMessageBody(body) {
   if (!body) return '';
-  // Linkify URLs
-  return body.replace(/(https?:\/\/[^\s<]+)/gi, url => {
-    const isMeet = /meet\.google\.com/i.test(url);
+  // Escape text first, then linkify URLs and preserve photo-report line breaks.
+  return escapeHtml(body).replace(/(https?:\/\/[^\s<]+)/gi, url => {
+    const href = url.replace(/&amp;/g, '&');
+    const isMeet = /meet\.google\.com/i.test(href);
     if (isMeet) {
       return `
         <span style="color:#c0d8f0;word-break:break-all;">${url}</span>
-        <a href="${url}" target="_blank" rel="noopener" class="msg-join-btn">▶ JOIN VIDEO CALL</a>`;
+        <a href="${href}" target="_blank" rel="noopener" class="msg-join-btn">▶ JOIN VIDEO CALL</a>`;
     }
-    return `<a href="${url}" target="_blank" rel="noopener" style="color:var(--accent);">${url}</a>`;
-  });
+    return `<a href="${href}" target="_blank" rel="noopener" style="color:var(--accent);">${url}</a>`;
+  }).replace(/\n/g, '<br>');
 }
 
 function renderPhotoHtml(photoUrl) {

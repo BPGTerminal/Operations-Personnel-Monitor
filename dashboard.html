@@ -46,6 +46,11 @@ body { min-height: 100vh; display: flex; flex-direction: column; overflow-y: aut
 .photo-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--transition); }
 .photo-thumb:hover img { transform: scale(1.05); }
 .photo-thumb .photo-meta { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,.85)); padding: 6px 8px; font-size: 8px; font-family: var(--font-mono); color: #fff; }
+.photo-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+.photo-card .photo-thumb { margin: 0; }
+.photo-caption { font-size: var(--font-sm); color: #fff; line-height: 1.35; font-weight: 600; }
+.photo-details { font-family: var(--font-mono); font-size: 8px; color: var(--text-dim); line-height: 1.55; word-break: break-word; }
+.photo-credit { color: var(--accent); font-weight: 700; }
 
 .narrative { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 16px; grid-column: 1 / -1; }
 .narrative h3 { font-family: var(--font-mono); font-size: 11px; color: var(--accent); letter-spacing: 2px; margin-bottom: 8px; }
@@ -77,7 +82,7 @@ body { min-height: 100vh; display: flex; flex-direction: column; overflow-y: aut
   body { background: #fff !important; color: #000 !important; overflow: visible !important; }
   .dash-header, .filter-bar, .btn { display: none !important; }
   .dash-content { grid-template-columns: 1fr 1fr !important; padding: 10px !important; }
-  .stat-card, .chart-card, .narrative { background: #fff !important; border: 1px solid #ccc !important; break-inside: avoid; }
+  .stat-card, .chart-card, .narrative, .photo-card { background: #fff !important; border: 1px solid #ccc !important; break-inside: avoid; }
   .stat-value { color: #1a4d8f !important; } .chart-title { color: #1a4d8f !important; }
   * { color: #000 !important; text-shadow: none !important; }
 }
@@ -176,7 +181,7 @@ function populateUnitDropdown() {
 // Client-side message categorization (mirrors backend)
 function catMsg(body, type) {
   const b = (body||'').toLowerCase();
-  if (type==='photo') return 'Photo Reports';
+  if (type==='photo') return 'Photo Accomplishments';
   if (type==='broadcast') return 'Broadcasts';
   if (type==='system') return 'System';
   if (b.includes('apprehend')||b.includes('violation')||b.includes('citation')) return 'Apprehensions';
@@ -186,6 +191,38 @@ function catMsg(body, type) {
   if (b.includes('traffic')||b.includes('vehicle')||b.includes('parking')) return 'Traffic';
   if (b.includes('incident')||b.includes('alert')||b.includes('emergency')) return 'Incidents';
   return 'General Comms';
+}
+
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function photoEmbedUrl(url) {
+  const m = String(url||'').match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  return m ? 'https://lh3.googleusercontent.com/d/' + m[1] : (url || '');
+}
+function fmtDT(v) { return String(v || '').replace('T',' '); }
+function isTaskLike(body, hasPhoto) {
+  return !!hasPhoto || /(done|complete|completed|accomplished|accomplishment|cleared|secured|finished|resolved|handled|processed|checked|inspected|documented|submitted|delivered|assisted|deployed)/i.test(body||'');
+}
+function isIncidentLike(body) {
+  return /(apprehend|violation|incident|issue|alert|emergency|accident|breach|unauthorized)/i.test(body||'');
+}
+function extractLabeled(body, label) {
+  const re = new RegExp(label + ':\\s*([^\\n]+)', 'i');
+  const m = String(body||'').match(re);
+  return m ? m[1].trim() : '';
+}
+function photoDescription(p) {
+  let d = p.photoDesc || p.description || extractLabeled(p.body, 'Description');
+  if (!d && p.body) d = String(p.body).replace(/^📸\s*(ACCOMPLISHMENT PHOTO|Photo)\s*/i,'').trim();
+  return d || 'Photo accomplishment report';
+}
+function photoWhere(p) { return p.photoWhere || extractLabeled(p.body, 'Where') || p.post || ''; }
+function photoWhy(p) { return p.photoWhy || extractLabeled(p.body, 'Why/Purpose') || extractLabeled(p.body, 'Why') || ''; }
+function photoCapture(p) { return p.captureTime || extractLabeled(p.body, 'Captured') || p.time || ''; }
+function messagePreview(m) {
+  const body = String(m.body || '').replace(/\n+/g, ' · ');
+  return body.length > 150 ? body.substring(0, 150) + '…' : body;
 }
 
 async function refreshDashboard() {
@@ -209,7 +246,7 @@ function buildDashboard(data) {
   const cfg = OPM.getConfig();
 
   // Filter by unit
-  let unitData = Array.isArray(data.unitData) ? data.unitData : [];
+  let unitData = Array.isArray(data.unitData) ? data.unitData.map(u => ({...u, tasks: Math.max(u.tasks||0, u.photos||0)})) : [];
   let categories = data.categories || {};
   let daily = data.dailyActivity || [];
   let photos = data.photos || [];
@@ -219,11 +256,28 @@ function buildDashboard(data) {
   if (selectedUnit) {
     unitData = unitData.filter(u => u.team === selectedUnit);
     const filteredMsgs = all.filter(m => m.team === selectedUnit);
-    categories = {}; filteredMsgs.forEach(m => { const c = catMsg((m.body||'').toLowerCase(), m.type||'chat'); if (!categories[c]) categories[c]=0; categories[c]++; });
-    daily = [];
     photos = photos.filter(p => p.team === selectedUnit);
+    categories = {};
+    filteredMsgs.forEach(m => { const c = catMsg((m.body||'').toLowerCase(), m.type||'chat'); if (!categories[c]) categories[c]=0; categories[c]++; });
+    const dayMap = {};
+    filteredMsgs.forEach(m => {
+      const ds = (m.time||'').substring(0,10) || 'unknown';
+      if (!dayMap[ds]) dayMap[ds] = {date:ds,messages:0,photos:0};
+      dayMap[ds].messages++;
+      if (m.photo || m.photoUrl) dayMap[ds].photos++;
+    });
+    daily = Object.values(dayMap).sort((a,b)=>a.date.localeCompare(b.date));
     all = filteredMsgs;
     const fpt = {}; if (perTeam[selectedUnit]) fpt[selectedUnit] = perTeam[selectedUnit]; perTeam = fpt;
+    if (unitData.length === 0 && filteredMsgs.length > 0) {
+      unitData = [{
+        team:selectedUnit,
+        messages:filteredMsgs.length,
+        photos:photos.length,
+        tasks:filteredMsgs.filter(m => isTaskLike(m.body, !!(m.photo||m.photoUrl))).length,
+        incidents:filteredMsgs.filter(m => isIncidentLike(m.body)).length
+      }];
+    }
   }
 
   const unitNames = unitData.map(u => u.team);
@@ -236,7 +290,7 @@ function buildDashboard(data) {
   const totalIncs  = unitData.reduce((a,u)=>a+(u.incidents||0), 0);
   const totalMsgs  = unitData.reduce((a,u)=>a+(u.messages||0), 0);
   const totalPhotos= unitData.reduce((a,u)=>a+(u.photos||0), 0);
-  const topUnit    = unitData.sort((a,b)=>(b.tasks||0)-(a.tasks||0))[0];
+  const topUnit    = unitData.slice().sort((a,b)=>(b.tasks||0)-(a.tasks||0))[0];
   const incidentUnits = unitData.filter(u => (u.incidents||0)>0);
   const unitLabel  = selectedUnit ? ' — ' + selectedUnit : '';
   const dateFrom = document.getElementById('f-date-from').value || 'beginning';
@@ -248,39 +302,40 @@ function buildDashboard(data) {
   html += `<div class="stats-row">
     <div class="stat-card"><div class="stat-value">${totalMsgs}</div><div class="stat-label">Total Messages</div></div>
     <div class="stat-card"><div class="stat-value">${totalPhotos}</div><div class="stat-label">Photo Reports</div></div>
-    <div class="stat-card"><div class="stat-value" style="color:var(--success);">${totalTasks}</div><div class="stat-label">Tasks Accomplished</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--success);">${totalTasks}</div><div class="stat-label">Accomplishments</div></div>
     <div class="stat-card"><div class="stat-value" style="color:var(--warning);">${totalIncs}</div><div class="stat-label">Incidents Logged</div></div>
     <div class="stat-card"><div class="stat-value">${selectedUnit ? all.length : s.totalPersonnel}</div><div class="stat-label">${selectedUnit ? 'Comms Exchanged' : 'Personnel Deployed'}</div></div>
     <div class="stat-card"><div class="stat-value" style="color:var(--success);">${selectedUnit ? (perTeam[selectedUnit]||0) : s.onlineNow}</div><div class="stat-label">${selectedUnit ? 'Staff in Unit' : 'Currently Online'}</div></div>
   </div>`;
 
-  // Tasks chart
+  // Accomplishments chart
   if (unitNames.length > 0) {
-    html += `<div class="chart-card ${selectedUnit ? 'full' : 'half'}"><div class="chart-title">📊 Tasks Accomplished${unitLabel}</div><div class="chart-wrap"><canvas id="chart-tasks"></canvas></div>
+    html += `<div class="chart-card ${selectedUnit ? 'full' : 'half'}"><div class="chart-title">✅ Accomplishments / Tasks${unitLabel}</div><div class="chart-wrap"><canvas id="chart-tasks"></canvas></div>
       <div class="insight${topUnit && topUnit.tasks>0 ? ' success' : ''}"><strong>Insight:</strong> ${topUnit && topUnit.tasks>0
-        ? `<strong>${topUnit.team}</strong> led with <strong>${topUnit.tasks} tasks</strong>${selectedUnit ? '.' : ', the highest output among all units.'}`
-        : 'No tasks recorded. Personnel should log accomplishments via the app.'}
-      ${selectedUnit && totalMsgs>0 ? `<br>Total for <strong>${selectedUnit}</strong>: ${totalMsgs} messages, ${totalPhotos} photos.` : ''}</div></div>`;
+        ? `<strong>${esc(topUnit.team)}</strong> credited with <strong>${topUnit.tasks} accomplishments</strong>${selectedUnit ? '.' : ', the highest output among all units.'}`
+        : 'No accomplishments recorded. Personnel should send photo reports with descriptions via the app.'}
+      ${totalPhotos>0 ? `<br><strong>Photo reports are counted as accomplishments</strong> and credited to the submitting unit.` : ''}
+      ${selectedUnit && totalMsgs>0 ? `<br>Total for <strong>${esc(selectedUnit)}</strong>: ${totalMsgs} messages, ${totalPhotos} photo reports.` : ''}</div></div>`;
 
     // Incidents chart
     html += `<div class="chart-card ${selectedUnit ? 'full' : 'half'}"><div class="chart-title">⚠ Incidents & Reports${unitLabel}</div><div class="chart-wrap"><canvas id="chart-incidents"></canvas></div>
       <div class="insight${totalIncs>0 ? ' warn' : ''}"><strong>Insight:</strong> ${totalIncs>0
-        ? incidentUnits.map(u => `<strong>${u.team}</strong>: ${u.incidents} incident${u.incidents>1?'s':''}`).join('; ')+`. Total: <strong>${totalIncs}</strong> incidents.`
-        : `No incidents${selectedUnit ? ' for ' + selectedUnit : ''} — operating smoothly.`}</div></div>`;
+        ? incidentUnits.map(u => `<strong>${esc(u.team)}</strong>: ${u.incidents} incident${u.incidents>1?'s':''}`).join('; ')+`. Total: <strong>${totalIncs}</strong> incidents.`
+        : `No incidents${selectedUnit ? ' for ' + esc(selectedUnit) : ''} — operating smoothly.`}</div></div>`;
 
-    // Daily trend (ALL UNITS only)
-    if (!selectedUnit && dailyLabels.length > 1) {
-      html += `<div class="chart-card full"><div class="chart-title">📈 Daily Activity Trend</div><div class="chart-wrap"><canvas id="chart-daily"></canvas></div>
-        <div class="insight"><strong>Insight:</strong> Peak: <strong>${Math.max(...dailyMsgs)} messages</strong> on <strong>${dailyLabels[dailyMsgs.indexOf(Math.max(...dailyMsgs))]}</strong>. Avg: <strong>${(dailyMsgs.reduce((a,b)=>a+b,0)/dailyMsgs.length).toFixed(1)}</strong> msgs/day.</div></div>`;
+    // Daily trend
+    if (dailyLabels.length > 1) {
+      html += `<div class="chart-card full"><div class="chart-title">📈 Daily Activity Trend${unitLabel}</div><div class="chart-wrap"><canvas id="chart-daily"></canvas></div>
+        <div class="insight"><strong>Insight:</strong> Peak: <strong>${Math.max(...dailyMsgs)} messages</strong> on <strong>${esc(dailyLabels[dailyMsgs.indexOf(Math.max(...dailyMsgs))])}</strong>. Avg: <strong>${(dailyMsgs.reduce((a,b)=>a+b,0)/dailyMsgs.length).toFixed(1)}</strong> msgs/day.</div></div>`;
     }
   }
 
   // Categories doughnut
   if (catLabels.length > 0) {
     html += `<div class="chart-card ${selectedUnit ? 'full' : 'half'}"><div class="chart-title">🍩 Communications${unitLabel}</div><div class="chart-wrap"><canvas id="chart-cats"></canvas></div>
-      <div class="insight"><strong>Insight:</strong> ${catLabels[0]}: <strong>${catValues[0]}</strong> (${((catValues[0]/Math.max(totalMsgs,1))*100).toFixed(0)}%).
-      ${catLabels.length>1 ? `<strong>${catLabels[1]}</strong>: ${catValues[1]}.` : ''}
-      ${selectedUnit ? `<br><strong>${selectedUnit}</strong> focuses on ${catLabels.slice(0,3).join(', ')}.` : ''}</div></div>`;
+      <div class="insight"><strong>Insight:</strong> ${esc(catLabels[0])}: <strong>${catValues[0]}</strong> (${((catValues[0]/Math.max(totalMsgs,1))*100).toFixed(0)}%).
+      ${catLabels.length>1 ? `<strong>${esc(catLabels[1])}</strong>: ${catValues[1]}.` : ''}
+      ${selectedUnit ? `<br><strong>${esc(selectedUnit)}</strong> focuses on ${esc(catLabels.slice(0,3).join(', '))}.` : ''}</div></div>`;
 
     if (!selectedUnit) {
       html += `<div class="chart-card half"><div class="chart-title">👥 Personnel by Unit</div><div class="chart-wrap"><canvas id="chart-personnel"></canvas></div>
@@ -288,32 +343,49 @@ function buildDashboard(data) {
     }
   }
 
-  // Photo gallery
+  // Photo accomplishment gallery
   if (photos.length > 0) {
-    html += `<div class="chart-card full"><div class="chart-title">📸 Operations Photos${unitLabel} (${photos.length})</div><div class="photo-grid">`;
-    photos.slice(0,12).forEach(p => {
-      const m = (p.url||'').match(/[?&]id=([a-zA-Z0-9_-]+)/);
-      const e = m ? 'https://lh3.googleusercontent.com/d/'+m[1] : p.url;
-      html += `<div class="photo-thumb" onclick="openPhoto('${e}','${p.url}')" title="${p.sender} · ${p.team}"><img src="${e}" loading="lazy" onerror="this.parentElement.style.display='none'"><div class="photo-meta">${p.sender} · ${p.time||''}</div></div>`;
+    html += `<div class="chart-card full"><div class="chart-title">📸 Photo Accomplishments${unitLabel} (${photos.length})</div><div class="photo-grid">`;
+    photos.forEach(p => {
+      const e = photoEmbedUrl(p.url);
+      const desc = photoDescription(p);
+      const cap = fmtDT(photoCapture(p));
+      const where = photoWhere(p);
+      const why = photoWhy(p);
+      html += `<div class="photo-card">
+        <div class="photo-thumb" data-embed="${esc(e)}" data-url="${esc(p.url)}" onclick="openPhoto(this.dataset.embed,this.dataset.url)" title="${esc(p.sender)} · ${esc(p.team)}">
+          <img src="${esc(e)}" loading="lazy" onerror="this.parentElement.style.display='none'">
+          <div class="photo-meta">${esc(p.sender)} · ${esc(p.time||'')}</div>
+        </div>
+        <div class="photo-caption">${esc(desc)}</div>
+        <div class="photo-details">
+          <span class="photo-credit">${esc(p.team||'UNASSIGNED')}</span> · ${esc(p.sender||'')}<br>
+          ${cap ? 'Captured: '+esc(cap)+'<br>' : ''}
+          ${where ? 'Where: '+esc(where)+'<br>' : ''}
+          ${why ? 'Why: '+esc(why)+'<br>' : ''}
+          ${p.lat||p.lng ? 'GPS: '+esc([p.lat,p.lng].filter(Boolean).join(', ')) : ''}
+        </div>
+      </div>`;
     });
-    html += `</div><div class="insight"><strong>Insight:</strong> <strong>${photos.length} photos</strong> submitted${selectedUnit?' by '+selectedUnit:''}. ${photos.length>6?'Showing 12 of '+photos.length+'.':''}</div></div>`;
+    html += `</div><div class="insight success"><strong>Report rule:</strong> Every described photo above is counted as an accomplishment and credited to the submitting unit. ${photos.length>=80?'Showing latest 80 photo reports.':''}</div></div>`;
   } else if (selectedUnit) {
-    html += `<div class="chart-card full"><div class="chart-title">📸 Operations Photos${unitLabel}</div><div class="empty-state">No photos submitted by ${selectedUnit} in this period.</div></div>`;
+    html += `<div class="chart-card full"><div class="chart-title">📸 Photo Accomplishments${unitLabel}</div><div class="empty-state">No described photo accomplishments submitted by ${esc(selectedUnit)} in this period.</div></div>`;
   }
 
   // Narrative (EDITABLE)
+  const photoLines = photos.slice(0,12).map(p => `• ${p.team || 'UNASSIGNED'}: ${photoDescription(p)} — ${p.sender || ''}${photoWhere(p) ? ' @ ' + photoWhere(p) : ''}${photoCapture(p) ? ' (' + fmtDT(photoCapture(p)) + ')' : ''}`).join('\n');
   const narrativeAuto = `${selectedUnit ? selectedUnit : 'OPM'} tracked ${totalMsgs} communications${selectedUnit ? '' : ' across all operations'}.
-${topUnit && topUnit.tasks>0 ? `${topUnit.team} led with ${topUnit.tasks} tasks. ` : ''}${totalIncs>0 ? `${totalIncs} incidents logged and documented. ` : 'No incidents reported. '}${totalPhotos>0 ? `${totalPhotos} photo reports document field conditions.` : ''}`;
+${totalTasks>0 ? `${totalTasks} accomplishments/tasks were recorded and credited to the responsible unit. ` : ''}${topUnit && topUnit.tasks>0 ? `${topUnit.team} led with ${topUnit.tasks} accomplishments. ` : ''}${totalIncs>0 ? `${totalIncs} incidents were logged and documented. ` : 'No incidents reported. '}${totalPhotos>0 ? `${totalPhotos} photo reports documented field accomplishments and conditions.` : ''}${photoLines ? '\n\nKey photo accomplishments:\n' + photoLines : ''}`;
 
   html += `<div class="narrative" id="narrative-block">
     <div class="flex justify-between items-center" style="margin-bottom:8px;">
-      <h3 style="margin-bottom:0;">📝 ${selectedUnit ? selectedUnit + ' — ' : ''}OPERATIONS NARRATIVE</h3>
+      <h3 style="margin-bottom:0;">📝 ${selectedUnit ? esc(selectedUnit) + ' — ' : ''}OPERATIONS NARRATIVE</h3>
       <span style="font-family:var(--font-mono);font-size:8px;color:var(--text-dim);">✏️ EDITABLE — Click text to edit, then SAVE before printing</span>
     </div>
-    <p style="margin-bottom:6px;"><strong>Period:</strong> ${dateFrom} → ${dateTo}<br>
-    ${selectedUnit ? '<strong>Unit:</strong> ' + selectedUnit + '<br><strong>Staff:</strong> ' + (perTeam[selectedUnit]||0) + '<br>' : '<strong>Personnel:</strong> ' + s.totalPersonnel + ' across ' + Object.keys(perTeam).length + ' units<br>'}
-    <strong>Messages:</strong> ${totalMsgs} · <strong>Photos:</strong> ${totalPhotos} · <strong>Tasks:</strong> ${totalTasks} · <strong>Incidents:</strong> ${totalIncs}</p>
-    <textarea class="narrative-edit" id="narrative-text" placeholder="Edit the operations narrative here...">${narrativeAuto}</textarea>
+    <p style="margin-bottom:6px;"><strong>Period:</strong> ${esc(dateFrom)} → ${esc(dateTo)}<br>
+    ${selectedUnit ? '<strong>Unit:</strong> ' + esc(selectedUnit) + '<br><strong>Staff:</strong> ' + (perTeam[selectedUnit]||0) + '<br>' : '<strong>Personnel:</strong> ' + s.totalPersonnel + ' across ' + Object.keys(perTeam).length + ' units<br>'}
+    <strong>Messages:</strong> ${totalMsgs} · <strong>Photos:</strong> ${totalPhotos} · <strong>Accomplishments:</strong> ${totalTasks} · <strong>Incidents:</strong> ${totalIncs}</p>
+    <textarea class="narrative-edit" id="narrative-text" placeholder="Edit the operations narrative here...">${esc(narrativeAuto)}</textarea>
     <div class="narrative-actions">
       <button class="btn btn-success btn-sm" onclick="saveNarrative()">💾 SAVE NARRATIVE</button>
       <button class="btn btn-sm" onclick="resetNarrative()">↺ RESET</button>
@@ -323,14 +395,14 @@ ${topUnit && topUnit.tasks>0 ? `${topUnit.team} led with ${topUnit.tasks} tasks.
 
   // Message log
   if (all.length > 0) {
-    html += `<div class="msg-log"><div class="chart-title" style="margin-bottom:12px;">📋 Message Log${unitLabel} (${all.length})</div>
-      ${all.slice().reverse().slice(0,100).map(m => `<div class="msg-log-row"><span class="msg-log-time">${(m.time||'').substring(0,19)}</span><span class="msg-log-sender">${m.sender||''}${m.team?' ['+m.team+']':''}</span><span class="msg-log-body">${(m.body||'').substring(0,120)}${m.photo?' 📷':''}</span></div>`).join('')}
-      ${all.length>100 ? '<div style="text-align:center;padding:8px;color:var(--text-dim);">Latest 100 of '+all.length+' messages</div>' : ''}</div>`;
+    html += `<div class="msg-log"><div class="chart-title" style="margin-bottom:12px;">📋 Message / Accomplishment Log${unitLabel} (${all.length})</div>
+      ${all.slice().reverse().slice(0,150).map(m => `<div class="msg-log-row"><span class="msg-log-time">${esc((m.time||'').substring(0,19))}</span><span class="msg-log-sender">${esc(m.sender||'')}${m.team?' ['+esc(m.team)+']':''}</span><span class="msg-log-body">${esc(messagePreview(m))}${m.photo||m.photoUrl?' 📷':''}</span></div>`).join('')}
+      ${all.length>150 ? '<div style="text-align:center;padding:8px;color:var(--text-dim);">Latest 150 of '+all.length+' messages</div>' : ''}</div>`;
   }
 
   document.getElementById('dash-content').innerHTML = html;
   setTimeout(() => { const nt = document.getElementById("narrative-text"); if (nt && !nt.dataset.loaded) { _originalNarrative = nt.value; const cfg = OPM.getConfig(); const unit = document.getElementById("f-unit").value || "ALL"; const df = document.getElementById("f-date-from").value || "any"; const dt = document.getElementById("f-date-to").value || "any"; const key = "nar_" + unit.replace(/[^a-z0-9]/gi,"_") + "_" + df + "_" + dt; if (cfg[key]) { nt.value = cfg[key]; } nt.dataset.loaded = "1"; } }, 300);
-  document.getElementById('dash-title').innerHTML = `${selectedUnit || cfg.eventName || 'Operations Summary'} <span>// ${selectedUnit ? 'Unit Report' : cfg.commander || 'Report'}</span>`;
+  document.getElementById('dash-title').innerHTML = `${esc(selectedUnit || cfg.eventName || 'Operations Summary')} <span>// ${esc(selectedUnit ? 'Unit Report' : cfg.commander || 'Report')}</span>`;
   setTimeout(() => renderCharts(unitNames, unitTasks, unitMsgs, unitIncs, dailyLabels, dailyMsgs, dailyPhotos, catLabels, catValues, perTeam, selectedUnit), 200);
 }
 
@@ -338,7 +410,7 @@ function renderCharts(unitNames, unitTasks, unitMsgs, unitIncs, dailyLabels, dai
   const colors = ['#00e5ff','#00ff88','#ff6b35','#ffd166','#a29bfe','#fd79a8','#55efc4'];
   const el1 = document.getElementById('chart-tasks');
   if (el1) chartInstances.tasks = new Chart(el1, { type:'bar', data:{ labels:unitNames, datasets:[
-    { label:'Tasks', data:unitTasks, backgroundColor:colors.slice(0,unitNames.length), borderWidth:0, borderRadius:4 },
+    { label:'Accomplishments', data:unitTasks, backgroundColor:colors.slice(0,unitNames.length), borderWidth:0, borderRadius:4 },
     { label:'Messages', data:unitMsgs, backgroundColor:colors.slice(0,unitNames.length).map(c=>c+'44'), borderWidth:0, borderRadius:4 }
   ]}, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:'#6a80b0', font:{ family:'Share Tech Mono', size:10 } } } }, scales:{ x:{ ticks:{ color:'#6a80b0', font:{ size:9 }, maxRotation:45 }, grid:{ color:'#1e326020' } }, y:{ ticks:{ color:'#6a80b0', font:{ size:9 } }, grid:{ color:'#1e326030' }, beginAtZero:true } } } });
 

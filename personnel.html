@@ -38,7 +38,7 @@ body{min-height:100vh;display:flex;flex-direction:column;align-items:center;over
 .msg-item.system{border-color:rgba(0,229,255,.2);background:rgba(0,229,255,.04);}
 .msg-item.broadcast{border-color:rgba(255,170,0,.3);background:rgba(255,170,0,.05);}
 .msg-sender{font-family:var(--font-mono);font-size:9px;color:var(--accent);letter-spacing:1px;}
-.msg-body{font-size:15px;color:#fff;margin-top:2px;}
+.msg-body{font-size:15px;color:#fff;margin-top:2px;white-space:pre-wrap;word-break:break-word;}
 .msg-time{font-family:var(--font-mono);font-size:8px;color:var(--text-dim);margin-top:2px;}
 .msg-photo{max-width:100%;margin-top:6px;cursor:pointer;border-radius:3px;}
 .join-btn{display:block;margin-top:6px;padding:8px 12px;background:var(--success-dim);border:1px solid var(--success);color:var(--success);font-family:var(--font-mono);font-size:11px;letter-spacing:1px;text-decoration:none;text-align:center;border-radius:3px;}
@@ -59,6 +59,18 @@ body{min-height:100vh;display:flex;flex-direction:column;align-items:center;over
 .gps-quality.fair{background:var(--warning);}
 .gps-quality.good{background:var(--success);}
 .retry-box{background:var(--warning-dim);border:1px solid var(--warning);border-radius:4px;padding:12px;margin:10px 0;text-align:center;}
+
+.photo-sheet,.photo-report-modal{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9999;display:none;align-items:flex-end;justify-content:center;padding:14px;}
+.photo-sheet-card,.photo-report-card{width:100%;max-width:520px;background:var(--bg-panel);border:1px solid var(--border-color);border-radius:10px;padding:16px;box-shadow:0 -8px 28px rgba(0,0,0,.45);}
+.photo-sheet-title,.photo-report-title{font-family:var(--font-mono);font-size:12px;color:var(--accent);letter-spacing:2px;margin-bottom:10px;text-align:center;}
+.photo-source-btn{width:100%;margin:6px 0;justify-content:center;}
+.photo-report-modal{align-items:center;overflow-y:auto;}
+.photo-report-card{max-height:94vh;overflow-y:auto;}
+.photo-preview{width:100%;max-height:240px;object-fit:contain;background:#000;border:1px solid var(--border-color);border-radius:6px;margin-bottom:10px;}
+.photo-report-grid{display:flex;flex-direction:column;gap:10px;}
+.photo-report-grid textarea{min-height:72px;resize:vertical;}
+.photo-help{font-family:var(--font-mono);font-size:9px;color:var(--text-dim);line-height:1.45;margin-top:2px;}
+.photo-actions{display:flex;gap:8px;margin-top:12px;}
 </style>
 </head>
 <body>
@@ -154,7 +166,51 @@ body{min-height:100vh;display:flex;flex-direction:column;align-items:center;over
 </div>
 
 <button id="meet-fab" onclick="joinMeet()">🎥</button>
-<input type="file" id="photo-input" accept="image/*" capture="environment" onchange="handlePhoto(event)" style="display:none;">
+<input type="file" id="photo-camera-input" accept="image/*" capture="environment" onchange="handlePhoto(event,'camera')" style="display:none;">
+<input type="file" id="photo-gallery-input" accept="image/*" onchange="handlePhoto(event,'gallery')" style="display:none;">
+
+<!-- PHOTO SOURCE -->
+<div class="photo-sheet" id="photo-source-sheet" onclick="if(event.target===this)closePhotoSheet()">
+  <div class="photo-sheet-card">
+    <div class="photo-sheet-title">📸 PHOTO ACCOMPLISHMENT</div>
+    <button class="btn btn-primary btn-block photo-source-btn" onclick="choosePhotoSource('camera')">📷 TAKE NEW PHOTO</button>
+    <button class="btn btn-success btn-block photo-source-btn" onclick="choosePhotoSource('gallery')">🖼️ CHOOSE FROM GALLERY</button>
+    <button class="btn btn-sm btn-block" onclick="closePhotoSheet()">CANCEL</button>
+    <div class="photo-help">Each photo will require a description, capture time, where, and why so it appears properly in the report.</div>
+  </div>
+</div>
+
+<!-- PHOTO REPORT FORM -->
+<div class="photo-report-modal" id="photo-report-modal">
+  <div class="photo-report-card">
+    <div class="photo-report-title">📸 DESCRIBE PHOTO REPORT</div>
+    <img class="photo-preview" id="photo-preview" alt="Photo preview">
+    <div class="photo-report-grid">
+      <div class="field-group">
+        <label class="field-label">Description / Accomplishment <span style="color:var(--danger);">*</span></label>
+        <textarea class="input" id="photo-desc" placeholder="What task/accomplishment does this photo show? e.g. Cleared obstruction at main gate, assisted crowd control, documented violation..."></textarea>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Time Captured</label>
+        <input class="input input-mono" id="photo-capture-time" type="datetime-local">
+        <div class="photo-help">Auto-filled from the image file when available. You may correct it before sending.</div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Where / Location</label>
+        <input class="input" id="photo-where" placeholder="e.g. Gate 2, waterfront road, admin desk...">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Why / Purpose</label>
+        <textarea class="input" id="photo-why" placeholder="Why was this photo taken? e.g. proof of accomplishment, incident documentation, before/after status..."></textarea>
+      </div>
+      <div class="photo-help" id="photo-gps-note">GPS: checking...</div>
+    </div>
+    <div class="photo-actions">
+      <button class="btn btn-primary flex-1" id="photo-send-btn" onclick="submitPhotoReport()">📤 SEND REPORT</button>
+      <button class="btn btn-sm flex-1" onclick="cancelPhotoReport()">CANCEL</button>
+    </div>
+  </div>
+</div>
 
 <div style="text-align:center;padding:16px 0 80px;font-family:var(--font-mono);">
   <div style="font-size:9px;color:var(--accent);letter-spacing:2px;opacity:.8;">-=pagong=-</div>
@@ -170,6 +226,7 @@ var me = null;
 var curLat = null, curLng = null;
 var fetchTimer = null, locTimer = null, approvalTimer = null;
 var meetUrl = null;
+var pendingPhoto = null;
 var FALLBACK_TEAMS = [
   {name:'ADMINISTRATIVE UNIT',code:'ADMIN26',color:'#00e5ff'},
   {name:'OPERATIONS UNIT',code:'OPS26',color:'#00ff88'},
@@ -451,6 +508,21 @@ async function fetchMsgs() {
     if (d.messages) renderMsgs(d.messages);
   } catch(e) { document.getElementById('status-txt').textContent='OFFLINE'; document.getElementById('status-icon').style.color='var(--danger)'; }
 }
+function esc(v) {
+  return String(v || '').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
+}
+function renderMsgText(body) {
+  var safe = esc(body || '');
+  safe = safe.replace(/(https?:\/\/[^\s<]+)/gi,function(url){
+    var href = url.replace(/&amp;/g,'&');
+    return '<a href="'+href+'" target="_blank" rel="noopener" style="color:var(--accent);word-break:break-all;">'+url+'</a>';
+  });
+  return safe.replace(/\n/g,'<br>');
+}
+function photoEmbedUrl(url) {
+  var m = String(url||'').match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  return m ? 'https://lh3.googleusercontent.com/d/'+m[1] : url;
+}
 function renderMsgs(msgs) {
   var list=document.getElementById('msg-list');
   if (!msgs||!msgs.length) { list.innerHTML='<div style="padding:24px;text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">No messages yet.</div>'; return; }
@@ -474,14 +546,22 @@ function renderMsgs(msgs) {
 
   list.innerHTML=rev.map(function(m){
     var cls=m.type==='broadcast'?'broadcast':m.type==='system'?'system':'';
-    var mm=(m.body||'').match(/(https:\/\/meet\.google\.com\/[\w-]+)/);
-    var bodyText=(m.body||'').replace(/(https:\/\/meet\.google\.com\/[\w-]+)/g,'');
+    var bodyRaw=m.body||'';
+    var mm=bodyRaw.match(/(https:\/\/meet\.google\.com\/[\w-]+)/);
+    var bodyText=bodyRaw.replace(/(https:\/\/meet\.google\.com\/[\w-]+)/g,'').trim();
     var mt=0;
     try { var dd2=new Date(m.time||''); if (!isNaN(dd2.getTime())) mt=dd2.getTime(); } catch(e) {}
     var recentMeet=mm&&mt>cutoff&&activeMeet;
-    return '<div class="msg-item '+cls+'"><div class="msg-sender">'+(m.sender||'')+(m.post?' · '+m.post:'')+'</div><div class="msg-body">'+bodyText+'</div>'+(m.photoUrl?'<img class="msg-photo" src="'+m.photoUrl+'" onclick="window.open(\''+m.photoUrl+'\')">':'')+(recentMeet?'<a href="'+mm[1]+'" target="_blank" rel="noopener" class="join-btn">▶ JOIN VIDEO CALL</a>':'')+'<div class="msg-time">'+(m.time||'')+'</div></div>';
+    var photoUrl=m.photoUrl||m.photo||'';
+    var photoHtml='';
+    if (photoUrl) {
+      var embed=photoEmbedUrl(photoUrl);
+      photoHtml='<img class="msg-photo" src="'+esc(embed)+'" data-url="'+esc(photoUrl)+'" onclick="window.open(this.dataset.url,\'_blank\')" loading="lazy" onerror="this.src=this.dataset.url;">';
+    }
+    return '<div class="msg-item '+cls+'"><div class="msg-sender">'+esc(m.sender||'')+(m.post?' · '+esc(m.post):'')+'</div><div class="msg-body">'+renderMsgText(bodyText)+'</div>'+photoHtml+(recentMeet?'<a href="'+esc(mm[1])+'" target="_blank" rel="noopener" class="join-btn">▶ JOIN VIDEO CALL</a>':'')+'<div class="msg-time">'+esc(m.time||'')+'</div></div>';
   }).join('');
 }
+
 async function sendMsg() {
   var inp=document.getElementById('msg-input'); var body=inp.value.trim();
   if (!body||!me) return; inp.value='';
@@ -492,28 +572,104 @@ async function sendMsg() {
 }
 
 // ============================================================
-// PHOTO
+// PHOTO ACCOMPLISHMENT REPORTS
 // ============================================================
-function takePhoto() { document.getElementById('photo-input').click(); }
-async function handlePhoto(e) {
+function takePhoto() { document.getElementById('photo-source-sheet').style.display='flex'; }
+function closePhotoSheet() { document.getElementById('photo-source-sheet').style.display='none'; }
+function choosePhotoSource(source) {
+  closePhotoSheet();
+  var id = source === 'camera' ? 'photo-camera-input' : 'photo-gallery-input';
+  document.getElementById(id).click();
+}
+function toLocalDateTimeInput(d) {
+  function pad(n){return String(n).padStart(2,'0');}
+  d = d instanceof Date && !isNaN(d.getTime()) ? d : new Date();
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+}
+function showPhotoReportModal() {
+  if (!pendingPhoto) return;
+  document.getElementById('photo-preview').src = pendingPhoto.dataUrl;
+  document.getElementById('photo-desc').value = '';
+  document.getElementById('photo-capture-time').value = pendingPhoto.captureTime;
+  document.getElementById('photo-where').value = (me && me.post) ? me.post : '';
+  document.getElementById('photo-why').value = '';
+  document.getElementById('photo-gps-note').textContent = curLat && curLng ? ('GPS will be attached: '+Number(curLat).toFixed(6)+', '+Number(curLng).toFixed(6)) : 'GPS not ready — report will still send with your post/location text.';
+  document.getElementById('photo-report-modal').style.display='flex';
+  setTimeout(function(){ document.getElementById('photo-desc').focus(); }, 150);
+}
+function cancelPhotoReport() {
+  pendingPhoto = null;
+  document.getElementById('photo-report-modal').style.display='none';
+}
+function handlePhoto(e, source) {
   var file=e.target.files[0]; if (!file) return; e.target.value='';
+  if (!/^image\//i.test(file.type||'')) { alert('Please select an image file.'); return; }
   var reader=new FileReader();
-  reader.onload=async function(ev) {
+  reader.onload=function(ev) {
+    pendingPhoto = {
+      file:file,
+      dataUrl:ev.target.result,
+      source:source||'gallery',
+      captureTime:toLocalDateTimeInput(new Date(file.lastModified || Date.now()))
+    };
+    showPhotoReportModal();
+  };
+  reader.onerror=function(){ alert('Cannot read photo. Please try again.'); };
+  reader.readAsDataURL(file);
+}
+function resizePhoto(dataUrl) {
+  return new Promise(function(resolve,reject){
     var img=new Image();
-    img.onload=async function(){
-      var c=document.createElement('canvas'); var M=800;
-      var s=Math.min(M/img.width,M/img.height,1);
-      c.width=img.width*s; c.height=img.height*s;
+    img.onload=function(){
+      var c=document.createElement('canvas'); var M=1200;
+      var scale=Math.min(M/img.width,M/img.height,1);
+      c.width=Math.max(1,Math.round(img.width*scale)); c.height=Math.max(1,Math.round(img.height*scale));
       c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-      var du=c.toDataURL('image/jpeg',0.65);
-      try {
-        var ur=await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'uploadPhoto',sender:me.name,photoData:du})});
-        var ud=await ur.json();
-        await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'sendMessage',sender:me.name,team:me.team,post:me.post,body:'📸 Photo',type:'photo',photoUrl:ud.photoUrl})});
-        fetchMsgs();
-      } catch(err) { alert('Upload failed.'); }
-    }; img.src=ev.target.result;
-  }; reader.readAsDataURL(file);
+      resolve(c.toDataURL('image/jpeg',0.72));
+    };
+    img.onerror=function(){ reject(new Error('Photo format not supported by this browser.')); };
+    img.src=dataUrl;
+  });
+}
+function formatCapture(v) { return (v || '').replace('T',' '); }
+function buildPhotoBody(desc, captureTime, where, why) {
+  var lines = ['📸 ACCOMPLISHMENT PHOTO'];
+  lines.push('Description: '+desc);
+  if (captureTime) lines.push('Captured: '+formatCapture(captureTime));
+  if (where) lines.push('Where: '+where);
+  if (why) lines.push('Why/Purpose: '+why);
+  if (curLat && curLng) lines.push('GPS: '+Number(curLat).toFixed(6)+', '+Number(curLng).toFixed(6));
+  return lines.join('\n');
+}
+async function submitPhotoReport() {
+  if (!pendingPhoto || !me) return;
+  var desc=document.getElementById('photo-desc').value.trim();
+  var captureTime=document.getElementById('photo-capture-time').value;
+  var where=document.getElementById('photo-where').value.trim();
+  var why=document.getElementById('photo-why').value.trim();
+  if (!desc) { alert('Please describe what this photo shows. This is needed for the report.'); document.getElementById('photo-desc').focus(); return; }
+
+  var btn=document.getElementById('photo-send-btn');
+  btn.textContent='UPLOADING...'; btn.disabled=true;
+  try {
+    var du=await resizePhoto(pendingPhoto.dataUrl);
+    var ur=await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'uploadPhoto',sender:me.name,photoData:du})});
+    var ud=await ur.json();
+    var body=buildPhotoBody(desc,captureTime,where,why);
+    await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({
+      action:'sendMessage', sender:me.name, team:me.team, post:me.post,
+      body:body, type:'photo', photoUrl:ud.photoUrl,
+      photoLat:curLat||'', photoLng:curLng||'', target:'ALL',
+      photoDesc:desc, captureTime:captureTime, photoWhere:where, photoWhy:why,
+      sourceName:(pendingPhoto.file&&pendingPhoto.file.name)||''
+    })});
+    cancelPhotoReport();
+    fetchMsgs();
+  } catch(err) {
+    alert('Upload failed: '+(err.message||err));
+  } finally {
+    btn.textContent='📤 SEND REPORT'; btn.disabled=false;
+  }
 }
 
 // ============================================================
@@ -559,7 +715,7 @@ function joinMeet() { if (meetUrl) window.open(meetUrl,'_blank'); else alert('No
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async function() {
     var keys = await caches.keys();
-    for (var i=0;i<keys.length;i++) { if (keys[i]!=='opm-v3') await caches.delete(keys[i]); }
+    for (var i=0;i<keys.length;i++) { if (keys[i].indexOf('opm-v5-photo-reports') !== 0) await caches.delete(keys[i]); }
     navigator.serviceWorker.register('./sw.js')
       .then(function(r){console.log('[OPM] SW:',r.scope);})
       .catch(function(e){console.log('[OPM] SW:',e);});
