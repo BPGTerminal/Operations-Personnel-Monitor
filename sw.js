@@ -12,13 +12,13 @@ const CACHE_NAME_DYNAMIC = `${CACHE_VERSION}-dynamic`;
 const PRECACHE_ASSETS = [
   './',
   './manifest.json',
-  './commander-manifest.json',
-  './dashboard-manifest.json',
+  './opm-manifest.json',
   './icon-192.png',
   './icon-512.png',
   './opm-core.css',
   './opm-commander.css',
   './opm-core.js',
+  './opm.html',
 ];
 
 // Install: pre-cache static assets
