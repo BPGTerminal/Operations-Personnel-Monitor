@@ -38,176 +38,113 @@ body{min-height:100vh;display:flex;flex-direction:column;align-items:center;over
 .msg-item.system{border-color:rgba(0,229,255,.2);background:rgba(0,229,255,.04);}
 .msg-item.broadcast{border-color:rgba(255,170,0,.3);background:rgba(255,170,0,.05);}
 .msg-sender{font-family:var(--font-mono);font-size:9px;color:var(--accent);letter-spacing:1px;}
-.msg-body{font-size:15px;color:#fff;margin-top:2px;white-space:pre-wrap;word-break:break-word;}
+.msg-body{font-size:15px;color:#fff;margin-top:2px;}
 .msg-time{font-family:var(--font-mono);font-size:8px;color:var(--text-dim);margin-top:2px;}
 .msg-photo{max-width:100%;margin-top:6px;cursor:pointer;border-radius:3px;}
 .join-btn{display:block;margin-top:6px;padding:8px 12px;background:var(--success-dim);border:1px solid var(--success);color:var(--success);font-family:var(--font-mono);font-size:11px;letter-spacing:1px;text-decoration:none;text-align:center;border-radius:3px;}
 .compose-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:var(--bg-panel);border-top:1px solid var(--border-color);padding:8px;display:none;}
-.compose-row{display:flex;gap:6px;}
+.compose-row,.inspect-row{display:flex;gap:6px;}
 .compose-row input{flex:1;padding:10px 12px;font-size:16px;background:var(--bg-surface);border:1px solid var(--border-color);color:var(--text-primary);outline:none;border-radius:3px;}
 .photo-btn{background:transparent;border:1px solid var(--border-color);color:var(--text-dim);font-size:20px;padding:0 12px;cursor:pointer;border-radius:3px;}
 .photo-btn:active{border-color:var(--accent);color:var(--accent);}
 #meet-fab{position:fixed;bottom:72px;right:16px;width:54px;height:54px;border-radius:50%;background:var(--success);color:#000;border:none;font-size:24px;cursor:pointer;box-shadow:0 2px 12px rgba(0,229,255,.4);display:none;align-items:center;justify-content:center;z-index:100;}
 #meet-fab.active{background:#ff4444;animation:pulse 1s infinite;}
 #meet-fab:active{transform:scale(.9);}
+#inspect-fab{position:fixed;bottom:140px;right:16px;width:54px;height:54px;border-radius:50%;background:var(--warning);color:#000;border:none;font-size:24px;cursor:pointer;box-shadow:0 2px 12px rgba(255,170,0,.4);display:none;align-items:center;justify-content:center;z-index:101;}
 .setup-overlay{position:fixed;inset:0;z-index:99999;background:var(--bg-base);display:none;flex-direction:column;align-items:center;justify-content:center;font-family:var(--font-mono);padding:20px;overflow-y:auto;}
 .setup-title{font-size:22px;font-weight:700;color:var(--accent);letter-spacing:3px;margin-bottom:4px;}
 .setup-sub{font-size:9px;color:rgba(0,229,255,.4);letter-spacing:2px;margin-bottom:24px;}
 .setup-card{background:var(--accent-dim);border:1px solid rgba(0,229,255,.2);border-radius:4px;padding:20px;width:100%;max-width:420px;}
 .gps-quality{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;}
-.gps-quality.poor{background:var(--danger);}
-.gps-quality.fair{background:var(--warning);}
-.gps-quality.good{background:var(--success);}
-.retry-box{background:var(--warning-dim);border:1px solid var(--warning);border-radius:4px;padding:12px;margin:10px 0;text-align:center;}
+.gps-quality.poor{background:var(--danger);}.gps-quality.fair{background:var(--warning);}.gps-quality.good{background:var(--success);}
 
-.photo-sheet,.photo-report-modal{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9999;display:none;align-items:flex-end;justify-content:center;padding:14px;}
-.photo-sheet-card,.photo-report-card{width:100%;max-width:520px;background:var(--bg-panel);border:1px solid var(--border-color);border-radius:10px;padding:16px;box-shadow:0 -8px 28px rgba(0,0,0,.45);}
-.photo-sheet-title,.photo-report-title{font-family:var(--font-mono);font-size:12px;color:var(--accent);letter-spacing:2px;margin-bottom:10px;text-align:center;}
-.photo-source-btn{width:100%;margin:6px 0;justify-content:center;}
-.photo-report-modal{align-items:center;overflow-y:auto;}
-.photo-report-card{max-height:94vh;overflow-y:auto;}
-.photo-preview{width:100%;max-height:240px;object-fit:contain;background:#000;border:1px solid var(--border-color);border-radius:6px;margin-bottom:10px;}
-.photo-report-grid{display:flex;flex-direction:column;gap:10px;}
-.photo-report-grid textarea{min-height:72px;resize:vertical;}
-.photo-help{font-family:var(--font-mono);font-size:9px;color:var(--text-dim);line-height:1.45;margin-top:2px;}
-.photo-actions{display:flex;gap:8px;margin-top:12px;}
+/* Inspection modal */
+.inspect-modal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9990;display:none;align-items:center;justify-content:center;padding:16px;}
+.inspect-modal.show{display:flex;}
+.inspect-card{width:100%;max-width:520px;max-height:90vh;background:var(--bg-panel);border:1px solid var(--border-color);border-radius:8px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.5);}
+.inspect-hdr{background:var(--warning-dim);border-bottom:1px solid var(--border-color);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:2;}
+.inspect-hdr span{font-family:var(--font-mono);font-size:11px;color:var(--warning);letter-spacing:1px;font-weight:700;}
+.inspect-body{padding:16px 18px;display:flex;flex-direction:column;gap:14px;}
+.inspect-group{border:1px solid var(--border-color);border-radius:6px;overflow:hidden;}
+.inspect-group-title{background:rgba(0,0,0,.25);padding:10px 14px;font-family:var(--font-mono);font-size:10px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;font-weight:700;}
+.inspect-group-body{padding:12px 14px;display:flex;flex-direction:column;gap:4px;}
+.inspect-row-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.03);}
+.inspect-row-item:last-child{border-bottom:none;}
+.inspect-check{width:18px;height:18px;accent-color:var(--success);cursor:pointer;flex-shrink:0;}
+.inspect-check-label{font-size:14px;color:var(--text-secondary);cursor:pointer;}
+.inspect-textarea{width:100%;min-height:60px;background:rgba(0,0,0,.3);border:1px solid var(--border-color);color:var(--text-primary);font-family:var(--font-sans);font-size:var(--font-sm);padding:10px 12px;resize:vertical;border-radius:var(--radius);outline:none;}
+.inspect-textarea:focus{border-color:var(--accent);}
+.inspect-photo-preview{width:100%;max-height:200px;object-fit:cover;border-radius:6px;border:1px solid var(--border-color);margin-top:4px;display:none;}
 </style>
 </head>
 <body>
 
-<!-- SETUP WIZARD -->
 <div class="setup-overlay" id="setup-overlay">
   <div style="font-size:40px;margin-bottom:6px;">⚙️</div>
   <div class="setup-title">OPM SETUP</div>
   <div class="setup-sub">FIRST-TIME CONFIGURATION</div>
   <div class="setup-card">
-    <div class="field-group" style="margin-bottom:14px;">
-      <label class="field-label">Apps Script URL</label>
-      <input class="input input-mono" id="sw-sheet-url" type="url" placeholder="https://script.google.com/macros/s/.../exec" style="font-size:11px;">
-    </div>
-    <div class="field-group" style="margin-bottom:14px;">
-      <label class="field-label">Settings CSV URL</label>
-      <input class="input input-mono" id="sw-csv-url" type="url" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?...&output=csv" style="font-size:11px;">
-    </div>
+    <div class="field-group" style="margin-bottom:14px;"><label class="field-label">Apps Script URL</label><input class="input input-mono" id="sw-sheet-url" type="url" placeholder="https://script.google.com/macros/s/.../exec" style="font-size:11px;"></div>
+    <div class="field-group" style="margin-bottom:14px;"><label class="field-label">Settings CSV URL</label><input class="input input-mono" id="sw-csv-url" type="url" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?...&output=csv" style="font-size:11px;"></div>
     <button class="btn btn-primary btn-block btn-lg" onclick="connectSetup()">CONNECT MY EOC ▶</button>
     <div id="sw-err" style="font-size:10px;color:var(--danger);min-height:14px;text-align:center;margin-top:8px;"></div>
   </div>
 </div>
 
-<!-- LOGIN -->
+<!-- Login -->
 <div id="login-screen" class="screen active">
-  <div class="brand-tag">-=pagong=-</div>
-  <div class="brand-badge">OPM</div>
-  <div class="app-title">Operations Personnel Monitor</div>
-  <div class="app-sub">Personnel Check-In</div>
+  <div class="brand-tag">-=pagong=-</div><div class="brand-badge">OPM</div>
+  <div class="app-title">Operations Personnel Monitor</div><div class="app-sub">Personnel Check-In</div>
   <div class="event-name" id="event-name-disp">READY</div>
-
   <div class="field-group w-full"><label class="field-label">Your Full Name</label><input class="input" type="text" id="l-name" placeholder="e.g. Ofc. Juan Dela Cruz" autocomplete="off"></div>
   <div class="field-group w-full"><label class="field-label">Your Team</label><select class="select" id="l-team"><option value="">— Select your team —</option></select></div>
   <div class="field-group w-full"><label class="field-label">Assigned Post / Position</label><input class="input" type="text" id="l-post" placeholder="e.g. North Gate, Main Stage..." autocomplete="off"></div>
   <div class="field-group w-full"><label class="field-label">Team Access Code</label><input class="input" type="password" id="l-code" placeholder="Enter your team's code"></div>
-
-  <div class="retry-box" id="retry-box" style="display:none;">
-    <div style="color:var(--warning);font-family:var(--font-mono);font-size:10px;margin-bottom:6px;">⚠ Teams not loading?</div>
-    <button class="btn btn-warning btn-sm" onclick="loadTeamsNow()">🔄 RETRY</button>
-  </div>
-
   <button id="login-btn" onclick="doLogin()">REQUEST ACCESS ▶</button>
   <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim);text-align:center;margin-top:8px;">DEVICE: <span id="device-id-disp" class="text-accent"></span></div>
 </div>
 
-<!-- WAITING -->
 <div id="waiting-screen" class="screen" style="text-align:center;padding:60px 24px;">
   <div class="waiting-icon">⏳</div>
   <div class="status-title text-warning">AWAITING APPROVAL</div>
-  <div class="status-name" id="wait-name"></div>
-  <div class="status-detail" id="wait-detail"></div>
+  <div class="status-name" id="wait-name"></div><div class="status-detail" id="wait-detail"></div>
   <div style="font-size:13px;color:var(--text-dim);margin-top:8px;">Commander is reviewing your request...</div>
   <button class="btn btn-sm" onclick="showLogin()">← BACK TO LOGIN</button>
 </div>
-
-<!-- REJECTED -->
 <div id="rejected-screen" class="screen" style="text-align:center;padding:60px 24px;">
-  <div style="font-size:64px;">❌</div>
-  <div class="status-title text-danger">ACCESS DENIED</div>
+  <div style="font-size:64px;">❌</div><div class="status-title text-danger">ACCESS DENIED</div>
   <div style="font-size:15px;color:var(--text-dim);">Your request was rejected by the Commander.</div>
   <button class="btn btn-sm" onclick="showLogin()">↩ TRY AGAIN</button>
 </div>
 
-<!-- MAIN APP -->
+<!-- Main App -->
 <div id="app-screen" class="screen" style="padding:0 0 80px;">
   <div class="app-header-bar">
-    <div class="flex items-center gap-sm">
-      <span class="brand-tag" style="font-size:8px;">-=pagong=-</span>
-      <span class="brand-badge" style="font-size:10px;padding:2px 8px;">OPM</span>
-      <div><div class="app-name" id="app-name">PERSONNEL</div><div class="app-detail" id="app-detail">---</div></div>
-    </div>
-    <div class="flex items-center gap-sm">
-      <span style="color:var(--success);font-size:14px;" id="status-icon">●</span>
-      <span style="font-family:var(--font-mono);font-size:9px;color:var(--success);" id="status-txt">ONLINE</span>
-      <button onclick="doLogout()" class="btn btn-danger btn-sm">⏏ OUT</button>
-    </div>
+    <div class="flex items-center gap-sm"><span class="brand-tag" style="font-size:8px;">-=pagong=-</span><span class="brand-badge" style="font-size:10px;padding:2px 8px;">OPM</span><div><div class="app-name" id="app-name">PERSONNEL</div><div class="app-detail" id="app-detail">---</div></div></div>
+    <div class="flex items-center gap-sm"><span style="color:var(--success);font-size:14px;" id="status-icon">●</span><span style="font-family:var(--font-mono);font-size:9px;color:var(--success);" id="status-txt">ONLINE</span><button onclick="doLogout()" class="btn btn-danger btn-sm">⏏ OUT</button></div>
   </div>
   <div class="status-bar"><span id="gps-status">📍 GPS: ---</span><span id="last-sync">SYNC: --</span></div>
-  <div class="loc-bar" id="loc-bar">
-    <button onclick="sendLocation(true)" class="btn btn-sm flex-1" id="loc-btn">📍 SEND LOCATION</button>
-    <button onclick="reCheckIn()" class="btn btn-success btn-sm flex-1" id="checkin-btn">✅ RE-CHECK IN</button>
-  </div>
+  <div class="loc-bar" id="loc-bar"><button onclick="sendLocation(true)" class="btn btn-sm flex-1" id="loc-btn">📍 SEND LOCATION</button><button onclick="reCheckIn()" class="btn btn-success btn-sm flex-1" id="checkin-btn">✅ RE-CHECK IN</button></div>
   <div class="msg-list" id="msg-list"><div style="padding:24px;text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">No messages yet.</div></div>
 </div>
 
-<!-- COMPOSE -->
 <div class="compose-bar" id="compose-bar">
-  <div class="compose-row">
-    <button class="photo-btn" onclick="takePhoto()">📷</button>
-    <input type="text" id="msg-input" placeholder="Type message...">
-    <button class="btn btn-primary btn-sm" onclick="sendMsg()">SEND</button>
-  </div>
+  <div class="compose-row"><button class="photo-btn" onclick="takePhoto()">📷</button><input type="text" id="msg-input" placeholder="Type message..."><button class="btn btn-primary btn-sm" onclick="sendMsg()">SEND</button></div>
 </div>
 
 <button id="meet-fab" onclick="joinMeet()">🎥</button>
-<input type="file" id="photo-camera-input" accept="image/*" capture="environment" onchange="handlePhoto(event,'camera')" style="display:none;">
-<input type="file" id="photo-gallery-input" accept="image/*" onchange="handlePhoto(event,'gallery')" style="display:none;">
+<button id="inspect-fab" onclick="openInspection()">📋</button>
+<input type="file" id="photo-input" accept="image/*" capture="environment" onchange="handlePhoto(event)" style="display:none;">
 
-<!-- PHOTO SOURCE -->
-<div class="photo-sheet" id="photo-source-sheet" onclick="if(event.target===this)closePhotoSheet()">
-  <div class="photo-sheet-card">
-    <div class="photo-sheet-title">📸 PHOTO ACCOMPLISHMENT</div>
-    <button class="btn btn-primary btn-block photo-source-btn" onclick="choosePhotoSource('camera')">📷 TAKE NEW PHOTO</button>
-    <button class="btn btn-success btn-block photo-source-btn" onclick="choosePhotoSource('gallery')">🖼️ CHOOSE FROM GALLERY</button>
-    <button class="btn btn-sm btn-block" onclick="closePhotoSheet()">CANCEL</button>
-    <div class="photo-help">Each photo will require a description, capture time, where, and why so it appears properly in the report.</div>
-  </div>
-</div>
-
-<!-- PHOTO REPORT FORM -->
-<div class="photo-report-modal" id="photo-report-modal">
-  <div class="photo-report-card">
-    <div class="photo-report-title">📸 DESCRIBE PHOTO REPORT</div>
-    <img class="photo-preview" id="photo-preview" alt="Photo preview">
-    <div class="photo-report-grid">
-      <div class="field-group">
-        <label class="field-label">Description / Accomplishment <span style="color:var(--danger);">*</span></label>
-        <textarea class="input" id="photo-desc" placeholder="What task/accomplishment does this photo show? e.g. Cleared obstruction at main gate, assisted crowd control, documented violation..."></textarea>
-      </div>
-      <div class="field-group">
-        <label class="field-label">Time Captured</label>
-        <input class="input input-mono" id="photo-capture-time" type="datetime-local">
-        <div class="photo-help">Auto-filled from the image file when available. You may correct it before sending.</div>
-      </div>
-      <div class="field-group">
-        <label class="field-label">Where / Location</label>
-        <input class="input" id="photo-where" placeholder="e.g. Gate 2, waterfront road, admin desk...">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Why / Purpose</label>
-        <textarea class="input" id="photo-why" placeholder="Why was this photo taken? e.g. proof of accomplishment, incident documentation, before/after status..."></textarea>
-      </div>
-      <div class="photo-help" id="photo-gps-note">GPS: checking...</div>
-    </div>
-    <div class="photo-actions">
-      <button class="btn btn-primary flex-1" id="photo-send-btn" onclick="submitPhotoReport()">📤 SEND REPORT</button>
-      <button class="btn btn-sm flex-1" onclick="cancelPhotoReport()">CANCEL</button>
+<!-- Inspection Modal -->
+<div class="inspect-modal" id="inspect-modal" onclick="if(event.target===this)closeInspection()">
+  <div class="inspect-card">
+    <div class="inspect-hdr"><span id="inspect-title">📋 DAILY INSPECTION</span><span onclick="closeInspection()" style="cursor:pointer;color:var(--text-dim);font-size:20px;">✕</span></div>
+    <div class="inspect-body" id="inspect-body"></div>
+    <div style="padding:0 18px 16px;display:flex;gap:8px;">
+      <button class="btn btn-warning btn-sm flex-1" onclick="attachInspectPhoto()">📷 ATTACH PHOTO</button>
+      <button class="btn btn-primary flex-1" onclick="submitInspection()">📤 SUBMIT INSPECTION</button>
+      <input type="file" id="inspect-photo-input" accept="image/*" onchange="previewInspectPhoto(event)" style="display:none;">
     </div>
   </div>
 </div>
@@ -219,509 +156,304 @@ body{min-height:100vh;display:flex;flex-direction:column;align-items:center;over
 
 <script src="opm-core.js"></script>
 <script>
-// ============================================================
-// SIMPLE STATE
-// ============================================================
-var me = null;
-var curLat = null, curLng = null;
-var fetchTimer = null, locTimer = null, approvalTimer = null;
-var meetUrl = null;
-var pendingPhoto = null;
-var FALLBACK_TEAMS = [
-  {name:'ADMINISTRATIVE UNIT',code:'ADMIN26',color:'#00e5ff'},
-  {name:'OPERATIONS UNIT',code:'OPS26',color:'#00ff88'},
-  {name:'UTILITY UNIT',code:'UTIL26',color:'#ff6b35'},
-  {name:'SAFETY & SECURITY',code:'SEC26',color:'#ffd166'},
-  {name:'TASK FORCE',code:'TF26',color:'#a29bfe'}
-];
+var me=null,curLat=null,curLng=null,fetchTimer=null,locTimer=null,approvalTimer=null,meetUrl=null;
+var _inspectPhotoData=null,_inspectPhotoFile=null;
+var FALLBACK_TEAMS=[{name:'ADMINISTRATIVE UNIT',code:'ADMIN26',color:'#00e5ff'},{name:'OPERATIONS UNIT',code:'OPS26',color:'#00ff88'},{name:'UTILITY UNIT',code:'UTIL26',color:'#ff6b35'},{name:'SAFETY & SECURITY',code:'SEC26',color:'#ffd166'},{name:'TASK FORCE',code:'TF26',color:'#a29bfe'}];
 
-// ============================================================
-// LOAD TEAMS — ALWAYS SHOWS SOMETHING
-// ============================================================
-function loadTeamsNow() {
-  var sel = document.getElementById('l-team');
-  var evd = document.getElementById('event-name-disp');
-  var cfg = OPM.getConfig();
-
-  // STEP 1: Try cached teams from localStorage
-  var cached = null;
-  try { cached = JSON.parse(localStorage.getItem('opm_teams_cache')); } catch(e) {}
-  if (!cached || !cached.length) {
-    try { cached = cfg.teams; } catch(e) {}
+// ═══════════ INSPECTION FORMS PER UNIT ═══════════
+var INSPECTION_FORMS={
+  'OPERATIONS UNIT':{
+    title:'OPERATIONS INSPECTION',
+    groups:[
+      {title:'Terminal Bays & Transport Operations',items:[
+        {id:'bays_organized',label:'Transport groups properly organized in assigned bays'},
+        {id:'dispatchers',label:'Dispatchers present and performing duties'},
+        {id:'traffic_flow',label:'Traffic flow within terminal is orderly'},
+        {id:'parking_compliance',label:'Vehicles parked in designated areas only'},
+        {id:'dispatch_schedule',label:'Departure/arrival schedules being followed'}
+      ]},
+      {title:'Policy & Rules Enforcement',items:[
+        {id:'policy_adherence',label:'Transport operators adhering to terminal policies'},
+        {id:'fare_compliance',label:'Fare matrix displayed and being followed'},
+        {id:'overloading',label:'No overloading incidents observed'},
+        {id:'colorum_check',label:'No colorum/unauthorized vehicles in terminal'}
+      ]},
+      {title:'Task Force Supervision',items:[
+        {id:'tf_deployed',label:'Task Force personnel deployed at assigned posts'},
+        {id:'tf_citations',label:'Citation tickets properly issued and recorded'},
+        {id:'tf_equipment',label:'TF equipment complete and in good condition'},
+        {id:'tf_highway',label:'Highway corridor checkpoints operational'},
+        {id:'tf_coordination',label:'TF coordination with PNP/HPG conducted'}
+      ]}
+    ]
+  },
+  'ADMINISTRATIVE UNIT':{
+    title:'ADMINISTRATION INSPECTION',
+    groups:[
+      {title:'Personnel Inspection',items:[
+        {id:'personnel_present',label:'All scheduled personnel present and at posts'},
+        {id:'uniform_compliance',label:'Personnel wearing proper uniform and ID'},
+        {id:'attendance_logged',label:'Attendance/time log properly recorded'},
+        {id:'admin_staff_tasked',label:'Admin staff assigned and performing clerical duties'},
+        {id:'grooming_standards',label:'Personnel meet grooming and appearance standards'}
+      ]},
+      {title:'Policy & Conduct',items:[
+        {id:'bpt_policy_adherence',label:'Personnel adhering to BPGT/LGU rules and policies'},
+        {id:'customer_service',label:'Frontline staff providing proper customer service'},
+        {id:'code_of_conduct',label:'Code of conduct being observed by all personnel'}
+      ]},
+      {title:'Watchmen & Security',items:[
+        {id:'watchmen_present',label:'Watchmen at designated posts'},
+        {id:'logbook_checked',label:'Watchmen log books reviewed — entries complete'},
+        {id:'incidents_logged',label:'Any incidents/hazards properly logged'},
+        {id:'safety_threats',label:'No safety/security threats identified'},
+        {id:'facility_condition',label:'Facilities checked — no urgent repairs needed'}
+      ]}
+    ]
+  },
+  'UTILITY UNIT':{
+    title:'UTILITY & MAINTENANCE INSPECTION',
+    groups:[
+      {title:'Cleanliness & Orderliness',items:[
+        {id:'terminal_clean',label:'Terminal floors, bays, and walkways clean'},
+        {id:'restrooms_clean',label:'Restrooms clean and stocked with supplies'},
+        {id:'waiting_areas',label:'Passenger waiting areas clean and orderly'},
+        {id:'waste_management',label:'Trash bins emptied and waste properly segregated'},
+        {id:'vendor_areas',label:'Vendor/stall areas clean and compliant'}
+      ]},
+      {title:'Facility Maintenance',items:[
+        {id:'lighting_working',label:'All terminal lighting functional'},
+        {id:'water_supply',label:'Water supply and plumbing functional'},
+        {id:'electrical_safe',label:'Electrical systems safe — no exposed wiring'},
+        {id:'structural_sound',label:'No visible structural damage or hazards'},
+        {id:'signage_intact',label:'All signages intact and readable'}
+      ]},
+      {title:'Equipment & Inventory',items:[
+        {id:'equipment_accounted',label:'All equipment on inventory accounted for'},
+        {id:'tools_available',label:'Maintenance tools complete and accessible'},
+        {id:'supplies_stocked',label:'Cleaning supplies and materials adequately stocked'},
+        {id:'beautification',label:'Plant boxes, landscaping, and beautification maintained'}
+      ]}
+    ]
+  },
+  'SAFETY & SECURITY':{
+    title:'SAFETY & SECURITY INSPECTION',
+    groups:[
+      {title:'Security Posts & Personnel',items:[
+        {id:'guards_present',label:'All security/watchmen at assigned posts'},
+        {id:'logbook_complete',label:'Log books reviewed and entries complete'},
+        {id:'radio_comms',label:'Radio/communication equipment working'}
+      ]},
+      {title:'Safety Hazards',items:[
+        {id:'fire_exits',label:'Fire exits clear and accessible'},
+        {id:'extinguishers',label:'Fire extinguishers present and not expired'},
+        {id:'cctv_working',label:'CCTV systems operational'},
+        {id:'no_hazards',label:'No safety hazards identified in terminal vicinity'}
+      ]}
+    ]
   }
-  if (cached && cached.length) {
-    populateTeams(cached);
-    evd.textContent = (cfg.eventName||'OPM').toUpperCase();
-    document.getElementById('retry-box').style.display = 'none';
-    // Background refresh
-    fetchTeamsFromServer();
-    return;
-  }
+};
 
-  // STEP 2: No cache — show fallback teams IMMEDIATELY
-  populateTeams(FALLBACK_TEAMS);
-  evd.textContent = (cfg.eventName||'OPM').toUpperCase();
-  document.getElementById('retry-box').style.display = 'none';
+// Default fallback inspection for any unit
+var DEFAULT_INSPECTION={
+  title:'DAILY INSPECTION',
+  groups:[
+    {title:'General Inspection',items:[
+      {id:'area_secure',label:'Area secure and orderly'},
+      {id:'no_issues',label:'No issues or incidents observed'},
+      {id:'personnel_present',label:'Personnel at designated posts'}
+    ]}
+  ]
+};
 
-  // Background: try server
-  fetchTeamsFromServer();
-}
-
-function populateTeams(teams) {
-  var sel = document.getElementById('l-team');
-  sel.innerHTML = '<option value="">— Select your team —</option>';
-  (teams||[]).forEach(function(t){
-    var o = document.createElement('option');
-    o.value = t.name; o.textContent = t.name;
-    sel.appendChild(o);
+function openInspection(){
+  if(!me)return;
+  var form=INSPECTION_FORMS[me.team]||DEFAULT_INSPECTION;
+  document.getElementById('inspect-title').textContent='📋 '+form.title;
+  var html='';
+  form.groups.forEach(function(g){
+    html+='<div class="inspect-group"><div class="inspect-group-title">'+g.title+'</div><div class="inspect-group-body">';
+    g.items.forEach(function(item){
+      html+='<div class="inspect-row-item"><input type="checkbox" class="inspect-check" id="insp_'+item.id+'" checked><label class="inspect-check-label" for="insp_'+item.id+'">'+item.label+'</label></div>';
+    });
+    html+='</div></div>';
   });
+  html+='<div class="field-group"><label class="field-label">Remarks / Notes</label><textarea class="inspect-textarea" id="insp-remarks" placeholder="Additional observations, issues found, or recommendations..."></textarea></div>';
+  html+='<img class="inspect-photo-preview" id="insp-photo-preview" alt="Inspection photo preview">';
+  document.getElementById('inspect-body').innerHTML=html;
+  _inspectPhotoData=null;_inspectPhotoFile=null;
+  document.getElementById('insp-photo-preview').style.display='none';
+  document.getElementById('inspect-modal').classList.add('show');
 }
 
-function parseCSV(text) {
-  var cfg = {};
-  text.trim().split('\n').forEach(function(line){
-    var idx = line.indexOf(',');
-    if (idx<0) return;
-    var key = line.substring(0,idx).replace(/"/g,'').trim();
-    var val = line.substring(idx+1).trim();
-    if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1,-1).replace(/""/g,'"');
-    if (key && key!=='Key') cfg[key]=val;
-  });
-  return cfg;
-}
+function closeInspection(){document.getElementById('inspect-modal').classList.remove('show');}
 
-async function fetchTeamsFromServer() {
-  var cfg = OPM.getConfig();
-  var teams = null;
-  var eventName = null;
+function attachInspectPhoto(){document.getElementById('inspect-photo-input').click();}
 
-  if (cfg.settingsCsvUrl) {
-    try {
-      var r = await fetch(cfg.settingsCsvUrl+'&t='+Date.now());
-      var p = parseCSV(await r.text());
-      if (p.teams) {
-        teams = typeof p.teams==='string' ? JSON.parse(p.teams) : p.teams;
-        if (teams&&teams.length) eventName=p.eventName;
-      }
-    } catch(e) {}
-  }
-  if (!teams && cfg.sheetUrl) {
-    try {
-      var r2 = await fetch(cfg.sheetUrl+'?action=getSettings&t='+Date.now());
-      var d2 = await r2.json();
-      if (d2.settings&&d2.settings.teams) {
-        teams = typeof d2.settings.teams==='string' ? JSON.parse(d2.settings.teams) : d2.settings.teams;
-        if (teams&&teams.length) eventName=d2.settings.eventName;
-      }
-    } catch(e) {}
-  }
-  if (teams && teams.length) {
-    populateTeams(teams);
-    if (eventName) document.getElementById('event-name-disp').textContent = eventName.toUpperCase();
-    try { localStorage.setItem('opm_teams_cache',JSON.stringify(teams)); } catch(e) {}
-    OPM.saveConfig({teams:teams,eventName:eventName||cfg.eventName});
-  }
-}
-
-// ============================================================
-// SETUP WIZARD
-// ============================================================
-function showSetup() {
-  var cfg = OPM.getConfig();
-  document.getElementById('sw-sheet-url').value = cfg.sheetUrl||'';
-  document.getElementById('sw-csv-url').value = cfg.settingsCsvUrl||'';
-  document.getElementById('setup-overlay').style.display = 'flex';
-}
-async function connectSetup() {
-  var sheetUrl = document.getElementById('sw-sheet-url').value.trim();
-  var csvUrl = document.getElementById('sw-csv-url').value.trim();
-  var err = document.getElementById('sw-err');
-  if (!sheetUrl||!sheetUrl.includes('script.google.com')) { err.textContent='Enter valid Apps Script URL'; return; }
-  if (!csvUrl||!csvUrl.includes('docs.google.com')) { err.textContent='Enter valid CSV URL'; return; }
-  err.style.color='var(--success)'; err.textContent='Saving...';
-  OPM.saveConfig({sheetUrl:sheetUrl,settingsCsvUrl:csvUrl});
-  localStorage.setItem('opm_setup_done','1');
-  err.textContent='Connected!';
-  setTimeout(function(){
-    document.getElementById('setup-overlay').style.display='none';
-    loadTeamsNow();
-    startGPS();
-  },800);
-}
-
-// ============================================================
-// GPS
-// ============================================================
-function startGPS() {
-  if (!navigator.geolocation) { document.getElementById('gps-status').innerHTML='<span style="color:var(--danger);">📍 NO GPS</span>'; return; }
-  var attempts=0;
-  function tryGet() {
-    attempts++;
-    document.getElementById('gps-status').innerHTML='<span style="color:var(--warning);">📍 searching ('+attempts+'/5)</span>';
-    navigator.geolocation.getCurrentPosition(function(pos){
-      curLat=pos.coords.latitude.toFixed(6);
-      curLng=pos.coords.longitude.toFixed(6);
-      var q=(pos.coords.accuracy<30)?'good':(pos.coords.accuracy<100)?'fair':'poor';
-      document.getElementById('gps-status').innerHTML='<span class="gps-quality '+q+'"></span>📍 '+curLat+', '+curLng;
-      if (me) sendLocation(false);
-    },function(e){
-      if (attempts<5) setTimeout(tryGet,5000);
-      else document.getElementById('gps-status').innerHTML='<span style="color:#ffaa00;">📍 unavailable</span>';
-    },{enableHighAccuracy:true,timeout:15000,maximumAge:0});
-  }
-  tryGet();
-  navigator.geolocation.watchPosition(function(pos){
-    curLat=pos.coords.latitude.toFixed(6);
-    curLng=pos.coords.longitude.toFixed(6);
-    document.getElementById('gps-status').innerHTML='<span class="gps-quality good"></span>📍 '+curLat+', '+curLng;
-  },function(){},{enableHighAccuracy:true,maximumAge:30000});
-}
-
-// ============================================================
-// LOGIN
-// ============================================================
-async function doLogin() {
-  var name=document.getElementById('l-name').value.trim();
-  var team=document.getElementById('l-team').value;
-  var post=document.getElementById('l-post').value.trim();
-  var code=document.getElementById('l-code').value.trim();
-  if (!name||!team||!post||!code) { alert('Fill all fields.'); return; }
-  var btn=document.getElementById('login-btn'); btn.textContent='CHECKING...'; btn.disabled=true;
-
-  var cfg=OPM.getConfig();
-  var teams=cfg.teams||FALLBACK_TEAMS;
-  var tObj=teams.find(function(t){return t.name===team;});
-  if (tObj&&tObj.code&&tObj.code.toUpperCase()!==code.toUpperCase()) { alert('Wrong access code.'); btn.textContent='REQUEST ACCESS ▶'; btn.disabled=false; return; }
-
-  btn.textContent='REQUESTING...';
-  try {
-    var devId=OPM.getDeviceId();
-    var url=OPM.SHEET_URL();
-    // Check if already approved
-    var cr=await fetch(url,{method:'POST',body:JSON.stringify({action:'checkApproval',deviceId:devId})});
-    var cd=await cr.json();
-    if (cd.status==='APPROVED') { me={devId:devId,name:name,team:team,post:post,color:tObj?tObj.color:'#00e5ff'}; localStorage.setItem('opm_pending',JSON.stringify(me)); enterApp(); return; }
-    // Request approval
-    var rr=await fetch(url,{method:'POST',body:JSON.stringify({action:'requestApproval',deviceId:devId,name:name,team:team,post:post})});
-    var rd=await rr.json();
-    me={devId:devId,name:name,team:team,post:post,color:tObj?tObj.color:'#00e5ff'};
-    localStorage.setItem('opm_pending',JSON.stringify(me));
-    if (rd.status==='APPROVED') enterApp();
-    else if (rd.status==='REJECTED') showRejected();
-    else showWaiting();
-  } catch(e) { alert('Cannot reach server. Check connection.'); }
-  btn.textContent='REQUEST ACCESS ▶'; btn.disabled=false;
-}
-
-// ============================================================
-// SCREENS
-// ============================================================
-function showLogin() {
-  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
-  document.getElementById('login-screen').classList.add('active');
-  if (approvalTimer) { clearInterval(approvalTimer); approvalTimer=null; }
-}
-function showWaiting() {
-  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
-  document.getElementById('waiting-screen').classList.add('active');
-  document.getElementById('wait-name').textContent=me.name;
-  document.getElementById('wait-detail').textContent=me.team+' · '+me.post;
-  approvalTimer=setInterval(pollApproval,5000);
-}
-function showRejected() {
-  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
-  document.getElementById('rejected-screen').classList.add('active');
-  if (approvalTimer) { clearInterval(approvalTimer); approvalTimer=null; }
-}
-function enterApp() {
-  if (approvalTimer) { clearInterval(approvalTimer); approvalTimer=null; }
-  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
-  document.getElementById('app-screen').style.display='flex'; document.getElementById('app-screen').classList.add('active');
-  document.getElementById('loc-bar').style.display='flex';
-  document.getElementById('compose-bar').style.display='block';
-  document.getElementById('meet-fab').style.display='flex';
-  document.getElementById('app-name').textContent=me.name;
-  document.getElementById('app-detail').textContent=me.team+' · '+me.post;
-  startGPS();
-  var intervalMs=(parseInt(OPM.getConfig().locInterval)||60)*1000;
-  locTimer=setInterval(function(){sendLocation(false);},intervalMs);
-  checkIn();
-  fetchMsgs();
-  fetchTimer=setInterval(fetchMsgs,7000);
-}
-function doLogout() {
-  if (!confirm('Log out?')) return;
-  if (me) { fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'markOneOffline',deviceId:me.devId})}).catch(function(){}); }
-  if (fetchTimer) { clearInterval(fetchTimer); fetchTimer=null; }
-  if (locTimer) { clearInterval(locTimer); locTimer=null; }
-  me=null; meetUrl=null;
-  document.getElementById('app-screen').style.display='none';
-  document.getElementById('loc-bar').style.display='none';
-  document.getElementById('compose-bar').style.display='none';
-  document.getElementById('meet-fab').style.display='none';
-  document.getElementById('meet-fab').classList.remove('active');
-  showLogin();
-}
-
-// ============================================================
-// POLLING
-// ============================================================
-async function pollApproval() {
-  if (!me) return;
-  try {
-    var r=await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'checkApproval',deviceId:me.devId})});
-    var d=await r.json();
-    if (d.status==='APPROVED') enterApp();
-    else if (d.status==='REJECTED') showRejected();
-  } catch(e) {}
-}
-async function checkIn() {
-  try {
-    await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'checkIn',deviceId:me.devId,name:me.name,team:me.team,post:me.post,lat:curLat||'',lng:curLng||''})});
-    document.getElementById('status-txt').textContent='ONLINE'; document.getElementById('status-icon').style.color='var(--success)';
-  } catch(e) { document.getElementById('status-txt').textContent='OFFLINE'; document.getElementById('status-icon').style.color='var(--danger)'; }
-}
-async function reCheckIn() {
-  var btn=document.getElementById('checkin-btn'); btn.textContent='CHECKING...'; btn.disabled=true;
-  await checkIn(); await fetchMsgs();
-  btn.textContent='✅ RE-CHECK IN'; btn.disabled=false;
-}
-async function sendLocation(manual) {
-  if (!me) return;
-  if (!curLat&&manual) { alert('GPS not ready.'); return; }
-  try {
-    await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'updateLocation',deviceId:me.devId,lat:curLat||'',lng:curLng||''})});
-    if (curLat) await checkIn();
-    if (manual) { var b=document.getElementById('loc-btn'); b.textContent=curLat?'✓ SENT':'⚠ NO GPS'; setTimeout(function(){b.textContent='📍 SEND LOCATION';},2000); }
-  } catch(e) { if (manual) alert('Failed.'); }
-}
-
-// ============================================================
-// MESSAGES
-// ============================================================
-async function fetchMsgs() {
-  try {
-    var r=await fetch(OPM.SHEET_URL()+'?action=getMessages&t='+Date.now());
-    var d=await r.json();
-    document.getElementById('last-sync').textContent='SYNC: '+OPM.formatTime();
-    document.getElementById('status-txt').textContent='ONLINE'; document.getElementById('status-icon').style.color='var(--success)';
-    if (d.messages) renderMsgs(d.messages);
-  } catch(e) { document.getElementById('status-txt').textContent='OFFLINE'; document.getElementById('status-icon').style.color='var(--danger)'; }
-}
-function esc(v) {
-  return String(v || '').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
-}
-function renderMsgText(body) {
-  var safe = esc(body || '');
-  safe = safe.replace(/(https?:\/\/[^\s<]+)/gi,function(url){
-    var href = url.replace(/&amp;/g,'&');
-    return '<a href="'+href+'" target="_blank" rel="noopener" style="color:var(--accent);word-break:break-all;">'+url+'</a>';
-  });
-  return safe.replace(/\n/g,'<br>');
-}
-function photoEmbedUrl(url) {
-  var m = String(url||'').match(/[?&]id=([a-zA-Z0-9_-]+)/);
-  return m ? 'https://lh3.googleusercontent.com/d/'+m[1] : url;
-}
-function renderMsgs(msgs) {
-  var list=document.getElementById('msg-list');
-  if (!msgs||!msgs.length) { list.innerHTML='<div style="padding:24px;text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">No messages yet.</div>'; return; }
-  var rev=[].concat(msgs).reverse();
-  // Find active Meet (last 6 hours)
-  var cutoff=Date.now()-6*60*60*1000;
-  var activeMeet=null;
-  for (var i=0;i<rev.length;i++) {
-    var m=rev[i];
-    if (m.body&&m.type==='system'&&m.body.toLowerCase().indexOf('ended')>=0) break;
-    var mm=(m.body||'').match(/(https:\/\/meet\.google\.com\/[\w-]+)/);
-    if (mm) {
-      var mt=0;
-      try { var dd=new Date(m.time||''); if (!isNaN(dd.getTime())) mt=dd.getTime(); } catch(e) {}
-      if (mt>cutoff) activeMeet=mm[1];
-      break;
-    }
-  }
-  if (activeMeet) { meetUrl=activeMeet; document.getElementById('meet-fab').classList.add('active'); }
-  else { meetUrl=null; document.getElementById('meet-fab').classList.remove('active'); }
-
-  list.innerHTML=rev.map(function(m){
-    var cls=m.type==='broadcast'?'broadcast':m.type==='system'?'system':'';
-    var bodyRaw=m.body||'';
-    var mm=bodyRaw.match(/(https:\/\/meet\.google\.com\/[\w-]+)/);
-    var bodyText=bodyRaw.replace(/(https:\/\/meet\.google\.com\/[\w-]+)/g,'').trim();
-    var mt=0;
-    try { var dd2=new Date(m.time||''); if (!isNaN(dd2.getTime())) mt=dd2.getTime(); } catch(e) {}
-    var recentMeet=mm&&mt>cutoff&&activeMeet;
-    var photoUrl=m.photoUrl||m.photo||'';
-    var photoHtml='';
-    if (photoUrl) {
-      var embed=photoEmbedUrl(photoUrl);
-      photoHtml='<img class="msg-photo" src="'+esc(embed)+'" data-url="'+esc(photoUrl)+'" onclick="window.open(this.dataset.url,\'_blank\')" loading="lazy" onerror="this.src=this.dataset.url;">';
-    }
-    return '<div class="msg-item '+cls+'"><div class="msg-sender">'+esc(m.sender||'')+(m.post?' · '+esc(m.post):'')+'</div><div class="msg-body">'+renderMsgText(bodyText)+'</div>'+photoHtml+(recentMeet?'<a href="'+esc(mm[1])+'" target="_blank" rel="noopener" class="join-btn">▶ JOIN VIDEO CALL</a>':'')+'<div class="msg-time">'+esc(m.time||'')+'</div></div>';
-  }).join('');
-}
-
-async function sendMsg() {
-  var inp=document.getElementById('msg-input'); var body=inp.value.trim();
-  if (!body||!me) return; inp.value='';
-  try {
-    await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'sendMessage',sender:me.name,team:me.team,post:me.post,body:body,type:'chat'})});
-    fetchMsgs();
-  } catch(e) { inp.value=body; alert('Send failed.'); }
-}
-
-// ============================================================
-// PHOTO ACCOMPLISHMENT REPORTS
-// ============================================================
-function takePhoto() { document.getElementById('photo-source-sheet').style.display='flex'; }
-function closePhotoSheet() { document.getElementById('photo-source-sheet').style.display='none'; }
-function choosePhotoSource(source) {
-  closePhotoSheet();
-  var id = source === 'camera' ? 'photo-camera-input' : 'photo-gallery-input';
-  document.getElementById(id).click();
-}
-function toLocalDateTimeInput(d) {
-  function pad(n){return String(n).padStart(2,'0');}
-  d = d instanceof Date && !isNaN(d.getTime()) ? d : new Date();
-  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
-}
-function showPhotoReportModal() {
-  if (!pendingPhoto) return;
-  document.getElementById('photo-preview').src = pendingPhoto.dataUrl;
-  document.getElementById('photo-desc').value = '';
-  document.getElementById('photo-capture-time').value = pendingPhoto.captureTime;
-  document.getElementById('photo-where').value = (me && me.post) ? me.post : '';
-  document.getElementById('photo-why').value = '';
-  document.getElementById('photo-gps-note').textContent = curLat && curLng ? ('GPS will be attached: '+Number(curLat).toFixed(6)+', '+Number(curLng).toFixed(6)) : 'GPS not ready — report will still send with your post/location text.';
-  document.getElementById('photo-report-modal').style.display='flex';
-  setTimeout(function(){ document.getElementById('photo-desc').focus(); }, 150);
-}
-function cancelPhotoReport() {
-  pendingPhoto = null;
-  document.getElementById('photo-report-modal').style.display='none';
-}
-function handlePhoto(e, source) {
-  var file=e.target.files[0]; if (!file) return; e.target.value='';
-  if (!/^image\//i.test(file.type||'')) { alert('Please select an image file.'); return; }
+function previewInspectPhoto(e){
+  var file=e.target.files[0];if(!file){e.target.value='';return;}
+  _inspectPhotoFile=file;
   var reader=new FileReader();
-  reader.onload=function(ev) {
-    pendingPhoto = {
-      file:file,
-      dataUrl:ev.target.result,
-      source:source||'gallery',
-      captureTime:toLocalDateTimeInput(new Date(file.lastModified || Date.now()))
-    };
-    showPhotoReportModal();
+  reader.onload=function(ev){
+    _inspectPhotoData=ev.target.result;
+    var preview=document.getElementById('insp-photo-preview');
+    preview.src=ev.target.result;preview.style.display='block';
   };
-  reader.onerror=function(){ alert('Cannot read photo. Please try again.'); };
   reader.readAsDataURL(file);
+  e.target.value='';
 }
-function resizePhoto(dataUrl) {
-  return new Promise(function(resolve,reject){
-    var img=new Image();
-    img.onload=function(){
-      var c=document.createElement('canvas'); var M=1200;
-      var scale=Math.min(M/img.width,M/img.height,1);
-      c.width=Math.max(1,Math.round(img.width*scale)); c.height=Math.max(1,Math.round(img.height*scale));
-      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-      resolve(c.toDataURL('image/jpeg',0.72));
-    };
-    img.onerror=function(){ reject(new Error('Photo format not supported by this browser.')); };
-    img.src=dataUrl;
+
+async function submitInspection(){
+  if(!me)return;
+  var form=INSPECTION_FORMS[me.team]||DEFAULT_INSPECTION;
+  var results=[];
+  form.groups.forEach(function(g){
+    g.items.forEach(function(item){
+      var cb=document.getElementById('insp_'+item.id);
+      results.push({id:item.id,label:item.label,checked:cb?cb.checked:true});
+    });
   });
-}
-function formatCapture(v) { return (v || '').replace('T',' '); }
-function buildPhotoBody(desc, captureTime, where, why) {
-  var lines = ['📸 ACCOMPLISHMENT PHOTO'];
-  lines.push('Description: '+desc);
-  if (captureTime) lines.push('Captured: '+formatCapture(captureTime));
-  if (where) lines.push('Where: '+where);
-  if (why) lines.push('Why/Purpose: '+why);
-  if (curLat && curLng) lines.push('GPS: '+Number(curLat).toFixed(6)+', '+Number(curLng).toFixed(6));
-  return lines.join('\n');
-}
-async function submitPhotoReport() {
-  if (!pendingPhoto || !me) return;
-  var desc=document.getElementById('photo-desc').value.trim();
-  var captureTime=document.getElementById('photo-capture-time').value;
-  var where=document.getElementById('photo-where').value.trim();
-  var why=document.getElementById('photo-why').value.trim();
-  if (!desc) { alert('Please describe what this photo shows. This is needed for the report.'); document.getElementById('photo-desc').focus(); return; }
+  var remarks=document.getElementById('insp-remarks');
+  var remarksText=remarks?remarks.value.trim():'';
+  var checkedCount=results.filter(function(r){return r.checked;}).length;
+  var body=me.team+' DAILY INSPECTION — '+OPM.formatTime()+'\n';
+  body+=checkedCount+'/'+results.length+' items passed\n';
+  results.forEach(function(r){body+=(r.checked?'✓ ':'✗ ')+r.label+'\n';});
+  if(remarksText)body+='\nRemarks: '+remarksText;
 
-  var btn=document.getElementById('photo-send-btn');
-  btn.textContent='UPLOADING...'; btn.disabled=true;
-  try {
-    var du=await resizePhoto(pendingPhoto.dataUrl);
-    var ur=await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'uploadPhoto',sender:me.name,photoData:du})});
-    var ud=await ur.json();
-    var body=buildPhotoBody(desc,captureTime,where,why);
-    await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({
-      action:'sendMessage', sender:me.name, team:me.team, post:me.post,
-      body:body, type:'photo', photoUrl:ud.photoUrl,
-      photoLat:curLat||'', photoLng:curLng||'', target:'ALL',
-      photoDesc:desc, captureTime:captureTime, photoWhere:where, photoWhy:why,
-      sourceName:(pendingPhoto.file&&pendingPhoto.file.name)||''
-    })});
-    cancelPhotoReport();
-    fetchMsgs();
-  } catch(err) {
-    alert('Upload failed: '+(err.message||err));
-  } finally {
-    btn.textContent='📤 SEND REPORT'; btn.disabled=false;
+  // Upload photo if attached
+  var photoUrl='';
+  if(_inspectPhotoData){
+    try{
+      var ur=await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'uploadPhoto',sender:me.name,photoData:_inspectPhotoData})});
+      var ud=await ur.json();
+      photoUrl=ud.photoUrl||'';
+    }catch(e){}
   }
+
+  try{
+    await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({
+      action:'sendMessage',sender:me.name,team:me.team,post:me.post,body:body,type:'inspection',
+      photoUrl:photoUrl,photoLat:curLat||'',photoLng:curLng||'',
+      inspectionData:JSON.stringify({results:results,remarks:remarksText,team:me.team,name:me.name,time:OPM.formatTime()})
+    })});
+    closeInspection();
+    fetchMsgs();
+    OPM.toast('Inspection submitted','success');
+  }catch(e){OPM.toast('Submit failed — check connection','error');}
 }
 
-// ============================================================
-// VIDEO
-// ============================================================
-function joinMeet() { if (meetUrl) window.open(meetUrl,'_blank'); else alert('No active call.'); }
+// Check if current user is a supervisor (any unit that has an inspection form)
+function isSupervisor(){return me&&INSPECTION_FORMS[me.team];}
 
-// ============================================================
-// INIT — RUNS IMMEDIATELY, NEVER BLOCKS
-// ============================================================
-(function initApp() {
-  document.getElementById('device-id-disp').textContent = OPM.getDeviceId().slice(-8);
+// ═══════════ SETUP ═══════════
+function showSetup(){var c=OPM.getConfig();document.getElementById('sw-sheet-url').value=c.sheetUrl||'';document.getElementById('sw-csv-url').value=c.settingsCsvUrl||'';document.getElementById('setup-overlay').style.display='flex';}
+async function connectSetup(){
+  var su=document.getElementById('sw-sheet-url').value.trim(),cu=document.getElementById('sw-csv-url').value.trim(),er=document.getElementById('sw-err');
+  if(!su||!su.includes('script.google.com')){er.textContent='Enter valid Apps Script URL';return;}
+  if(!cu||!cu.includes('docs.google.com')){er.textContent='Enter valid CSV URL';return;}
+  er.style.color='var(--success)';er.textContent='Saving...';
+  OPM.saveConfig({sheetUrl:su,settingsCsvUrl:cu});localStorage.setItem('opm_setup_done','1');
+  er.textContent='Connected!';
+  setTimeout(function(){document.getElementById('setup-overlay').style.display='none';loadTeamsNow();startGPS();},800);
+}
+
+// ═══════════ TEAMS ═══════════
+function loadTeamsNow(){
+  var s=document.getElementById('l-team'),e=document.getElementById('event-name-disp'),c=OPM.getConfig(),cached=null;
+  try{cached=JSON.parse(localStorage.getItem('opm_teams_cache'));}catch(x){}
+  if(!cached||!cached.length)try{cached=c.teams;}catch(x){}
+  if(cached&&cached.length){populateTeams(cached);e.textContent=(c.eventName||'OPM').toUpperCase();fetchTeamsFromServer();return;}
+  populateTeams(FALLBACK_TEAMS);e.textContent=(c.eventName||'OPM').toUpperCase();fetchTeamsFromServer();
+}
+function populateTeams(t){var s=document.getElementById('l-team');s.innerHTML='<option value="">— Select your team —</option>';t.forEach(function(t){var o=document.createElement('option');o.value=t.name;o.textContent=t.name;s.appendChild(o);});}
+function parseCSV(t){var c={};t.trim().split('\n').forEach(function(l){var i=l.indexOf(',');if(i<0)return;var k=l.substring(0,i).replace(/"/g,'').trim(),v=l.substring(i+1).trim();if(v.startsWith('"')&&v.endsWith('"'))v=v.slice(1,-1).replace(/""/g,'"');if(k&&k!=='Key')c[k]=v;});return c;}
+async function fetchTeamsFromServer(){
+  var c=OPM.getConfig(),t=null,en=null;
+  if(c.settingsCsvUrl){try{var r=await fetch(c.settingsCsvUrl+'&t='+Date.now());var p=parseCSV(await r.text());if(p.teams){t=typeof p.teams==='string'?JSON.parse(p.teams):p.teams;if(t&&t.length)en=p.eventName;}}catch(e){}}
+  if(!t&&c.sheetUrl){try{var r2=await fetch(c.sheetUrl+'?action=getSettings&t='+Date.now());var d2=await r2.json();if(d2.settings&&d2.settings.teams){t=typeof d2.settings.teams==='string'?JSON.parse(d2.settings.teams):d2.settings.teams;if(t&&t.length)en=d2.settings.eventName;}}catch(e){}}
+  if(t&&t.length){populateTeams(t);if(en)document.getElementById('event-name-disp').textContent=en.toUpperCase();try{localStorage.setItem('opm_teams_cache',JSON.stringify(t));}catch(e){}OPM.saveConfig({teams:t,eventName:en||c.eventName});}
+}
+
+// ═══════════ GPS ═══════════
+function startGPS(){
+  if(!navigator.geolocation){document.getElementById('gps-status').innerHTML='<span style="color:var(--danger);">📍 NO GPS</span>';return;}
+  var a=0;
+  function tg(){a++;document.getElementById('gps-status').innerHTML='<span style="color:var(--warning);">📍 searching ('+a+'/5)</span>';
+    navigator.geolocation.getCurrentPosition(function(p){curLat=p.coords.latitude.toFixed(6);curLng=p.coords.longitude.toFixed(6);var q=p.coords.accuracy<30?'good':p.coords.accuracy<100?'fair':'poor';document.getElementById('gps-status').innerHTML='<span class="gps-quality '+q+'"></span>📍 '+curLat+', '+curLng;if(me)sendLocation(false);},function(e){if(a<5)setTimeout(tg,5000);else document.getElementById('gps-status').innerHTML='<span style="color:#ffaa00;">📍 unavailable</span>';},{enableHighAccuracy:true,timeout:15000,maximumAge:0});}
+  tg();
+  navigator.geolocation.watchPosition(function(p){curLat=p.coords.latitude.toFixed(6);curLng=p.coords.longitude.toFixed(6);document.getElementById('gps-status').innerHTML='<span class="gps-quality good"></span>📍 '+curLat+', '+curLng;},function(){},{enableHighAccuracy:true,maximumAge:30000});
+}
+
+// ═══════════ LOGIN ═══════════
+async function doLogin(){
+  var n=document.getElementById('l-name').value.trim(),t=document.getElementById('l-team').value,p=document.getElementById('l-post').value.trim(),c=document.getElementById('l-code').value.trim();
+  if(!n||!t||!p||!c){alert('Fill all fields.');return;}
+  var b=document.getElementById('login-btn');b.textContent='CHECKING...';b.disabled=true;
+  var cfg=OPM.getConfig(),teams=cfg.teams||FALLBACK_TEAMS,tObj=teams.find(function(x){return x.name===t;});
+  if(tObj&&tObj.code&&tObj.code.toUpperCase()!==c.toUpperCase()){alert('Wrong access code.');b.textContent='REQUEST ACCESS ▶';b.disabled=false;return;}
+  b.textContent='REQUESTING...';
+  try{var did=OPM.getDeviceId(),url=OPM.SHEET_URL();var cr=await fetch(url,{method:'POST',body:JSON.stringify({action:'checkApproval',deviceId:did})});var cd=await cr.json();
+    if(cd.status==='APPROVED'){me={devId:did,name:n,team:t,post:p,color:tObj?tObj.color:'#00e5ff'};localStorage.setItem('opm_pending',JSON.stringify(me));enterApp();return;}
+    var rr=await fetch(url,{method:'POST',body:JSON.stringify({action:'requestApproval',deviceId:did,name:n,team:t,post:p})});var rd=await rr.json();
+    me={devId:did,name:n,team:t,post:p,color:tObj?tObj.color:'#00e5ff'};localStorage.setItem('opm_pending',JSON.stringify(me));
+    if(rd.status==='APPROVED')enterApp();else if(rd.status==='REJECTED')showRejected();else showWaiting();}
+  catch(e){alert('Cannot reach server.');}
+  b.textContent='REQUEST ACCESS ▶';b.disabled=false;
+}
+
+function showLogin(){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById('login-screen').classList.add('active');if(approvalTimer){clearInterval(approvalTimer);approvalTimer=null;}}
+function showWaiting(){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById('waiting-screen').classList.add('active');document.getElementById('wait-name').textContent=me.name;document.getElementById('wait-detail').textContent=me.team+' · '+me.post;approvalTimer=setInterval(pollApproval,5000);}
+function showRejected(){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById('rejected-screen').classList.add('active');if(approvalTimer){clearInterval(approvalTimer);approvalTimer=null;}}
+function enterApp(){
+  if(approvalTimer){clearInterval(approvalTimer);approvalTimer=null;}
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('app-screen').style.display='flex';document.getElementById('app-screen').classList.add('active');
+  document.getElementById('loc-bar').style.display='flex';document.getElementById('compose-bar').style.display='block';
+  document.getElementById('meet-fab').style.display='flex';
+  if(isSupervisor())document.getElementById('inspect-fab').style.display='flex';
+  document.getElementById('app-name').textContent=me.name;document.getElementById('app-detail').textContent=me.team+' · '+me.post;
+  startGPS();var im=(parseInt(OPM.getConfig().locInterval)||60)*1000;locTimer=setInterval(function(){sendLocation(false);},im);
+  checkIn();fetchMsgs();fetchTimer=setInterval(fetchMsgs,7000);
+}
+function doLogout(){
+  if(!confirm('Log out?'))return;
+  if(me){fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'markOneOffline',deviceId:me.devId})}).catch(function(){});}
+  if(fetchTimer){clearInterval(fetchTimer);fetchTimer=null;}if(locTimer){clearInterval(locTimer);locTimer=null;}
+  me=null;meetUrl=null;document.getElementById('app-screen').style.display='none';document.getElementById('loc-bar').style.display='none';
+  document.getElementById('compose-bar').style.display='none';document.getElementById('meet-fab').style.display='none';
+  document.getElementById('inspect-fab').style.display='none';document.getElementById('meet-fab').classList.remove('active');showLogin();
+}
+
+async function pollApproval(){if(!me)return;try{var r=await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'checkApproval',deviceId:me.devId})});var d=await r.json();if(d.status==='APPROVED')enterApp();else if(d.status==='REJECTED')showRejected();}catch(e){}}
+async function checkIn(){try{await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'checkIn',deviceId:me.devId,name:me.name,team:me.team,post:me.post,lat:curLat||'',lng:curLng||''})});document.getElementById('status-txt').textContent='ONLINE';document.getElementById('status-icon').style.color='var(--success)';}catch(e){document.getElementById('status-txt').textContent='OFFLINE';document.getElementById('status-icon').style.color='var(--danger)';}}
+async function reCheckIn(){var b=document.getElementById('checkin-btn');b.textContent='CHECKING...';b.disabled=true;await checkIn();await fetchMsgs();b.textContent='✅ RE-CHECK IN';b.disabled=false;}
+async function sendLocation(m){if(!me)return;if(!curLat&&m){alert('GPS not ready.');return;}try{await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'updateLocation',deviceId:me.devId,lat:curLat||'',lng:curLng||''})});if(curLat)await checkIn();if(m){var b=document.getElementById('loc-btn');b.textContent=curLat?'✓ SENT':'⚠ NO GPS';setTimeout(function(){b.textContent='📍 SEND LOCATION';},2000);}}catch(e){if(m)alert('Failed.');}}
+
+async function fetchMsgs(){try{var r=await fetch(OPM.SHEET_URL()+'?action=getMessages&t='+Date.now());var d=await r.json();document.getElementById('last-sync').textContent='SYNC: '+OPM.formatTime();document.getElementById('status-txt').textContent='ONLINE';document.getElementById('status-icon').style.color='var(--success)';if(d.messages)renderMsgs(d.messages);}catch(e){document.getElementById('status-txt').textContent='OFFLINE';document.getElementById('status-icon').style.color='var(--danger)';}}
+function renderMsgs(msgs){
+  var l=document.getElementById('msg-list');if(!msgs||!msgs.length){l.innerHTML='<div style="padding:24px;text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">No messages yet.</div>';return;}
+  var rev=[].concat(msgs).reverse(),cutoff=Date.now()-6*60*60*1000,activeMeet=null;
+  for(var i=0;i<rev.length;i++){var m=rev[i];if(m.body&&m.type==='system'&&m.body.toLowerCase().indexOf('ended')>=0)break;var mm=(m.body||'').match(/(https:\/\/meet\.google\.com\/[\w-]+)/);if(mm){var mt=0;try{var dd=new Date(m.time||'');if(!isNaN(dd.getTime()))mt=dd.getTime();}catch(e){}if(mt>cutoff)activeMeet=mm[1];break;}}
+  if(activeMeet){meetUrl=activeMeet;document.getElementById('meet-fab').classList.add('active');}else{meetUrl=null;document.getElementById('meet-fab').classList.remove('active');}
+  l.innerHTML=rev.map(function(m){var cls=m.type==='broadcast'?'broadcast':m.type==='system'?'system':m.type==='inspection'?'system':'';var mm2=(m.body||'').match(/(https:\/\/meet\.google\.com\/[\w-]+)/);var bt=(m.body||'').replace(/(https:\/\/meet\.google\.com\/[\w-]+)/g,'').replace(/\n/g,'<br>');var mt2=0;try{var dd2=new Date(m.time||'');if(!isNaN(dd2.getTime()))mt2=dd2.getTime();}catch(e){}var rm=mm2&&mt2>cutoff&&activeMeet;return '<div class="msg-item '+cls+'"><div class="msg-sender">'+(m.type==='inspection'?'📋 ':'')+(m.sender||'')+(m.post?' · '+m.post:'')+'</div><div class="msg-body">'+bt+'</div>'+(m.photoUrl?'<img class="msg-photo" src="'+m.photoUrl+'" onclick="window.open(\''+m.photoUrl+'\')">':'')+(rm?'<a href="'+mm2[1]+'" target="_blank" rel="noopener" class="join-btn">▶ JOIN VIDEO CALL</a>':'')+'<div class="msg-time">'+(m.time||'')+'</div></div>';}).join('');
+}
+async function sendMsg(){var i=document.getElementById('msg-input'),b=i.value.trim();if(!b||!me)return;i.value='';try{await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'sendMessage',sender:me.name,team:me.team,post:me.post,body:b,type:'chat'})});fetchMsgs();}catch(e){i.value=b;alert('Send failed.');}}
+
+function takePhoto(){document.getElementById('photo-input').click();}
+async function handlePhoto(e){var f=e.target.files[0];if(!f){e.target.value='';return;}var r=new FileReader();r.onload=async function(ev){var img=new Image();img.onload=async function(){var c=document.createElement('canvas'),M=800,s=Math.min(M/img.width,M/img.height,1);c.width=img.width*s;c.height=img.height*s;c.getContext('2d').drawImage(img,0,0,c.width,c.height);var du=c.toDataURL('image/jpeg',0.65);try{var ur=await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'uploadPhoto',sender:me.name,photoData:du})});var ud=await ur.json();await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'sendMessage',sender:me.name,team:me.team,post:me.post,body:'📸 Photo',type:'photo',photoUrl:ud.photoUrl,photoLat:curLat||'',photoLng:curLng||''})});fetchMsgs();}catch(err){alert('Upload failed.');}};img.src=ev.target.result;};r.readAsDataURL(f);e.target.value='';}
+function joinMeet(){if(meetUrl)window.open(meetUrl,'_blank');else alert('No active call.');}
+
+(function initApp(){
+  document.getElementById('device-id-disp').textContent=OPM.getDeviceId().slice(-8);
   document.getElementById('l-code').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
   document.getElementById('msg-input').addEventListener('keydown',function(e){if(e.key==='Enter')sendMsg();});
-
-  var cfg = OPM.getConfig();
-  if (!cfg.sheetUrl || !cfg.settingsCsvUrl) {
-    showSetup();
-    return;
-  }
-
-  // Teams load NOW (non-blocking — shows fallback if cache empty)
-  loadTeamsNow();
-  startGPS();
-
-  // Auto-login check (only if session exists)
-  var pending = JSON.parse(localStorage.getItem('opm_pending')||'null');
-  if (pending && pending.devId) {
-    me = pending;
-    fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'checkApproval',deviceId:pending.devId})})
-      .then(function(r){return r.json();})
-      .then(function(d){
-        if (d.status==='APPROVED') enterApp();
-        else if (d.status==='PENDING') showWaiting();
-        else if (d.status==='REJECTED') { localStorage.removeItem('opm_pending'); showRejected(); }
-      })
-      .catch(function(){ enterApp(); });
-  }
+  var cfg=OPM.getConfig();if(!cfg.sheetUrl||!cfg.settingsCsvUrl){showSetup();return;}
+  loadTeamsNow();startGPS();
+  var p=JSON.parse(localStorage.getItem('opm_pending')||'null');if(p&&p.devId){me=p;fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'checkApproval',deviceId:p.devId})}).then(function(r){return r.json();}).then(function(d){if(d.status==='APPROVED')enterApp();else if(d.status==='PENDING')showWaiting();else if(d.status==='REJECTED'){localStorage.removeItem('opm_pending');showRejected();}}).catch(function(){enterApp();});}
 })();
 </script>
-
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', async function() {
-    var keys = await caches.keys();
-    for (var i=0;i<keys.length;i++) { if (keys[i].indexOf('opm-v5-photo-reports') !== 0) await caches.delete(keys[i]); }
-    navigator.serviceWorker.register('./sw.js')
-      .then(function(r){console.log('[OPM] SW:',r.scope);})
-      .catch(function(e){console.log('[OPM] SW:',e);});
-  });
-}
-</script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1dfccd77bdddd99',t:'MTc4NDUyNzc5OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script>if('serviceWorker'in navigator){window.addEventListener('load',async function(){var k=await caches.keys();for(var i=0;i<k.length;i++){if(k[i]!=='opm-v3')await caches.delete(k[i]);}navigator.serviceWorker.register('./sw.js').then(function(r){console.log('[OPM] SW:',r.scope);}).catch(function(e){console.log('[OPM] SW:',e);});});}</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2232db32dff1108',t:'MTc4NTIzNDMxMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
 </body>
 </html>
