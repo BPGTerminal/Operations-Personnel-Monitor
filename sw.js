@@ -4,7 +4,7 @@
    network-first for HTML, bypass for API endpoints.
    ═══════════════════════════════════════════════════════════════ */
 
-const CACHE_VERSION = 'opm-v5-photo-reports';
+const CACHE_VERSION = 'opm-v5';
 const CACHE_NAME_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_NAME_DYNAMIC = `${CACHE_VERSION}-dynamic`;
 
@@ -12,14 +12,13 @@ const CACHE_NAME_DYNAMIC = `${CACHE_VERSION}-dynamic`;
 const PRECACHE_ASSETS = [
   './',
   './manifest.json',
+  './commander-manifest.json',
+  './dashboard-manifest.json',
   './icon-192.png',
   './icon-512.png',
   './opm-core.css',
   './opm-commander.css',
   './opm-core.js',
-  './personnel.html',
-  './commander.html',
-  './dashboard.html',
 ];
 
 // Install: pre-cache static assets
