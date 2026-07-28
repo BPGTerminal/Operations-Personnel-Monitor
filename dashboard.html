@@ -3,472 +3,340 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OPM — Operations Dashboard</title>
-
-<!-- dashboard loaded via opm.html PWA; no standalone manifest here -->
+<title>OPM — Operations Report</title>
+<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#00e5ff">
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
-
 <link rel="stylesheet" href="opm-core.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
 <style>
-body { min-height: 100vh; display: flex; flex-direction: column; overflow-y: auto; }
-.dash-header { background: var(--bg-panel); border-bottom: 1px solid var(--border-color); padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 12px; }
-.dash-header h1 { font-size: 18px; font-weight: 700; letter-spacing: 2px; color: #fff; }
-.dash-header h1 span { color: var(--accent); }
+body{min-height:100vh;display:flex;flex-direction:column;overflow-y:auto;background:var(--bg-base);}
 
-.filter-bar { background: var(--bg-panel); border-bottom: 1px solid var(--border-color); padding: 10px 20px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
-.filter-bar label { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); letter-spacing: 1px; white-space: nowrap; }
-.filter-bar input[type="date"] { background: var(--bg-surface); border: 1px solid var(--border-color); color: #fff; font-family: var(--font-mono); font-size: 10px; padding: 5px 8px; border-radius: var(--radius); }
+/* Report layout */
+.report{max-width:1100px;width:100%;margin:0 auto;padding:0;flex:1;}
 
-.dash-content { flex: 1; padding: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; max-width: 1400px; width: 100%; margin: 0 auto; }
-.stats-row { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
-.stat-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 16px; text-align: center; }
-.stat-value { font-family: var(--font-mono); font-size: 30px; font-weight: 700; color: var(--accent); line-height: 1; }
-.stat-label { font-family: var(--font-mono); font-size: 9px; color: var(--text-dim); letter-spacing: 1px; margin-top: 6px; text-transform: uppercase; }
+/* Cover / header section */
+.report-cover{background:var(--bg-panel);border-bottom:3px solid var(--accent);padding:28px 32px;text-align:center;}
+.report-cover .logo-row{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:8px;}
+.report-cover .logo{width:48px;height:48px;border-radius:50%;}
+.report-cover h1{font-size:22px;font-weight:700;letter-spacing:3px;color:#fff;text-transform:uppercase;margin-bottom:4px;}
+.report-cover .subtitle{font-family:var(--font-mono);font-size:10px;color:var(--accent);letter-spacing:2px;}
+.report-cover .meta-row{display:flex;justify-content:center;gap:32px;margin-top:12px;font-family:var(--font-mono);font-size:9px;color:var(--text-dim);flex-wrap:wrap;}
+.report-cover .meta-row span strong{color:var(--text-secondary);}
 
-.chart-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; }
-.chart-card.half { grid-column: span 1; }
-.chart-card.full { grid-column: 1 / -1; }
-.chart-title { font-family: var(--font-mono); font-size: 10px; color: var(--accent); letter-spacing: 1.5px; margin-bottom: 10px; text-transform: uppercase; font-weight: 700; }
-.chart-wrap { flex: 1; position: relative; min-height: 250px; }
-.chart-wrap canvas { width: 100% !important; }
+/* Toolbar */
+.report-toolbar{background:var(--bg-panel);border-bottom:1px solid var(--border-color);padding:8px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:100;}
+.report-toolbar label{font-family:var(--font-mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;white-space:nowrap;}
+.report-toolbar input[type="date"]{background:var(--bg-surface);border:1px solid var(--border-color);color:#fff;font-family:var(--font-mono);font-size:10px;padding:5px 8px;border-radius:var(--radius);}
+.report-body{padding:20px 24px;display:flex;flex-direction:column;gap:22px;}
 
-.insight { margin-top: 10px; padding: 10px 12px; background: var(--accent-dim); border-left: 3px solid var(--accent); font-size: var(--font-sm); color: var(--text-secondary); border-radius: 0 var(--radius) var(--radius) 0; line-height: 1.5; }
-.insight.warn { border-color: var(--warning); background: var(--warning-dim); }
-.insight.success { border-color: var(--success); background: var(--success-dim); }
+/* Section */
+.sec{border:1px solid var(--border-color);border-radius:6px;overflow:hidden;background:var(--bg-panel);}
+.sec-hdr{background:var(--accent-dim);border-bottom:1px solid var(--border-color);padding:12px 20px;font-family:var(--font-mono);font-size:10px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
+.sec-body{padding:20px;}
 
-.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-top: 8px; }
-.photo-thumb { position: relative; aspect-ratio: 4/3; overflow: hidden; border-radius: var(--radius); border: 1px solid var(--border-color); cursor: pointer; background: var(--bg-surface); }
-.photo-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--transition); }
-.photo-thumb:hover img { transform: scale(1.05); }
-.photo-thumb .photo-meta { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,.85)); padding: 6px 8px; font-size: 8px; font-family: var(--font-mono); color: #fff; }
-.photo-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 8px; display: flex; flex-direction: column; gap: 6px; }
-.photo-card .photo-thumb { margin: 0; }
-.photo-caption { font-size: var(--font-sm); color: #fff; line-height: 1.35; font-weight: 600; }
-.photo-details { font-family: var(--font-mono); font-size: 8px; color: var(--text-dim); line-height: 1.55; word-break: break-word; }
-.photo-credit { color: var(--accent); font-weight: 700; }
+/* Stats bar */
+.stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--border-color);border-radius:6px;overflow:hidden;}
+.stat-item{background:var(--bg-panel);padding:16px 20px;text-align:center;}
+.stat-num{font-family:var(--font-mono);font-size:28px;font-weight:700;color:var(--accent);line-height:1;}
+.stat-lbl{font-family:var(--font-mono);font-size:8px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-top:4px;}
 
-.narrative { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 16px; grid-column: 1 / -1; }
-.narrative h3 { font-family: var(--font-mono); font-size: 11px; color: var(--accent); letter-spacing: 2px; margin-bottom: 8px; }
-.narrative p { font-size: var(--font-sm); color: var(--text-secondary); line-height: 1.7; margin-bottom: 8px; }
-.narrative-edit {
-  width: 100%; min-height: 180px; background: var(--bg-surface);
-  border: 1px solid var(--border-color); color: var(--text-primary);
-  font-family: var(--font-sans); font-size: var(--font-sm);
-  padding: 12px; line-height: 1.7; resize: vertical;
-  border-radius: var(--radius); outline: none;
-}
-.narrative-edit:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
-.narrative-actions { display: flex; gap: 8px; margin-top: 10px; }
+/* Unit tables */
+.unit-table{width:100%;border-collapse:collapse;font-size:var(--font-xs);}
+.unit-table th{background:rgba(0,0,0,.25);color:var(--accent);font-family:var(--font-mono);font-size:9px;letter-spacing:1px;padding:10px 14px;text-align:left;text-transform:uppercase;border-bottom:1px solid var(--border-color);}
+.unit-table td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text-secondary);}
+.unit-table tr:hover td{background:var(--accent-dim);}
+.unit-table .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;}
+.unit-table .num{font-family:var(--font-mono);font-weight:700;text-align:center;}
 
-.msg-log { grid-column: 1 / -1; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 16px; max-height: 450px; overflow-y: auto; }
-.msg-log-row { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.03); font-size: var(--font-xs); }
-.msg-log-time { font-family: var(--font-mono); color: var(--text-dim); min-width: 75px; flex-shrink: 0; }
-.msg-log-sender { color: var(--accent); font-weight: 600; min-width: 100px; flex-shrink: 0; }
-.msg-log-body { flex: 1; color: var(--text-secondary); }
+/* Photo report cards */
+.photo-report-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;}
+.photo-report-card{background:var(--bg-surface);border:1px solid var(--border-color);border-radius:6px;overflow:hidden;}
+.photo-report-card img{width:100%;height:200px;object-fit:cover;display:block;}
+.photo-report-card .card-info{padding:12px 14px;}
+.photo-report-card .card-desc{font-size:14px;font-weight:700;color:#fff;line-height:1.4;margin-bottom:8px;}
+.photo-report-card .card-meta{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:var(--font-xs);}
+.photo-report-card .card-meta .lbl{font-family:var(--font-mono);color:var(--accent);font-size:9px;white-space:nowrap;}
+.photo-report-card .card-meta .val{color:var(--text-dim);word-break:break-word;}
 
-.empty-state { text-align: center; padding: 40px; color: var(--text-dim); font-family: var(--font-mono); font-size: 12px; }
+/* Narrative */
+.narrative-edit{width:100%;min-height:140px;background:rgba(0,0,0,.3);border:1px solid var(--border-color);color:var(--text-primary);font-family:var(--font-sans);font-size:var(--font-sm);padding:14px;line-height:1.8;resize:vertical;border-radius:var(--radius);outline:none;}
+.narrative-edit:focus{border-color:var(--accent);}
 
-.photo-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.92); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
-.photo-modal-overlay.show { display: flex; }
-.photo-modal-overlay img { max-width: 92vw; max-height: 85vh; border: 2px solid var(--accent); border-radius: 6px; }
-.photo-modal-close { position: absolute; top: 20px; right: 28px; color: #fff; font-size: 32px; cursor: pointer; font-family: var(--font-mono); }
+/* Message log */
+.msg-log{max-height:400px;overflow-y:auto;font-size:var(--font-xs);}
+.msg-log-row{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.03);}
+.msg-log-time{font-family:var(--font-mono);color:var(--text-dim);min-width:80px;flex-shrink:0;font-size:9px;}
+.msg-log-sender{color:var(--accent);font-weight:600;min-width:110px;flex-shrink:0;}
+.msg-log-body{flex:1;color:var(--text-secondary);}
 
-@media print {
-  body { background: #fff !important; color: #000 !important; overflow: visible !important; }
-  .dash-header, .filter-bar, .btn { display: none !important; }
-  .dash-content { grid-template-columns: 1fr 1fr !important; padding: 10px !important; }
-  .stat-card, .chart-card, .narrative, .photo-card { background: #fff !important; border: 1px solid #ccc !important; break-inside: avoid; }
-  .stat-value { color: #1a4d8f !important; } .chart-title { color: #1a4d8f !important; }
-  * { color: #000 !important; text-shadow: none !important; }
+/* Empty */
+.empty{text-align:center;padding:40px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px;}
+
+/* Print */
+@media print{
+  body{background:#fff!important;color:#000!important;overflow:visible!important;}
+  .report-toolbar,.btn{display:none!important;}
+  .report{padding:0!important;max-width:none!important;}
+  .report-cover{border-bottom-color:#1a4d8f!important;}
+  .sec,.sec-hdr,.sec-body{background:#fff!important;border-color:#ccc!important;break-inside:avoid;}
+  .sec-hdr{color:#1a4d8f!important;background:#f0f4f8!important;}
+  *{color:#000!important;text-shadow:none!important;box-shadow:none!important;}
+  .stat-num{color:#1a4d8f!important;}
+  .unit-table th{background:#f0f4f8!important;color:#1a4d8f!important;}
+  .card-desc,.msg-log-sender{color:#1a4d8f!important;}
+  .card-meta .lbl{color:#1a4d8f!important;}
 }
 </style>
 </head>
 <body>
 
-<div class="dash-header">
-  <div class="flex items-center gap-sm">
-    <span class="badge badge-accent">OPM DASHBOARD</span>
-    <h1 id="dash-title">Operations Summary <span>// Report</span></h1>
+<div class="report" id="report">
+
+  <!-- Cover -->
+  <div class="report-cover" id="cover">
+    <div class="logo-row">
+      <img class="logo" src="icon-192.png" alt="OPM">
+    </div>
+    <h1 id="cover-title">Operations Report</h1>
+    <div class="subtitle">O P E R A T I O N S &nbsp; P E R S O N N E L &nbsp; M O N I T O R</div>
+    <div class="meta-row">
+      <span><strong id="cover-unit">ALL UNITS</strong></span>
+      <span><strong id="cover-date"></strong></span>
+      <span><strong id="cover-event"></strong></span>
+    </div>
   </div>
-  <div class="flex gap-sm">
-    <button class="btn btn-sm" onclick="window.print()">🖨 PRINT / PDF</button>
-    <button class="btn btn-primary btn-sm" onclick="refreshDashboard()">🔄 REFRESH</button>
+
+  <!-- Toolbar -->
+  <div class="report-toolbar">
+    <label>UNIT:</label>
+    <select class="select" id="f-unit" onchange="refresh()" style="width:auto;min-width:170px;"><option value="">ALL UNITS</option></select>
+    <span style="color:var(--text-dim);margin:0 6px;">|</span>
+    <label>FROM:</label><input type="date" id="f-from" onchange="refresh()">
+    <label>TO:</label><input type="date" id="f-to" onchange="refresh()">
+    <button class="btn btn-sm" onclick="document.getElementById('f-from').value='';document.getElementById('f-to').value='';refresh();">ALL TIME</button>
+    <button class="btn btn-sm btn-success" onclick="setToday();">TODAY</button>
+    <button class="btn btn-sm btn-warning" onclick="setThisWeek();">THIS WEEK</button>
+    <span style="flex:1;"></span>
+    <button class="btn btn-sm" onclick="window.print()">🖨 PRINT</button>
+    <button class="btn btn-primary btn-sm" onclick="refresh()">🔄 REFRESH</button>
     <a class="btn btn-sm" href="commander.html">▶ COMMANDER</a>
     <a class="btn btn-sm" href="admin.html">⚙ ADMIN</a>
+    <span id="last-upd" class="mono text-dim" style="font-size:9px;"></span>
   </div>
-</div>
 
-<div class="filter-bar">
-  <label>UNIT:</label>
-  <select class="select" id="f-unit" onchange="refreshDashboard()" style="width:auto;min-width:180px;">
-    <option value="">ALL UNITS</option>
-  </select>
-  <span style="color:var(--text-dim);margin:0 8px;">|</span>
-  <label>FROM:</label>
-  <input type="date" id="f-date-from" onchange="refreshDashboard()">
-  <label>TO:</label>
-  <input type="date" id="f-date-to" onchange="refreshDashboard()">
-  <button class="btn btn-sm" onclick="document.getElementById('f-date-from').value='';document.getElementById('f-date-to').value='';refreshDashboard();">ALL TIME</button>
-  <button class="btn btn-sm btn-success" onclick="setToday();">TODAY</button>
-  <button class="btn btn-sm btn-warning" onclick="setThisWeek();">THIS WEEK</button>
-  <span style="flex:1;"></span>
-  <span id="last-updated" class="mono text-dim" style="font-size:9px;"></span>
-</div>
-
-<div class="dash-content" id="dash-content">
-  <div class="chart-card full"><div class="empty-state">⏳ Loading dashboard data...</div></div>
-</div>
-
-<div class="photo-modal-overlay" id="photo-modal">
-  <span class="photo-modal-close" onclick="document.getElementById('photo-modal').classList.remove('show')">✕</span>
-  <img id="photo-modal-img" src="" alt="Photo">
+  <div class="report-body" id="report-body">
+    <div class="sec"><div class="sec-body empty">⏳ Loading report...</div></div>
+  </div>
 </div>
 
 <script src="opm-core.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-let chartInstances = {};
-
-function destroyCharts() { Object.values(chartInstances).forEach(c => c.destroy()); chartInstances = {}; }
-
-async function fetchDashboardData() {
-  const url = OPM.SHEET_URL(); if (!url) return null;
-  const from = document.getElementById('f-date-from').value;
-  const to   = document.getElementById('f-date-to').value;
-  try {
-    const params = new URLSearchParams({ action:'getDashboardData', t:Date.now() });
-    if (from) params.set('dateFrom', from + ' 00:00:00');
-    if (to)   params.set('dateTo',   to   + ' 23:59:59');
-    const res = await fetch(url + '?' + params, { cache:'no-store' });
-    return await res.json();
-  } catch(e) { console.error('[OPM] Dashboard:', e.message); return null; }
+function fmtDT(v){return String(v||'').replace('T',' ');}
+function extractLabeled(body,label){
+  if(!body)return'';
+  var r=new RegExp(label+':\\s*(.+?)(?:\\n|$)','i');
+  var m=body.match(r);
+  return m?m[1].trim():'';
 }
+function photoDescription(p){return p.photoDesc||p.description||extractLabeled(p.body,'Description')||'Photo report';}
+function photoWhere(p){return p.photoWhere||extractLabeled(p.body,'Where')||p.post||'';}
+function photoWhy(p){return p.photoWhy||extractLabeled(p.body,'Why/Purpose')||extractLabeled(p.body,'Why')||'';}
+function photoCapture(p){return p.captureTime||extractLabeled(p.body,'Captured')||p.time||'';}
 
-function setToday() {
-  const d = new Date().toISOString().substring(0,10);
-  document.getElementById('f-date-from').value = d;
-  document.getElementById('f-date-to').value = d;
-  refreshDashboard();
-}
-function setThisWeek() {
-  const now = new Date(), day = now.getDay();
-  const mon = new Date(now); mon.setDate(now.getDate() - (day===0?6:day-1));
-  const sun = new Date(mon); sun.setDate(mon.getDate()+6);
-  document.getElementById('f-date-from').value = mon.toISOString().substring(0,10);
-  document.getElementById('f-date-to').value   = sun.toISOString().substring(0,10);
-  refreshDashboard();
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+var _chart=null;
+
+function populateUnits(){
+  var cfg=OPM.getConfig();var teams=Array.isArray(cfg.teams)?cfg.teams:[];
+  var sel=document.getElementById('f-unit');var cur=sel.value;
+  sel.innerHTML='<option value="">ALL UNITS</option>';
+  teams.forEach(function(t){var o=document.createElement('option');o.value=t.name;o.textContent=t.name;if(t.name===cur)o.selected=true;sel.appendChild(o);});
 }
 
-// Populate unit dropdown from config
-function populateUnitDropdown() {
-  const cfg = OPM.getConfig();
-  const teams = Array.isArray(cfg.teams) ? cfg.teams : [];
-  const sel = document.getElementById('f-unit');
-  const currentVal = sel.value;
-  sel.innerHTML = '<option value="">ALL UNITS</option>';
-  teams.forEach(t => {
-    const o = document.createElement('option');
-    o.value = t.name; o.textContent = t.name;
-    if (t.name === currentVal) o.selected = true;
-    sel.appendChild(o);
-  });
+function setToday(){var d=new Date().toISOString().substring(0,10);document.getElementById('f-from').value=d;document.getElementById('f-to').value=d;refresh();}
+function setThisWeek(){var n=new Date(),day=n.getDay();var m=new Date(n);m.setDate(n.getDate()-(day===0?6:day-1));var s=new Date(m);s.setDate(m.getDate()+6);document.getElementById('f-from').value=m.toISOString().substring(0,10);document.getElementById('f-to').value=s.toISOString().substring(0,10);refresh();}
+
+async function fetchData(){
+  var url=OPM.SHEET_URL();if(!url)return null;
+  var from=document.getElementById('f-from').value;
+  var to=document.getElementById('f-to').value;
+  try{
+    var p=new URLSearchParams({action:'getDashboardData',t:Date.now()});
+    if(from)p.set('dateFrom',from+' 00:00:00');
+    if(to)p.set('dateTo',to+' 23:59:59');
+    var r=await fetch(url+'?'+p,{cache:'no-store'});
+    return await r.json();
+  }catch(e){return null;}
 }
 
-// Client-side message categorization (mirrors backend)
-function catMsg(body, type) {
-  const b = (body||'').toLowerCase();
-  if (type==='photo') return 'Photo Accomplishments';
-  if (type==='broadcast') return 'Broadcasts';
-  if (type==='system') return 'System';
-  if (b.includes('apprehend')||b.includes('violation')||b.includes('citation')) return 'Apprehensions';
-  if (b.includes('clear')||b.includes('safe')||b.includes('secure')) return 'Status Reports';
-  if (b.includes('clean')||b.includes('utility')||b.includes('sweep')) return 'Utility Tasks';
-  if (b.includes('document')||b.includes('admin')||b.includes('permit')) return 'Admin Tasks';
-  if (b.includes('traffic')||b.includes('vehicle')||b.includes('parking')) return 'Traffic';
-  if (b.includes('incident')||b.includes('alert')||b.includes('emergency')) return 'Incidents';
-  return 'General Comms';
-}
+async function refresh(){
+  populateUnits();
+  if(_chart){_chart.destroy();_chart=null;}
+  document.getElementById('report-body').innerHTML='<div class="sec"><div class="sec-body empty">⏳ Loading report...</div></div>';
+  var data=await fetchData();
+  document.getElementById('last-upd').textContent='Updated: '+OPM.formatTime();
 
-function esc(v) {
-  return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-function photoEmbedUrl(url) {
-  const m = String(url||'').match(/[?&]id=([a-zA-Z0-9_-]+)/);
-  return m ? 'https://lh3.googleusercontent.com/d/' + m[1] : (url || '');
-}
-function fmtDT(v) { return String(v || '').replace('T',' '); }
-function isTaskLike(body, hasPhoto) {
-  return !!hasPhoto || /(done|complete|completed|accomplished|accomplishment|cleared|secured|finished|resolved|handled|processed|checked|inspected|documented|submitted|delivered|assisted|deployed)/i.test(body||'');
-}
-function isIncidentLike(body) {
-  return /(apprehend|violation|incident|issue|alert|emergency|accident|breach|unauthorized)/i.test(body||'');
-}
-function extractLabeled(body, label) {
-  const re = new RegExp(label + ':\\s*([^\\n]+)', 'i');
-  const m = String(body||'').match(re);
-  return m ? m[1].trim() : '';
-}
-function photoDescription(p) {
-  let d = p.photoDesc || p.description || extractLabeled(p.body, 'Description');
-  if (!d && p.body) d = String(p.body).replace(/^📸\s*(ACCOMPLISHMENT PHOTO|Photo)\s*/i,'').trim();
-  return d || 'Photo accomplishment report';
-}
-function photoWhere(p) { return p.photoWhere || extractLabeled(p.body, 'Where') || p.post || ''; }
-function photoWhy(p) { return p.photoWhy || extractLabeled(p.body, 'Why/Purpose') || extractLabeled(p.body, 'Why') || ''; }
-function photoCapture(p) { return p.captureTime || extractLabeled(p.body, 'Captured') || p.time || ''; }
-function messagePreview(m) {
-  const body = String(m.body || '').replace(/\n+/g, ' · ');
-  return body.length > 150 ? body.substring(0, 150) + '…' : body;
-}
+  var selUnit=document.getElementById('f-unit').value||'ALL UNITS';
+  var df=document.getElementById('f-from').value||'beginning';
+  var dt=document.getElementById('f-to').value||'present';
+  var cfg=OPM.getConfig();
 
-async function refreshDashboard() {
-  populateUnitDropdown();
-  destroyCharts();
-  document.getElementById('dash-content').innerHTML = '<div class="chart-card full"><div class="empty-state">⏳ Loading dashboard data...</div></div>';
-  const data = await fetchDashboardData();
-  document.getElementById('last-updated').textContent = 'Updated: ' + OPM.formatTime();
+  document.getElementById('cover-title').textContent=(cfg.eventName||'Operations Report');
+  document.getElementById('cover-unit').textContent=selUnit;
+  document.getElementById('cover-date').textContent=df+' → '+dt;
+  document.getElementById('cover-event').textContent=cfg.unit||cfg.location||'';
 
-  if (!data || !data.summary || (data.summary.totalMessages === 0 && data.summary.totalPersonnel === 0)) {
-    var su = document.getElementById('f-unit').value || 'ALL UNITS';
-    var df = document.getElementById('f-date-from').value || 'any';
-    var dt = document.getElementById('f-date-to').value || 'any';
-    document.getElementById('dash-content').innerHTML = '<div class="chart-card full"><div class="empty-state">No data for <strong>' + su + '</strong> on <strong>' + df + ' &#8594; ' + dt + '</strong><br><br><button class="btn btn-primary btn-sm" onclick="setToday();">TODAY</button> <button class="btn btn-warning btn-sm" onclick="setThisWeek();">THIS WEEK</button> <button class="btn btn-sm" onclick="document.getElementById(\'f-date-from\').value=\'\';document.getElementById(\'f-date-to\').value=\'\';refreshDashboard();">ALL TIME</button></div></div>';
+  if(!data||!data.summary||(data.summary.totalMessages===0&&data.summary.totalPersonnel===0)){
+    document.getElementById('report-body').innerHTML='<div class="sec"><div class="sec-body empty">No data for <strong>'+selUnit+'</strong> on <strong>'+df+' → '+dt+'</strong><br><br><button class="btn btn-primary btn-sm" onclick="setToday();">TODAY</button> <button class="btn btn-warning btn-sm" onclick="setThisWeek();">THIS WEEK</button> <button class="btn btn-sm" onclick="document.getElementById(\'f-from\').value=\'\';document.getElementById(\'f-to\').value=\'\';refresh();">ALL TIME</button></div></div>';
     return;
   }
 
-  buildDashboard(data);
+  build(data,selUnit,df,dt);
 }
 
-function buildDashboard(data) {
-  const s = data.summary;
-  const selectedUnit = document.getElementById('f-unit').value;
-  const cfg = OPM.getConfig();
+function build(data,selUnit,df,dt){
+  var s=data.summary;
+  var unitData=Array.isArray(data.unitData)?data.unitData:[];
+  var photos=data.photos||[];
+  var all=data.allMessages||[];
+  var perTeam=data.personnelByTeam||{};
+  var daily=data.dailyActivity||[];
 
   // Filter by unit
-  let unitData = Array.isArray(data.unitData) ? data.unitData.map(u => ({...u, tasks: Math.max(u.tasks||0, u.photos||0)})) : [];
-  let categories = data.categories || {};
-  let daily = data.dailyActivity || [];
-  let photos = data.photos || [];
-  let all = data.allMessages || [];
-  let perTeam = data.personnelByTeam || {};
+  if(selUnit!=='ALL UNITS'){
+    unitData=unitData.filter(function(u){return u.team===selUnit;});
+    photos=photos.filter(function(p){return p.team===selUnit;});
+    all=all.filter(function(m){return m.team===selUnit;});
+    var fpt={};if(perTeam[selUnit])fpt[selUnit]=perTeam[selUnit];perTeam=fpt;
+  }
 
-  if (selectedUnit) {
-    unitData = unitData.filter(u => u.team === selectedUnit);
-    const filteredMsgs = all.filter(m => m.team === selectedUnit);
-    photos = photos.filter(p => p.team === selectedUnit);
-    categories = {};
-    filteredMsgs.forEach(m => { const c = catMsg((m.body||'').toLowerCase(), m.type||'chat'); if (!categories[c]) categories[c]=0; categories[c]++; });
-    const dayMap = {};
-    filteredMsgs.forEach(m => {
-      const ds = (m.time||'').substring(0,10) || 'unknown';
-      if (!dayMap[ds]) dayMap[ds] = {date:ds,messages:0,photos:0};
-      dayMap[ds].messages++;
-      if (m.photo || m.photoUrl) dayMap[ds].photos++;
+  var totalMsgs=unitData.reduce(function(a,u){return a+(u.messages||0);},0);
+  var totalTasks=unitData.reduce(function(a,u){return a+(u.tasks||0);},0);
+  var totalIncs=unitData.reduce(function(a,u){return a+(u.incidents||0);},0);
+  var totalPhotos=unitData.reduce(function(a,u){return a+(u.photos||0);},0);
+  var unitNames=unitData.map(function(u){return u.team;});
+  var unitTasks=unitData.map(function(u){return u.tasks||0;});
+  var unitPhotos=unitData.map(function(u){return u.photos||0;});
+
+  var html='';
+
+  // ── EXECUTIVE SUMMARY ────────────────────
+  html+='<div class="sec"><div class="sec-hdr">📋 EXECUTIVE SUMMARY</div><div class="sec-body"><div class="stats-bar">';
+  html+='<div class="stat-item"><div class="stat-num">'+totalMsgs+'</div><div class="stat-lbl">Communications</div></div>';
+  html+='<div class="stat-item"><div class="stat-num" style="color:var(--success);">'+totalTasks+'</div><div class="stat-lbl">Tasks Accomplished</div></div>';
+  html+='<div class="stat-item"><div class="stat-num">'+totalPhotos+'</div><div class="stat-lbl">Photo Reports</div></div>';
+  html+='<div class="stat-item"><div class="stat-num" style="color:var(--warning);">'+totalIncs+'</div><div class="stat-lbl">Incidents Logged</div></div>';
+  html+='<div class="stat-item"><div class="stat-num">'+(selUnit!=='ALL UNITS'?(perTeam[selUnit]||0):s.totalPersonnel)+'</div><div class="stat-lbl">'+(selUnit!=='ALL UNITS'?'Staff in Unit':'Personnel Deployed')+'</div></div>';
+  html+='<div class="stat-item"><div class="stat-num" style="color:var(--success);">'+(selUnit!=='ALL UNITS'?(perTeam[selUnit]||0):s.onlineNow)+'</div><div class="stat-lbl">Currently Active</div></div>';
+  html+='</div></div></div>';
+
+  // ── UNIT PERFORMANCE TABLE ───────────────
+  if(unitNames.length>0){
+    html+='<div class="sec"><div class="sec-hdr">📊 UNIT PERFORMANCE BREAKDOWN<span style="font-size:8px;color:var(--text-dim);letter-spacing:0;">PERIOD: '+df+' → '+dt+'</span></div><div class="sec-body">';
+    html+='<table class="unit-table"><thead><tr><th></th><th>UNIT / SECTOR</th><th class="num">TASKS</th><th class="num">PHOTOS</th><th class="num">INCIDENTS</th><th class="num">COMMS</th></tr></thead><tbody>';
+    var colors=['#00e5ff','#00ff88','#ff6b35','#ffd166','#a29bfe','#fd79a8','#55efc4'];
+    unitData.forEach(function(u,i){
+      html+='<tr><td><span class="dot" style="background:'+(colors[i%7])+'"></span></td><td><strong>'+u.team+'</strong></td><td class="num" style="color:var(--success);">'+(u.tasks||0)+'</td><td class="num">'+(u.photos||0)+'</td><td class="num" style="color:'+(u.incidents>0?'var(--warning)':'var(--text-dim)')+';">'+(u.incidents||0)+'</td><td class="num">'+(u.messages||0)+'</td></tr>';
     });
-    daily = Object.values(dayMap).sort((a,b)=>a.date.localeCompare(b.date));
-    all = filteredMsgs;
-    const fpt = {}; if (perTeam[selectedUnit]) fpt[selectedUnit] = perTeam[selectedUnit]; perTeam = fpt;
-    if (unitData.length === 0 && filteredMsgs.length > 0) {
-      unitData = [{
-        team:selectedUnit,
-        messages:filteredMsgs.length,
-        photos:photos.length,
-        tasks:filteredMsgs.filter(m => isTaskLike(m.body, !!(m.photo||m.photoUrl))).length,
-        incidents:filteredMsgs.filter(m => isIncidentLike(m.body)).length
-      }];
-    }
+    html+='</tbody></table>';
+    // Bar chart for visual comparison
+    html+='<div style="margin-top:16px;height:180px;"><canvas id="chart-perf"></canvas></div>';
+    html+='</div></div>';
   }
 
-  const unitNames = unitData.map(u => u.team);
-  const unitTasks = unitData.map(u => u.tasks||0);
-  const unitMsgs  = unitData.map(u => u.messages||0);
-  const unitIncs  = unitData.map(u => u.incidents||0);
-  const catLabels = Object.keys(categories), catValues = Object.values(categories);
-  const dailyLabels = daily.map(d => d.date), dailyMsgs = daily.map(d => d.messages), dailyPhotos = daily.map(d => d.photos);
-  const totalTasks = unitData.reduce((a,u)=>a+(u.tasks||0), 0);
-  const totalIncs  = unitData.reduce((a,u)=>a+(u.incidents||0), 0);
-  const totalMsgs  = unitData.reduce((a,u)=>a+(u.messages||0), 0);
-  const totalPhotos= unitData.reduce((a,u)=>a+(u.photos||0), 0);
-  const topUnit    = unitData.slice().sort((a,b)=>(b.tasks||0)-(a.tasks||0))[0];
-  const incidentUnits = unitData.filter(u => (u.incidents||0)>0);
-  const unitLabel  = selectedUnit ? ' — ' + selectedUnit : '';
-  const dateFrom = document.getElementById('f-date-from').value || 'beginning';
-  const dateTo   = document.getElementById('f-date-to').value || 'present';
-
-  let html = '';
-
-  // Stats
-  html += `<div class="stats-row">
-    <div class="stat-card"><div class="stat-value">${totalMsgs}</div><div class="stat-label">Total Messages</div></div>
-    <div class="stat-card"><div class="stat-value">${totalPhotos}</div><div class="stat-label">Photo Reports</div></div>
-    <div class="stat-card"><div class="stat-value" style="color:var(--success);">${totalTasks}</div><div class="stat-label">Accomplishments</div></div>
-    <div class="stat-card"><div class="stat-value" style="color:var(--warning);">${totalIncs}</div><div class="stat-label">Incidents Logged</div></div>
-    <div class="stat-card"><div class="stat-value">${selectedUnit ? all.length : s.totalPersonnel}</div><div class="stat-label">${selectedUnit ? 'Comms Exchanged' : 'Personnel Deployed'}</div></div>
-    <div class="stat-card"><div class="stat-value" style="color:var(--success);">${selectedUnit ? (perTeam[selectedUnit]||0) : s.onlineNow}</div><div class="stat-label">${selectedUnit ? 'Staff in Unit' : 'Currently Online'}</div></div>
-  </div>`;
-
-  // Accomplishments chart
-  if (unitNames.length > 0) {
-    html += `<div class="chart-card ${selectedUnit ? 'full' : 'half'}"><div class="chart-title">✅ Accomplishments / Tasks${unitLabel}</div><div class="chart-wrap"><canvas id="chart-tasks"></canvas></div>
-      <div class="insight${topUnit && topUnit.tasks>0 ? ' success' : ''}"><strong>Insight:</strong> ${topUnit && topUnit.tasks>0
-        ? `<strong>${esc(topUnit.team)}</strong> credited with <strong>${topUnit.tasks} accomplishments</strong>${selectedUnit ? '.' : ', the highest output among all units.'}`
-        : 'No accomplishments recorded. Personnel should send photo reports with descriptions via the app.'}
-      ${totalPhotos>0 ? `<br><strong>Photo reports are counted as accomplishments</strong> and credited to the submitting unit.` : ''}
-      ${selectedUnit && totalMsgs>0 ? `<br>Total for <strong>${esc(selectedUnit)}</strong>: ${totalMsgs} messages, ${totalPhotos} photo reports.` : ''}</div></div>`;
-
-    // Incidents chart
-    html += `<div class="chart-card ${selectedUnit ? 'full' : 'half'}"><div class="chart-title">⚠ Incidents & Reports${unitLabel}</div><div class="chart-wrap"><canvas id="chart-incidents"></canvas></div>
-      <div class="insight${totalIncs>0 ? ' warn' : ''}"><strong>Insight:</strong> ${totalIncs>0
-        ? incidentUnits.map(u => `<strong>${esc(u.team)}</strong>: ${u.incidents} incident${u.incidents>1?'s':''}`).join('; ')+`. Total: <strong>${totalIncs}</strong> incidents.`
-        : `No incidents${selectedUnit ? ' for ' + esc(selectedUnit) : ''} — operating smoothly.`}</div></div>`;
-
-    // Daily trend
-    if (dailyLabels.length > 1) {
-      html += `<div class="chart-card full"><div class="chart-title">📈 Daily Activity Trend${unitLabel}</div><div class="chart-wrap"><canvas id="chart-daily"></canvas></div>
-        <div class="insight"><strong>Insight:</strong> Peak: <strong>${Math.max(...dailyMsgs)} messages</strong> on <strong>${esc(dailyLabels[dailyMsgs.indexOf(Math.max(...dailyMsgs))])}</strong>. Avg: <strong>${(dailyMsgs.reduce((a,b)=>a+b,0)/dailyMsgs.length).toFixed(1)}</strong> msgs/day.</div></div>`;
-    }
-  }
-
-  // Categories doughnut
-  if (catLabels.length > 0) {
-    html += `<div class="chart-card ${selectedUnit ? 'full' : 'half'}"><div class="chart-title">🍩 Communications${unitLabel}</div><div class="chart-wrap"><canvas id="chart-cats"></canvas></div>
-      <div class="insight"><strong>Insight:</strong> ${esc(catLabels[0])}: <strong>${catValues[0]}</strong> (${((catValues[0]/Math.max(totalMsgs,1))*100).toFixed(0)}%).
-      ${catLabels.length>1 ? `<strong>${esc(catLabels[1])}</strong>: ${catValues[1]}.` : ''}
-      ${selectedUnit ? `<br><strong>${esc(selectedUnit)}</strong> focuses on ${esc(catLabels.slice(0,3).join(', '))}.` : ''}</div></div>`;
-
-    if (!selectedUnit) {
-      html += `<div class="chart-card half"><div class="chart-title">👥 Personnel by Unit</div><div class="chart-wrap"><canvas id="chart-personnel"></canvas></div>
-        <div class="insight success"><strong>Insight:</strong> <strong>${s.totalPersonnel} personnel</strong> across <strong>${Object.keys(perTeam).length} units</strong>. ${s.onlineNow} active.</div></div>`;
-    }
-  }
-
-  // Photo accomplishment gallery
-  if (photos.length > 0) {
-    html += `<div class="chart-card full"><div class="chart-title">📸 Photo Accomplishments${unitLabel} (${photos.length})</div><div class="photo-grid">`;
-    photos.forEach(p => {
-      const e = photoEmbedUrl(p.url);
-      const desc = photoDescription(p);
-      const cap = fmtDT(photoCapture(p));
-      const where = photoWhere(p);
-      const why = photoWhy(p);
-      html += `<div class="photo-card">
-        <div class="photo-thumb" data-embed="${esc(e)}" data-url="${esc(p.url)}" onclick="openPhoto(this.dataset.embed,this.dataset.url)" title="${esc(p.sender)} · ${esc(p.team)}">
-          <img src="${esc(e)}" loading="lazy" onerror="this.parentElement.style.display='none'">
-          <div class="photo-meta">${esc(p.sender)} · ${esc(p.time||'')}</div>
-        </div>
-        <div class="photo-caption">${esc(desc)}</div>
-        <div class="photo-details">
-          <span class="photo-credit">${esc(p.team||'UNASSIGNED')}</span> · ${esc(p.sender||'')}<br>
-          ${cap ? 'Captured: '+esc(cap)+'<br>' : ''}
-          ${where ? 'Where: '+esc(where)+'<br>' : ''}
-          ${why ? 'Why: '+esc(why)+'<br>' : ''}
-          ${p.lat||p.lng ? 'GPS: '+esc([p.lat,p.lng].filter(Boolean).join(', ')) : ''}
-        </div>
-      </div>`;
+  // ── PHOTO REPORT GALLERY ─────────────────
+  if(photos.length>0){
+    html+='<div class="sec"><div class="sec-hdr">📸 FIELD PHOTO REPORTS ('+photos.length+')</div><div class="sec-body">';
+    html+='<div class="photo-report-grid">';
+    photos.slice(0,20).forEach(function(p){
+      var m=(p.url||'').match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      var embed=m?'https://lh3.googleusercontent.com/d/'+m[1]:p.url;
+      var desc=photoDescription(p);
+      var where=photoWhere(p);
+      var why=photoWhy(p);
+      var cap=photoCapture(p);
+      html+='<div class="photo-report-card">';
+      html+='<img src="'+esc(embed)+'" loading="lazy" onerror="this.parentElement.style.display=\'none\'" onclick="window.open(\''+esc(p.url)+'\')">';
+      html+='<div class="card-info">';
+      html+='<div class="card-desc">'+esc(desc)+'</div>';
+      html+='<div class="card-meta">';
+      if(where)html+='<span class="lbl">Location:</span><span class="val">'+esc(where)+'</span>';
+      if(cap)html+='<span class="lbl">Captured:</span><span class="val">'+esc(fmtDT(cap))+'</span>';
+      if(why)html+='<span class="lbl">Purpose:</span><span class="val">'+esc(why)+'</span>';
+      html+='<span class="lbl">Unit:</span><span class="val" style="color:'+esc(colors[unitNames.indexOf(p.team)%7]||'var(--accent)')+';">'+esc(p.team||'')+'</span>';
+      html+='<span class="lbl">By:</span><span class="val">'+esc(p.sender||'')+'</span>';
+      html+='</div></div></div>';
     });
-    html += `</div><div class="insight success"><strong>Report rule:</strong> Every described photo above is counted as an accomplishment and credited to the submitting unit. ${photos.length>=80?'Showing latest 80 photo reports.':''}</div></div>`;
-  } else if (selectedUnit) {
-    html += `<div class="chart-card full"><div class="chart-title">📸 Photo Accomplishments${unitLabel}</div><div class="empty-state">No described photo accomplishments submitted by ${esc(selectedUnit)} in this period.</div></div>`;
+    html+='</div>';
+    if(photos.length>20)html+='<div style="text-align:center;padding:12px;color:var(--text-dim);font-family:var(--font-mono);font-size:10px;">Showing 20 of '+photos.length+' photo reports</div>';
+    html+='</div></div>';
   }
 
-  // Narrative (EDITABLE)
-  const photoLines = photos.slice(0,12).map(p => `• ${p.team || 'UNASSIGNED'}: ${photoDescription(p)} — ${p.sender || ''}${photoWhere(p) ? ' @ ' + photoWhere(p) : ''}${photoCapture(p) ? ' (' + fmtDT(photoCapture(p)) + ')' : ''}`).join('\n');
-  const narrativeAuto = `${selectedUnit ? selectedUnit : 'OPM'} tracked ${totalMsgs} communications${selectedUnit ? '' : ' across all operations'}.
-${totalTasks>0 ? `${totalTasks} accomplishments/tasks were recorded and credited to the responsible unit. ` : ''}${topUnit && topUnit.tasks>0 ? `${topUnit.team} led with ${topUnit.tasks} accomplishments. ` : ''}${totalIncs>0 ? `${totalIncs} incidents were logged and documented. ` : 'No incidents reported. '}${totalPhotos>0 ? `${totalPhotos} photo reports documented field accomplishments and conditions.` : ''}${photoLines ? '\n\nKey photo accomplishments:\n' + photoLines : ''}`;
+  // ── NARRATIVE ─────────────────────────────
+  var narrativeAuto='During the reporting period ('+df+' to '+dt+'), the '+esc(selUnit)+' recorded '+totalMsgs+' communications, '+totalTasks+' task accomplishments, and '+totalPhotos+' photo reports from the field.\n\n';
+  if(totalTasks>0)narrativeAuto+='A total of '+totalTasks+' tasks were accomplished across units, demonstrating active field operations and task completion tracking.\n';
+  if(totalIncs>0)narrativeAuto+=totalIncs+' incidents were logged and documented, requiring appropriate command attention and follow-up actions.\n';
+  else narrativeAuto+='No incidents were reported during this period, indicating smooth operations.\n';
+  if(totalPhotos>0)narrativeAuto+=totalPhotos+' photo reports provide visual documentation of field conditions, accomplishments, and incidents. These photos serve as evidence of work completed and situations encountered.\n';
+  if(daily.length>1)narrativeAuto+='Activity was recorded across '+daily.length+' day(s) during this period.\n';
 
-  html += `<div class="narrative" id="narrative-block">
-    <div class="flex justify-between items-center" style="margin-bottom:8px;">
-      <h3 style="margin-bottom:0;">📝 ${selectedUnit ? esc(selectedUnit) + ' — ' : ''}OPERATIONS NARRATIVE</h3>
-      <span style="font-family:var(--font-mono);font-size:8px;color:var(--text-dim);">✏️ EDITABLE — Click text to edit, then SAVE before printing</span>
-    </div>
-    <p style="margin-bottom:6px;"><strong>Period:</strong> ${esc(dateFrom)} → ${esc(dateTo)}<br>
-    ${selectedUnit ? '<strong>Unit:</strong> ' + esc(selectedUnit) + '<br><strong>Staff:</strong> ' + (perTeam[selectedUnit]||0) + '<br>' : '<strong>Personnel:</strong> ' + s.totalPersonnel + ' across ' + Object.keys(perTeam).length + ' units<br>'}
-    <strong>Messages:</strong> ${totalMsgs} · <strong>Photos:</strong> ${totalPhotos} · <strong>Accomplishments:</strong> ${totalTasks} · <strong>Incidents:</strong> ${totalIncs}</p>
-    <textarea class="narrative-edit" id="narrative-text" placeholder="Edit the operations narrative here...">${esc(narrativeAuto)}</textarea>
-    <div class="narrative-actions">
-      <button class="btn btn-success btn-sm" onclick="saveNarrative()">💾 SAVE NARRATIVE</button>
-      <button class="btn btn-sm" onclick="resetNarrative()">↺ RESET</button>
-      <span id="narrative-saved" style="display:none;font-family:var(--font-mono);font-size:10px;color:var(--success);align-self:center;">✓ SAVED</span>
-    </div>
-  </div>`;
+  html+='<div class="sec"><div class="sec-hdr">📝 OPERATIONS NARRATIVE <span style="font-size:8px;color:var(--text-dim);letter-spacing:0;">✏️ EDITABLE</span></div><div class="sec-body">';
+  html+='<textarea class="narrative-edit" id="narrative-text">'+esc(narrativeAuto)+'</textarea>';
+  html+='<div class="flex gap-sm" style="margin-top:10px;">';
+  html+='<button class="btn btn-success btn-sm" onclick="saveNarrative()">💾 SAVE</button>';
+  html+='<button class="btn btn-sm" onclick="resetNarrative()">↺ RESET</button>';
+  html+='<span id="nar-saved" style="display:none;font-family:var(--font-mono);font-size:10px;color:var(--success);align-self:center;">✓ SAVED</span>';
+  html+='</div></div></div>';
 
-  // Message log
-  if (all.length > 0) {
-    html += `<div class="msg-log"><div class="chart-title" style="margin-bottom:12px;">📋 Message / Accomplishment Log${unitLabel} (${all.length})</div>
-      ${all.slice().reverse().slice(0,150).map(m => `<div class="msg-log-row"><span class="msg-log-time">${esc((m.time||'').substring(0,19))}</span><span class="msg-log-sender">${esc(m.sender||'')}${m.team?' ['+esc(m.team)+']':''}</span><span class="msg-log-body">${esc(messagePreview(m))}${m.photo||m.photoUrl?' 📷':''}</span></div>`).join('')}
-      ${all.length>150 ? '<div style="text-align:center;padding:8px;color:var(--text-dim);">Latest 150 of '+all.length+' messages</div>' : ''}</div>`;
+  // ── MESSAGE LOG ──────────────────────────
+  if(all.length>0){
+    html+='<div class="sec"><div class="sec-hdr">📋 COMMUNICATIONS LOG ('+all.length+')</div><div class="sec-body">';
+    html+='<div class="msg-log">';
+    all.slice().reverse().slice(0,80).forEach(function(m){
+      html+='<div class="msg-log-row"><span class="msg-log-time">'+esc((m.time||'').substring(0,19))+'</span><span class="msg-log-sender">'+esc(m.sender||'')+(m.team?' ['+esc(m.team)+']':'')+'</span><span class="msg-log-body">'+esc((m.body||'').substring(0,130))+(m.photo?' 📷':'')+'</span></div>';
+    });
+    html+='</div>';
+    if(all.length>80)html+='<div style="text-align:center;padding:8px;color:var(--text-dim);font-family:var(--font-mono);font-size:10px;">Latest 80 of '+all.length+' messages</div>';
+    html+='</div></div>';
   }
 
-  document.getElementById('dash-content').innerHTML = html;
-  setTimeout(() => { const nt = document.getElementById("narrative-text"); if (nt && !nt.dataset.loaded) { _originalNarrative = nt.value; const cfg = OPM.getConfig(); const unit = document.getElementById("f-unit").value || "ALL"; const df = document.getElementById("f-date-from").value || "any"; const dt = document.getElementById("f-date-to").value || "any"; const key = "nar_" + unit.replace(/[^a-z0-9]/gi,"_") + "_" + df + "_" + dt; if (cfg[key]) { nt.value = cfg[key]; } nt.dataset.loaded = "1"; } }, 300);
-  document.getElementById('dash-title').innerHTML = `${esc(selectedUnit || cfg.eventName || 'Operations Summary')} <span>// ${esc(selectedUnit ? 'Unit Report' : cfg.commander || 'Report')}</span>`;
-  setTimeout(() => renderCharts(unitNames, unitTasks, unitMsgs, unitIncs, dailyLabels, dailyMsgs, dailyPhotos, catLabels, catValues, perTeam, selectedUnit), 200);
+  document.getElementById('report-body').innerHTML=html;
+
+  // Chart
+  setTimeout(function(){
+    var canvas=document.getElementById('chart-perf');
+    if(canvas&&unitNames.length>0){
+      _chart=new Chart(canvas,{type:'bar',data:{labels:unitNames,datasets:[
+        {label:'Tasks',data:unitTasks,backgroundColor:colors.slice(0,unitNames.length),borderWidth:0,borderRadius:3},
+        {label:'Photos',data:unitPhotos,backgroundColor:colors.slice(0,unitNames.length).map(function(c){return c+'66';}),borderWidth:0,borderRadius:3}
+      ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6a80b0',font:{family:'Share Tech Mono',size:10}}}},scales:{x:{ticks:{color:'#6a80b0',font:{size:9},maxRotation:45},grid:{color:'#1e326020'}},y:{ticks:{color:'#6a80b0',font:{size:9}},grid:{color:'#1e326030'},beginAtZero:true}}}});
+    }
+
+    // Load saved narrative
+    var nt=document.getElementById('narrative-text');
+    if(nt){_origNarrative=nt.value;var key='nar_'+selUnit.replace(/[^a-z0-9]/gi,'_')+'_'+(df||'any')+'_'+(dt||'any');var cfg=OPM.getConfig();if(cfg[key])nt.value=cfg[key];}
+  },300);
 }
 
-function renderCharts(unitNames, unitTasks, unitMsgs, unitIncs, dailyLabels, dailyMsgs, dailyPhotos, catLabels, catValues, perTeam, selectedUnit) {
-  const colors = ['#00e5ff','#00ff88','#ff6b35','#ffd166','#a29bfe','#fd79a8','#55efc4'];
-  const el1 = document.getElementById('chart-tasks');
-  if (el1) chartInstances.tasks = new Chart(el1, { type:'bar', data:{ labels:unitNames, datasets:[
-    { label:'Accomplishments', data:unitTasks, backgroundColor:colors.slice(0,unitNames.length), borderWidth:0, borderRadius:4 },
-    { label:'Messages', data:unitMsgs, backgroundColor:colors.slice(0,unitNames.length).map(c=>c+'44'), borderWidth:0, borderRadius:4 }
-  ]}, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:'#6a80b0', font:{ family:'Share Tech Mono', size:10 } } } }, scales:{ x:{ ticks:{ color:'#6a80b0', font:{ size:9 }, maxRotation:45 }, grid:{ color:'#1e326020' } }, y:{ ticks:{ color:'#6a80b0', font:{ size:9 } }, grid:{ color:'#1e326030' }, beginAtZero:true } } } });
-
-  const el2 = document.getElementById('chart-incidents');
-  if (el2) chartInstances.incidents = new Chart(el2, { type:'bar', data:{ labels:unitNames, datasets:[{ label:'Incidents', data:unitIncs, backgroundColor:['#ffaa00','#ff7744','#ff4465','#ffaa00','#ff7744','#ff4465','#ffaa00'], borderWidth:0, borderRadius:4 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:'#6a80b0', font:{ family:'Share Tech Mono', size:10 } } } }, scales:{ x:{ ticks:{ color:'#6a80b0', font:{ size:9 }, maxRotation:45 }, grid:{ color:'#1e326020' } }, y:{ ticks:{ color:'#6a80b0', font:{ size:9 } }, grid:{ color:'#1e326030' }, beginAtZero:true } } } });
-
-  const el3 = document.getElementById('chart-daily');
-  if (el3) chartInstances.daily = new Chart(el3, { type:'line', data:{ labels:dailyLabels, datasets:[
-    { label:'Messages', data:dailyMsgs, borderColor:'#00e5ff', backgroundColor:'#00e5ff20', tension:.3, fill:true, pointRadius:4 },
-    { label:'Photos', data:dailyPhotos, borderColor:'#00ff88', backgroundColor:'#00ff8820', tension:.3, fill:true, pointRadius:4 }
-  ]}, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:'#6a80b0', font:{ family:'Share Tech Mono', size:10 } } } }, scales:{ x:{ ticks:{ color:'#6a80b0', font:{ size:8 }, maxRotation:45 }, grid:{ color:'#1e326020' } }, y:{ ticks:{ color:'#6a80b0', font:{ size:9 } }, grid:{ color:'#1e326030' }, beginAtZero:true } } } });
-
-  const el4 = document.getElementById('chart-cats');
-  if (el4) chartInstances.cats = new Chart(el4, { type:'doughnut', data:{ labels:catLabels, datasets:[{ data:catValues, backgroundColor:colors.slice(0,catLabels.length), borderWidth:2, borderColor:'#0c1526' }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ color:'#6a80b0', font:{ family:'Share Tech Mono', size:9 }, padding:12 } } } } });
-
-  const el5 = document.getElementById('chart-personnel');
-  if (el5) { const pl = Object.keys(perTeam), pv = Object.values(perTeam); chartInstances.personnel = new Chart(el5, { type:'doughnut', data:{ labels:pl, datasets:[{ data:pv, backgroundColor:colors.slice(0,pl.length), borderWidth:2, borderColor:'#0c1526' }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ color:'#6a80b0', font:{ family:'Share Tech Mono', size:9 }, padding:12 } } } } }); }
+var _origNarrative='';
+function saveNarrative(){
+  var nt=document.getElementById('narrative-text');if(!nt)return;
+  var selUnit=document.getElementById('f-unit').value||'ALL UNITS';
+  var df=document.getElementById('f-from').value||'any',dt=document.getElementById('f-to').value||'any';
+  var key='nar_'+selUnit.replace(/[^a-z0-9]/gi,'_')+'_'+df+'_'+dt;
+  var cfg=OPM.getConfig();cfg[key]=nt.value.trim();OPM.saveConfig(cfg);
+  document.getElementById('nar-saved').style.display='inline';
+  setTimeout(function(){document.getElementById('nar-saved').style.display='none';},2000);
+}
+function resetNarrative(){
+  if(_origNarrative)document.getElementById('narrative-text').value=_origNarrative;
 }
 
-function openPhoto(embed, fallback) {
-  const m = document.getElementById('photo-modal'), i = document.getElementById('photo-modal-img');
-  i.src = embed; i.onerror = () => { i.src = fallback; }; m.classList.add('show');
-}
-document.getElementById('photo-modal').addEventListener('click', function(e) { if (e.target===this) this.classList.remove('show'); });
-document.addEventListener('keydown', e => { if (e.key==='Escape') document.getElementById('photo-modal').classList.remove('show'); });
-
-
-// ═══════════ EDITABLE NARRATIVE ═══════════
-let _originalNarrative = "";
-
-function saveNarrative() {
-  const text = document.getElementById("narrative-text").value.trim();
-  if (!text) { OPM.toast("Narrative cannot be empty", "warning"); return; }
-  const cfg = OPM.getConfig();
-  const unit = document.getElementById("f-unit").value || "ALL";
-  const df = document.getElementById("f-date-from").value || "any";
-  const dt = document.getElementById("f-date-to").value || "any";
-  const key = "nar_" + unit.replace(/[^a-z0-9]/gi,"_") + "_" + df + "_" + dt;
-  cfg[key] = text;
-  OPM.saveConfig(cfg);
-  document.getElementById("narrative-saved").style.display = "inline";
-  setTimeout(() => { document.getElementById("narrative-saved").style.display = "none"; }, 2000);
-  OPM.toast("Narrative saved", "success");
-}
-
-function resetNarrative() {
-  if (_originalNarrative) {
-    document.getElementById("narrative-text").value = _originalNarrative;
-    OPM.toast("Narrative reset to auto-generated text", "info");
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => { populateUnitDropdown(); setToday(); });
+document.addEventListener('DOMContentLoaded',function(){populateUnits();setToday();});
 </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1adaf7b2be8dd3a',t:'MTc4NDAwMjMwOA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a222bc153c8403ad',t:'MTc4NTIyOTY1OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
