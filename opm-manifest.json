@@ -2,7 +2,7 @@
   "name": "OPM — Operations Personnel Monitor",
   "short_name": "OPM",
   "description": "EOC Commander Dashboard & Operations Reports",
-  "start_url": "./opm.html",
+  "start_url": "./commander.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
