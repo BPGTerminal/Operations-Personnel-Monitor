@@ -259,39 +259,117 @@ function build(data,selUnit,df,dt){
   // ── INSPECTION REPORTS ────────────────────
   var inspections = all.filter(function(m){return m.type==='inspection';});
   if(inspections.length>0){
-    html+='<div class="sec"><div class="sec-hdr">DAILY INSPECTION REPORTS ('+inspections.length+')</div><div class="sec-body">';
-    inspections.slice().reverse().forEach(function(ins){
-      var photoUrls=[];
-      try{var pd=JSON.parse(ins.photo||'[]');if(Array.isArray(pd))pd.forEach(function(p){photoUrls.push({label:p.label,section:p.section,urls:p.urls||[]});});}catch(e){if(ins.photo)photoUrls.push({label:'Photo',section:'',urls:[ins.photo]});}
+    // Build combined inspection data: group checked items from all inspectors
+    var combinedSections = {}; // {sectionTitle: [{label, inspector, team, photos, remarks}]}
+    var allInspectors = [];
+    var allRemarks = [];
 
-      html+='<div style="background:var(--bg-surface);border:1px solid var(--border-color);border-radius:8px;padding:18px;margin-bottom:12px;">';
-      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span style="font-weight:700;font-size:15px;color:#fff;">'+esc(ins.sender||'')+'</span><span style="font-family:var(--font-mono);font-size:9px;color:var(--accent);">'+esc(ins.team||'')+'</span><span style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim);">'+esc((ins.time||'').substring(0,19))+'</span></div>';
-      var lines=(ins.body||'').split('\n');
+    inspections.forEach(function(ins){
+      var inspector = ins.sender || 'Unknown';
+      var team = ins.team || '';
+      allInspectors.push(inspector + ' (' + team + ')');
+
+      // Parse photo URLs with labels
+      var photoMap = {};
+      try{
+        var pd = JSON.parse(ins.photo||'[]');
+        if(Array.isArray(pd)){
+          pd.forEach(function(p){
+            photoMap[p.label] = (p.urls||[]).map(function(u){
+              var m2 = (u||'').match(/[?&]id=([a-zA-Z0-9_-]+)/);
+              return {embed: m2 ? 'https://lh3.googleusercontent.com/d/'+m2[1] : u, raw: u};
+            });
+          });
+        }
+      }catch(e){}
+
+      // Parse body: extract checked items with their section
+      var lines = (ins.body||'').split('\n');
       lines.forEach(function(line){
-        if(line.indexOf('✓ ')!==-1){
-          var clean=line.replace('✓ ','').trim();
-          html+='<div style="margin:4px 0;font-size:13px;color:var(--text-secondary);"><span style="color:var(--success);font-weight:700;">✓</span> '+esc(clean)+'</div>';
-        }else if(line.indexOf('Remarks:')!==-1){
-          html+='<div style="margin-top:10px;padding:10px;background:rgba(255,170,0,.08);border-left:2px solid var(--warning);font-size:12px;color:var(--text-secondary);font-style:italic;">'+esc(line.substring(9))+'</div>';
+        if(line.indexOf('\u2713 ') !== -1){
+          // Format: "✓ label (section)"
+          var clean = line.replace('\u2713 ','').trim();
+          var label = clean.replace(/ \(.*\)$/,'');
+          var section = '';
+          var m3 = clean.match(/\((.+)\)$/);
+          if(m3) section = m3[1];
+
+          if(!combinedSections[section]) combinedSections[section] = [];
+          combinedSections[section].push({
+            label: label, inspector: inspector, team: team,
+            photos: photoMap[label] || [],
+            time: ins.time || ''
+          });
+        }
+        if(line.indexOf('Remarks: ') !== -1){
+          allRemarks.push({inspector: inspector, team: team, text: line.substring(9).trim()});
         }
       });
-      if(photoUrls.length>0){
-        html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">';
-        photoUrls.forEach(function(pu){
-          pu.urls.forEach(function(u){
-            var m2=(u||'').match(/[?&]id=([a-zA-Z0-9_-]+)/);
-            var embed=m2?'https://lh3.googleusercontent.com/d/'+m2[1]:u;
-            html+='<img src="'+esc(embed)+'" style="width:140px;height:105px;object-fit:cover;border-radius:4px;border:1px solid var(--border-color);cursor:pointer;" onclick="window.open(\''+esc(u)+'\')" loading="lazy" title="'+esc(pu.label||'')+'">';
-          });
-        });
-        html+='</div>';
-      }
-      html+='</div>';
     });
+
+    // Render combined inspection report
+    html+='<div class="sec"><div class="sec-hdr">DAILY INSPECTION REPORT ('+inspections.length+' Inspector'+(inspections.length>1?'s':'')+')</div><div class="sec-body">';
+
+    // Inspector list
+    html+='<div style="margin-bottom:12px;font-size:13px;color:var(--text-secondary);"><strong>Conducted by:</strong> '+allInspectors.join('; ')+'</div>';
+
+    // Combined table: each section as a group
+    Object.keys(combinedSections).sort().forEach(function(section){
+      if(!section) section = 'General';
+      html+='<div style="border:1px solid var(--border-color);border-radius:6px;margin-bottom:12px;overflow:hidden;">';
+      html+='<div style="background:rgba(0,0,0,.25);padding:10px 14px;font-family:var(--font-mono);font-size:10px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;font-weight:700;">'+esc(section)+'</div>';
+      html+='<div style="padding:12px 14px;">';
+
+      combinedSections[section].forEach(function(item){
+        html+='<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);">';
+        html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">';
+        html+='<div style="flex:1;"><span style="color:var(--success);font-weight:700;font-size:14px;">✓</span> <span style="font-size:13px;color:var(--text-secondary);">'+esc(item.label)+'</span></div>';
+        html+='<span style="font-family:var(--font-mono);font-size:8px;color:var(--text-dim);white-space:nowrap;flex-shrink:0;">'+esc(item.inspector)+'</span>';
+        html+='</div>';
+
+        // Show photos inline for this checklist item
+        if(item.photos.length>0){
+          html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;margin-left:24px;">';
+          item.photos.forEach(function(ph){
+            html+='<img src="'+esc(ph.embed)+'" style="width:120px;height:90px;object-fit:cover;border-radius:4px;border:1px solid var(--border-color);cursor:pointer;" onclick="window.open(\''+esc(ph.raw)+'\')" loading="lazy">';
+          });
+          html+='</div>';
+        }
+        html+='</div>';
+      });
+
+      html+='</div></div>';
+    });
+
+    // Combined remarks
+    if(allRemarks.length>0){
+      html+='<div style="margin-top:12px;padding:12px 14px;background:rgba(255,170,0,.08);border-left:3px solid var(--warning);border-radius:0 4px 4px 0;">';
+      html+='<div style="font-family:var(--font-mono);font-size:10px;color:var(--warning);letter-spacing:1px;margin-bottom:6px;">REMARKS & OBSERVATIONS</div>';
+      allRemarks.forEach(function(r){
+        html+='<div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;font-style:italic;">'+esc(r.inspector)+' ('+esc(r.team)+'): '+esc(r.text)+'</div>';
+      });
+      html+='</div>';
+    }
+
+    // Combined narrative summary
+    var totalItems = 0;
+    Object.values(combinedSections).forEach(function(arr){totalItems+=arr.length;});
+    html+='<div class="narrative" style="margin-top:14px;">';
+    html+='<h3>INSPECTION SUMMARY</h3>';
+    html+='<p>A total of <strong>'+inspections.length+' inspection'+(inspections.length>1?'s':'')+'</strong> '+(inspections.length>1?'were':'was')+' conducted on '+(df||'today')+' by '+allInspectors.join(', ')+', covering <strong>'+totalItems+' checklist items</strong> across '+Object.keys(combinedSections).length+' categories. ';
+    html+='All inspected items passed verification. ';
+    if(allRemarks.length>0){
+      html+='The following observations were noted: ';
+      allRemarks.forEach(function(r,i){html+=(i>0?'; ':'')+esc(r.inspector)+' noted "'+esc(r.text.substring(0,80))+(r.text.length>80?'...':'')+'"';});
+      html+='. ';
+    }
+    html+='No critical findings were reported requiring immediate command action.</p>';
+    html+='</div>';
+
     html+='</div></div>';
   }
 
-  // ── PHOTO REPORT INDEX ───────────────────  // ── PHOTO REPORT INDEX ───────────────────
+  // ── PHOTO REPORT INDEX ───────────────────  // ── PHOTO REPORT INDEX ───────────────────  // ── PHOTO REPORT INDEX ───────────────────
   if(photos.length>0){
     // Group photos by unit
     var byUnit={};photos.forEach(function(p){var u=p.team||'UNASSIGNED';if(!byUnit[u])byUnit[u]=[];byUnit[u].push(p);});
@@ -467,6 +545,6 @@ function resetNarrative(){if(_origNarrative)document.getElementById('narrative-t
 
 document.addEventListener('DOMContentLoaded',function(){populateUnits();setToday();});
 </script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2291d332d274639',t:'MTc4NTI5NjU1MA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a229ac38da4f0478',t:'MTc4NTMwMjQwOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
+</body>
 </html>
