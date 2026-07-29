@@ -104,6 +104,12 @@ body{min-height:100vh;display:flex;flex-direction:column;overflow-y:auto;backgro
   .photo-side .photo-badge{background:#f0f4f8!important;color:#000!important;border:1px solid #ccc;}
   .photo-side .photo-index-badge{background:#1a4d8f!important;color:#fff!important;}
 }
+.photo-edit-desc{width:100%;background:transparent;border:none;color:#fff;font-size:20px;font-weight:700;line-height:1.3;font-family:var(--font-sans);resize:none;outline:none;padding:0;min-height:60px;}
+.photo-edit-desc:focus{outline:1px solid var(--accent);border-radius:3px;padding:6px;}
+.photo-edit-input{width:100%;background:transparent;border:none;color:var(--text-dim);font-size:var(--font-xs);font-family:var(--font-sans);outline:none;padding:0;}
+.photo-edit-input:focus{outline:1px solid var(--accent);border-radius:2px;padding:2px 4px;color:var(--text-primary);}
+.photo-edit-purpose{width:100%;background:transparent;border:none;color:var(--text-secondary);font-size:13px;line-height:1.5;font-style:italic;font-family:var(--font-sans);resize:none;outline:none;padding:8px 0 0 0;margin-top:4px;border-top:1px solid rgba(255,255,255,.08);min-height:40px;}
+.photo-edit-purpose:focus{outline:1px solid var(--accent);border-radius:3px;padding:6px;}
 </style>
 </head>
 <body>
@@ -259,17 +265,14 @@ function build(data,selUnit,df,dt){
   // ── INSPECTION REPORTS ────────────────────
   var inspections = all.filter(function(m){return m.type==='inspection';});
   if(inspections.length>0){
-    // Build combined inspection data: group checked items from all inspectors
-    var combinedSections = {}; // {sectionTitle: [{label, inspector, team, photos, remarks}]}
-    var allInspectors = [];
-    var allRemarks = [];
-
+    // Build per-unit combined inspection data
+    var unitInspections = {}; // {unitName: {inspector, time, sections: {section: [{label, photos}]}, remarks}}
     inspections.forEach(function(ins){
-      var inspector = ins.sender || 'Unknown';
-      var team = ins.team || '';
-      allInspectors.push(inspector + ' (' + team + ')');
-
-      // Parse photo URLs with labels
+      var team = ins.team || 'UNASSIGNED';
+      if(!unitInspections[team]){
+        unitInspections[team] = {inspector: ins.sender||'', time: ins.time||'', sections: {}, remarks: []};
+      }
+      // Parse photos
       var photoMap = {};
       try{
         var pd = JSON.parse(ins.photo||'[]');
@@ -283,93 +286,106 @@ function build(data,selUnit,df,dt){
         }
       }catch(e){}
 
-      // Parse body: extract checked items with their section
       var lines = (ins.body||'').split('\n');
       lines.forEach(function(line){
         if(line.indexOf('\u2713 ') !== -1){
-          // Format: "✓ label (section)"
           var clean = line.replace('\u2713 ','').trim();
           var label = clean.replace(/ \(.*\)$/,'');
-          var section = '';
+          var sec = '';
           var m3 = clean.match(/\((.+)\)$/);
-          if(m3) section = m3[1];
-
-          if(!combinedSections[section]) combinedSections[section] = [];
-          combinedSections[section].push({
-            label: label, inspector: inspector, team: team,
-            photos: photoMap[label] || [],
-            time: ins.time || ''
-          });
+          if(m3) sec = m3[1];
+          if(!sec) sec = 'General';
+          if(!unitInspections[team].sections[sec]) unitInspections[team].sections[sec] = [];
+          unitInspections[team].sections[sec].push({label: label, photos: photoMap[label]||[]});
         }
         if(line.indexOf('Remarks: ') !== -1){
-          allRemarks.push({inspector: inspector, team: team, text: line.substring(9).trim()});
+          unitInspections[team].remarks.push(line.substring(9).trim());
         }
       });
     });
 
-    // Render combined inspection report
-    html+='<div class="sec"><div class="sec-hdr">DAILY INSPECTION REPORT ('+inspections.length+' Inspector'+(inspections.length>1?'s':'')+')</div><div class="sec-body">';
+    var unitNames = Object.keys(unitInspections).sort();
 
-    // Inspector list
-    html+='<div style="margin-bottom:12px;font-size:13px;color:var(--text-secondary);"><strong>Conducted by:</strong> '+allInspectors.join('; ')+'</div>';
+    if(unitNames.length > 0){
+      html+='<div class="sec"><div class="sec-hdr">DAILY INSPECTION REPORT'+(unitNames.length>1?'S':'')+' ('+inspections.length+' Inspector'+(inspections.length>1?'s':'')+')</div><div class="sec-body">';
 
-    // Combined table: each section as a group
-    Object.keys(combinedSections).sort().forEach(function(section){
-      if(!section) section = 'General';
-      html+='<div style="border:1px solid var(--border-color);border-radius:6px;margin-bottom:12px;overflow:hidden;">';
-      html+='<div style="background:rgba(0,0,0,.25);padding:10px 14px;font-family:var(--font-mono);font-size:10px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;font-weight:700;">'+esc(section)+'</div>';
-      html+='<div style="padding:12px 14px;">';
+      // Per-unit sections
+      unitNames.forEach(function(unit){
+        var ui = unitInspections[unit];
+        var sectionKeys = Object.keys(ui.sections).sort();
+        var totalUnitItems = 0;
+        sectionKeys.forEach(function(k){totalUnitItems += ui.sections[k].length;});
 
-      combinedSections[section].forEach(function(item){
-        html+='<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);">';
-        html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">';
-        html+='<div style="flex:1;"><span style="color:var(--success);font-weight:700;font-size:14px;">✓</span> <span style="font-size:13px;color:var(--text-secondary);">'+esc(item.label)+'</span></div>';
-        html+='<span style="font-family:var(--font-mono);font-size:8px;color:var(--text-dim);white-space:nowrap;flex-shrink:0;">'+esc(item.inspector)+'</span>';
-        html+='</div>';
+        html+='<div style="border:2px solid '+(colors[(unitNames.indexOf(unit))%7]||'var(--border-color)')+' ;border-radius:8px;margin-bottom:16px;overflow:hidden;">';
+        html+='<div style="background:rgba(0,0,0,.3);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-color);">';
+        html+='<div><span style="font-size:15px;font-weight:700;color:#fff;">'+esc(unit)+'</span><span style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim);margin-left:10px;">Inspected by: '+esc(ui.inspector)+'</span></div>';
+        html+='<span style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim);">'+esc((ui.time||'').substring(0,19))+'</span></div>';
 
-        // Show photos inline for this checklist item
-        if(item.photos.length>0){
-          html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;margin-left:24px;">';
-          item.photos.forEach(function(ph){
-            html+='<img src="'+esc(ph.embed)+'" style="width:120px;height:90px;object-fit:cover;border-radius:4px;border:1px solid var(--border-color);cursor:pointer;" onclick="window.open(\''+esc(ph.raw)+'\')" loading="lazy">';
+        html+='<div style="padding:14px 16px;">';
+
+        sectionKeys.forEach(function(sec){
+          html+='<div style="margin-bottom:10px;"><div style="font-family:var(--font-mono);font-size:9px;color:var(--accent);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">'+esc(sec)+'</div>';
+          ui.sections[sec].forEach(function(item){
+            html+='<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.03);">';
+            html+='<div style="font-size:13px;color:var(--text-secondary);"><span style="color:var(--success);font-weight:700;">✓</span> '+esc(item.label)+'</div>';
+            if(item.photos.length>0){
+              html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;margin-left:22px;">';
+              item.photos.forEach(function(ph){
+                html+='<img src="'+esc(ph.embed)+'" style="width:110px;height:82px;object-fit:cover;border-radius:4px;border:1px solid var(--border-color);cursor:pointer;" onclick="window.open(\''+esc(ph.raw)+'\')" loading="lazy">';
+              });
+              html+='</div>';
+            }
+            html+='</div>';
           });
           html+='</div>';
+        });
+
+        // Unit remarks
+        if(ui.remarks.length>0){
+          html+='<div style="margin-top:8px;padding:10px 12px;background:rgba(255,170,0,.06);border-left:3px solid var(--warning);border-radius:0 4px 4px 0;">';
+          html+='<div style="font-family:var(--font-mono);font-size:9px;color:var(--warning);letter-spacing:1px;margin-bottom:4px;">REMARKS</div>';
+          ui.remarks.forEach(function(r){html+='<div style="font-size:12px;color:var(--text-secondary);font-style:italic;">'+esc(r)+'</div>';});
+          html+='</div>';
         }
+
+        // Per-unit mini-narrative
+        html+='<div style="margin-top:10px;font-size:12px;color:var(--text-dim);line-height:1.6;">';
+        html+=esc(unit)+' conducted a comprehensive inspection of '+totalUnitItems+' items across '+sectionKeys.length+' categor'+(sectionKeys.length>1?'ies':'y')+'. ';
+        html+='All '+totalUnitItems+' inspected items were found satisfactory and in compliance with terminal standards.';
+        if(ui.remarks.length>0) html+=' '+ui.remarks.length+' observation'+(ui.remarks.length>1?'s':'')+' '+ (ui.remarks.length>1?'were':'was')+' noted for follow-up.';
         html+='</div>';
+
+        html+='</div></div>';
       });
+
+      // Combined narrative summary at the bottom
+      var grandTotal = 0, totalRemarks = 0;
+      unitNames.forEach(function(u){var ui2=unitInspections[u];Object.keys(ui2.sections).forEach(function(k){grandTotal+=ui2.sections[k].length;});totalRemarks+=ui2.remarks.length;});
+      var allCats = [];
+      unitNames.forEach(function(u){Object.keys(unitInspections[u].sections).forEach(function(k){if(allCats.indexOf(k)<0)allCats.push(k);});});
+
+      html+='<div class="narrative" style="margin-top:8px;">';
+      html+='<h3>CONSOLIDATED INSPECTION FINDINGS</h3>';
+      html+='<p>';
+      html+='On '+(df||'this date')+', a total of <strong>'+inspections.length+' inspection'+(inspections.length>1?'s':'')+'</strong> '+(inspections.length>1?'were':'was')+' conducted covering <strong>'+unitNames.length+' unit'+(unitNames.length>1?'s':'')+'</strong> — '+unitNames.map(function(u){return unitInspections[u].inspector+' ('+u+')';}).join(', ')+'. ';
+      html+='Collectively, <strong>'+grandTotal+' checklist items</strong> were inspected and passed across <strong>'+allCats.length+' inspection categories</strong>: '+allCats.join(', ')+'. ';
+      if(totalRemarks>0){
+        html+='<strong>'+totalRemarks+' observation'+(totalRemarks>1?'s':'')+'</strong> '+(totalRemarks>1?'were':'was')+' recorded during these inspections. ';
+      }
+      html+='No critical deficiencies or safety hazards requiring immediate command intervention were identified. All units demonstrated compliance with terminal policies, operational standards, and maintenance protocols. ';
+      html+='The inspection findings indicate that daily operations are being conducted in accordance with BPGT/LGU rules and regulations. ';
+      if(totalRemarks>0){
+        html+='Minor observations noted by inspectors should be addressed by the respective unit heads within their regular duty cycles.';
+      }
+      html+='</p>';
+      html+='</div>';
 
       html+='</div></div>';
-    });
-
-    // Combined remarks
-    if(allRemarks.length>0){
-      html+='<div style="margin-top:12px;padding:12px 14px;background:rgba(255,170,0,.08);border-left:3px solid var(--warning);border-radius:0 4px 4px 0;">';
-      html+='<div style="font-family:var(--font-mono);font-size:10px;color:var(--warning);letter-spacing:1px;margin-bottom:6px;">REMARKS & OBSERVATIONS</div>';
-      allRemarks.forEach(function(r){
-        html+='<div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;font-style:italic;">'+esc(r.inspector)+' ('+esc(r.team)+'): '+esc(r.text)+'</div>';
-      });
-      html+='</div>';
     }
 
-    // Combined narrative summary
-    var totalItems = 0;
-    Object.values(combinedSections).forEach(function(arr){totalItems+=arr.length;});
-    html+='<div class="narrative" style="margin-top:14px;">';
-    html+='<h3>INSPECTION SUMMARY</h3>';
-    html+='<p>A total of <strong>'+inspections.length+' inspection'+(inspections.length>1?'s':'')+'</strong> '+(inspections.length>1?'were':'was')+' conducted on '+(df||'today')+' by '+allInspectors.join(', ')+', covering <strong>'+totalItems+' checklist items</strong> across '+Object.keys(combinedSections).length+' categories. ';
-    html+='All inspected items passed verification. ';
-    if(allRemarks.length>0){
-      html+='The following observations were noted: ';
-      allRemarks.forEach(function(r,i){html+=(i>0?'; ':'')+esc(r.inspector)+' noted "'+esc(r.text.substring(0,80))+(r.text.length>80?'...':'')+'"';});
-      html+='. ';
-    }
-    html+='No critical findings were reported requiring immediate command action.</p>';
-    html+='</div>';
+  // ── PHOTO REPORT INDEX ───────────────────
 
-    html+='</div></div>';
-  }
-
-  // ── PHOTO REPORT INDEX ───────────────────  // ── PHOTO REPORT INDEX ───────────────────  // ── PHOTO REPORT INDEX ───────────────────
+  // ── PHOTO REPORT INDEX ───────────────────
   if(photos.length>0){
     // Group photos by unit
     var byUnit={};photos.forEach(function(p){var u=p.team||'UNASSIGNED';if(!byUnit[u])byUnit[u]=[];byUnit[u].push(p);});
@@ -404,23 +420,25 @@ function build(data,selUnit,df,dt){
       var cap=photoCapture(p);
       var unitColor=colors[unitNames.indexOf(p.team)%7]||'var(--accent)';
 
-      html+='<div class="photo-report-card">';
+      var pid = 'photox_'+i;
+      html+='<div class="photo-report-card" id="'+pid+'">';
       // Photo side
       html+='<div class="photo-side" onclick="window.open(\''+esc(p.url)+'\')" title="Click to open full photo">';
       html+='<img src="'+esc(embed)+'" loading="lazy" onerror="this.parentElement.style.display=\'none\'">';
       html+='<span class="photo-badge" style="background:'+unitColor+';color:#000;">'+esc(p.team||'')+'</span>';
       html+='<span class="photo-index-badge">#'+(i+1)+'</span>';
       html+='</div>';
-      // Info side
+      // Info side — EDITABLE
       html+='<div class="info-side">';
-      html+='<div class="field-name">'+esc(desc)+'</div>';
+      html+='<textarea class="photo-edit-desc" id="'+pid+'_desc" data-original="'+esc(desc)+'" onchange="markPhotoEdited(\''+pid+'\')">'+esc(desc)+'</textarea>';
       html+='<div class="field-row">';
-      if(where)html+='<span class="field-key">Location</span><span class="field-val">'+esc(where)+'</span>';
-      if(cap)html+='<span class="field-key">Captured</span><span class="field-val">'+esc(fmtDT(cap))+'</span>';
+      html+='<span class="field-key">Location</span><input class="photo-edit-input" id="'+pid+'_where" value="'+esc(where)+'" data-original="'+esc(where)+'" onchange="markPhotoEdited(\''+pid+'\')">';
+      html+='<span class="field-key">Captured</span><input class="photo-edit-input" id="'+pid+'_cap" value="'+esc(fmtDT(cap))+'" data-original="'+esc(fmtDT(cap))+'" onchange="markPhotoEdited(\''+pid+'\')">';
       html+='<span class="field-key">Unit</span><span class="field-val" style="color:'+unitColor+';font-weight:600;">'+esc(p.team||'')+'</span>';
       html+='<span class="field-key">By</span><span class="field-val">'+esc(p.sender||'')+'</span>';
       html+='</div>';
-      if(why)html+='<div class="field-purpose">"'+esc(why)+'"</div>';
+      html+='<textarea class="photo-edit-purpose" id="'+pid+'_why" placeholder="Why / Purpose..." data-original="'+esc(why)+'" onchange="markPhotoEdited(\''+pid+'\')">'+esc(why)+'</textarea>';
+      html+='<div class="photo-edit-indicator" id="'+pid+'_indicator" style="display:none;font-family:var(--font-mono);font-size:8px;color:var(--warning);margin-top:4px;">EDITED</div>';
       html+='</div></div>';
     });
     html+='</div>';
@@ -543,8 +561,37 @@ function saveNarrative(){
 }
 function resetNarrative(){if(_origNarrative)document.getElementById('narrative-text').value=_origNarrative;}
 
+// Photo edit tracking
+function markPhotoEdited(pid){
+  var ind = document.getElementById(pid+'_indicator');
+  if(ind) ind.style.display = 'inline';
+  // Auto-save after 1.5 seconds of no typing
+  if(window._photoSaveTimers) clearTimeout(window._photoSaveTimers[pid]);
+  if(!window._photoSaveTimers) window._photoSaveTimers = {};
+  window._photoSaveTimers[pid] = setTimeout(function(){
+    var descEl = document.getElementById(pid+'_desc');
+    var whereEl = document.getElementById(pid+'_where');
+    var capEl = document.getElementById(pid+'_cap');
+    var whyEl = document.getElementById(pid+'_why');
+    if(!descEl) return;
+    var cfg = OPM.getConfig();
+    if(!cfg._photoEdits) cfg._photoEdits = {};
+    cfg._photoEdits[pid] = {
+      desc: descEl.value, where: whereEl ? whereEl.value : '',
+      cap: capEl ? capEl.value : '', why: whyEl ? whyEl.value : '',
+      originalDesc: descEl.dataset.original || '',
+      originalWhere: whereEl ? (whereEl.dataset.original || '') : '',
+      originalWhy: whyEl ? (whyEl.dataset.original || '') : ''
+    };
+    OPM.saveConfig(cfg);
+    if(ind) ind.textContent = '✓ SAVED';
+    if(ind) ind.style.color = 'var(--success)';
+    setTimeout(function(){ if(ind) ind.style.display = 'none'; }, 2000);
+  }, 1500);
+}
+
 document.addEventListener('DOMContentLoaded',function(){populateUnits();setToday();});
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a229ac38da4f0478',t:'MTc4NTMwMjQwOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a229bbbdbd0bbd83',t:'MTc4NTMwMzA0NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
 </body>
 </html>
