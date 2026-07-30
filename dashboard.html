@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OPM — Operations Report</title>
+<title>OPM — Terminal Operations & Management Report</title>
 <link rel="manifest" href="manifest.json"><meta name="theme-color" content="#00e5ff">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="opm-core.css">
@@ -68,7 +68,7 @@ td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--t
 </style>
 </head>
 <body>
-<div class="header"><img src="bpgt-logo.png" alt="BPGT"><h1 id="cover-title">Operations Report</h1><div class="sub" id="cover-sub">BROOKE'S POINT GOVERNMENT TERMINAL</div></div>
+<div class="header"><img src="bpgt-logo.png" alt="BPGT"><h1 id="cover-title">TERMINAL OPERATIONS AND MANAGEMENT REPORT</h1><div class="sub" id="cover-sub">BROOKE'S POINT GOVERNMENT TERMINAL</div></div>
 <div class="bar">
 <label>UNIT:</label><select id="unit" onchange="R()"><option value="">ALL UNITS</option></select>
 <span style="color:var(--text-dim);margin:0 6px">|</span>
@@ -84,9 +84,16 @@ td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--t
 <a class="btn btn-sm" href="admin.html">ADMIN</a>
 </div>
 <div class="content" id="content"><div class="card"><div class="card-body empty">Loading report...</div></div></div>
-<div class="footer"><div class="ft">-=pagong=-</div><div class="fs">JOEY SABENACIO HEREDERO &middot; OPM &middot; &copy; 2026</div></div>
+<div class="footer">
+<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:4px">
+<img src="icon-192.png" style="width:18px;height:18px;border-radius:50%;opacity:.7">
+<span class="ft">-=pagong=-</span>
+<img src="icon-192.png" style="width:18px;height:18px;border-radius:50%;opacity:.7">
+</div>
+<div class="fs">JOEY SABENACIO HEREDERO &middot; OPM &middot; &copy; 2026</div>
+</div>
 <script src="opm-core.js"></script>
 <script src="dashboard.js"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a23276e26cdeddc4',t:'MTc4NTM5NDU5Ng=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2327d89ad798b83',t:'MTc4NTM5NDg2OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
 </body>
 </html>

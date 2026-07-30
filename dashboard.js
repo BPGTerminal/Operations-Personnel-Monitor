@@ -25,7 +25,7 @@ async function R(){
   document.getElementById("content").innerHTML='<div class="card"><div class="card-body empty">Loading report...</div></div>';
   var data=await Q();
   var su=document.getElementById("unit").value||"ALL UNITS",df=document.getElementById("from").value||"beginning",dt=document.getElementById("to").value||"present";
-  var c2=OPM.getConfig();document.getElementById("cover-title").textContent=(c2.eventName||"Operations Report");document.getElementById("cover-sub").textContent=(c2.location||"BROOKE'S POINT GOVERNMENT TERMINAL");
+  var c2=OPM.getConfig();document.getElementById("cover-title").textContent=(c2.eventName||"TERMINAL OPERATIONS AND MANAGEMENT REPORT");document.getElementById("cover-sub").textContent=(c2.location||"BROOKE'S POINT GOVERNMENT TERMINAL");
   if(!data||!data.summary||(data.summary.totalMessages===0&&data.summary.totalPersonnel===0)){document.getElementById("content").innerHTML='<div class="card"><div class="card-body empty">No data for <strong>'+esc(su)+'</strong> from <strong>'+esc(df)+'</strong> to <strong>'+esc(dt)+'</strong><br><br><button class="btn btn-sm" onclick="T()">TODAY</button> <button class="btn btn-sm" onclick="R()">ALL TIME</button></div></div>';return}
   B(data,su,df,dt)
 }
