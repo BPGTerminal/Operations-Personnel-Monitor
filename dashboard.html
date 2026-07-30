@@ -4,172 +4,171 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OPM — Operations Report</title>
 <link rel="manifest" href="manifest.json"><meta name="theme-color" content="#00e5ff">
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="opm-core.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-body{min-height:100vh;display:flex;flex-direction:column;overflow-y:auto;background:var(--bg-base);}
-.report{max-width:1100px;width:100%;margin:0 auto;flex:1;}
-.report-cover{background:var(--bg-panel);border-bottom:3px solid var(--accent);padding:28px 32px;text-align:center;}
-.report-cover .logo{width:48px;height:48px;border-radius:50%;margin-bottom:6px;}
-.report-cover h1{font-size:22px;font-weight:700;letter-spacing:3px;color:#fff;text-transform:uppercase;margin-bottom:4px;}
-.report-cover .subtitle{font-family:var(--font-mono);font-size:10px;color:var(--accent);letter-spacing:2px;}
-.report-cover .meta-row{display:flex;justify-content:center;gap:32px;margin-top:10px;font-family:var(--font-mono);font-size:9px;color:var(--text-dim);flex-wrap:wrap;}
-.report-cover .meta-row span strong{color:var(--text-secondary);}
-.report-toolbar{background:var(--bg-panel);border-bottom:1px solid var(--border-color);padding:8px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:100;}
-.report-toolbar label{font-family:var(--font-mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;white-space:nowrap;}
-.report-toolbar input[type="date"]{background:var(--bg-surface);border:1px solid var(--border-color);color:#fff;font-family:var(--font-mono);font-size:10px;padding:5px 8px;border-radius:var(--radius);}
-.report-body{padding:20px 24px;display:flex;flex-direction:column;gap:22px;}
-.sec{border:1px solid var(--border-color);border-radius:6px;overflow:hidden;background:var(--bg-panel);}
-.sec-hdr{background:var(--accent-dim);border-bottom:1px solid var(--border-color);padding:12px 20px;font-family:var(--font-mono);font-size:10px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
-.sec-body{padding:20px;}
-.stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--border-color);border-radius:6px;overflow:hidden;}
-.stat-item{background:var(--bg-panel);padding:16px 20px;text-align:center;}
-.stat-num{font-family:var(--font-mono);font-size:28px;font-weight:700;color:var(--accent);line-height:1;}
-.stat-lbl{font-family:var(--font-mono);font-size:8px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-top:4px;}
-.unit-table{width:100%;border-collapse:collapse;font-size:var(--font-xs);}
-.unit-table th{background:rgba(0,0,0,.25);color:var(--accent);font-family:var(--font-mono);font-size:9px;letter-spacing:1px;padding:10px 14px;text-align:left;text-transform:uppercase;border-bottom:1px solid var(--border-color);}
-.unit-table td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text-secondary);}
-.unit-table tr:hover td{background:var(--accent-dim);}.unit-table .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;}
-.unit-table .num{font-family:var(--font-mono);font-weight:700;text-align:center;}
-.photo-index{margin-bottom:16px;}.photo-index h4{font-family:var(--font-mono);font-size:11px;color:var(--accent);letter-spacing:1px;margin-bottom:4px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.06);}
-.photo-index-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;}
-.photo-index-item{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--bg-surface);border-radius:4px;border:1px solid var(--border-color);font-size:var(--font-xs);}
-.photo-index-num{font-family:var(--font-mono);color:var(--accent);font-weight:700;flex-shrink:0;min-width:20px;}
-.photo-index-desc{flex:1;line-height:1.4;color:var(--text-secondary);}.photo-index-where{font-family:var(--font-mono);font-size:8px;color:var(--text-dim);margin-top:2px;}
-.photo-gallery{display:flex;flex-direction:column;gap:24px;}
-.photo-report-card{display:grid;grid-template-columns:1fr 1fr;gap:0;background:var(--bg-surface);border:1px solid var(--border-color);border-radius:8px;overflow:hidden;}
-.photo-side{position:relative;min-height:280px;overflow:hidden;cursor:pointer;background:rgba(0,0,0,.3);}
-.photo-side img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;transition:transform .3s;}
-.photo-side:hover img{transform:scale(1.03);}
-.photo-side .photo-badge{position:absolute;top:12px;left:12px;background:rgba(0,0,0,.7);color:#fff;font-family:var(--font-mono);font-size:9px;padding:4px 10px;border-radius:3px;letter-spacing:1px;z-index:2;}
-.photo-side .photo-index-badge{position:absolute;top:12px;right:12px;background:var(--accent);color:#000;font-family:var(--font-mono);font-size:9px;font-weight:700;padding:4px 10px;border-radius:3px;z-index:2;}
-.info-side{padding:20px 24px;display:flex;flex-direction:column;justify-content:center;gap:10px;}
-.info-side .field-name{font-size:22px;font-weight:700;color:#fff;line-height:1.3;}
-.info-side .field-row{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:var(--font-xs);}
-.info-side .field-key{font-family:var(--font-mono);color:var(--accent);font-size:9px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
-.info-side .field-val{color:var(--text-dim);word-break:break-word;}
-.info-side .field-purpose{font-size:13px;color:var(--text-secondary);line-height:1.5;font-style:italic;margin-top:4px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08);}
-.narrative-edit{width:100%;min-height:140px;background:rgba(0,0,0,.3);border:1px solid var(--border-color);color:var(--text-primary);font-family:var(--font-sans);font-size:var(--font-sm);padding:14px;line-height:1.8;resize:vertical;border-radius:var(--radius);outline:none;}
-.narrative-edit:focus{border-color:var(--accent);}
-.msg-log{max-height:400px;overflow-y:auto;font-size:var(--font-xs);}.msg-log-row{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.03);}
-.msg-log-time{font-family:var(--font-mono);color:var(--text-dim);min-width:80px;flex-shrink:0;font-size:9px;}
-.msg-log-sender{color:var(--accent);font-weight:600;min-width:110px;flex-shrink:0;}
-.msg-log-body{flex:1;color:var(--text-secondary);}
-.empty{text-align:center;padding:40px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px;}
-@media(max-width:768px){.photo-report-card{grid-template-columns:1fr!important;}.photo-side{min-height:220px;}}
-@media print{body{background:#fff!important;color:#000!important;overflow:visible!important;}
-.report-toolbar,.btn{display:none!important;}.report{padding:0!important;max-width:none!important;}
-.report-cover{border-bottom-color:#1a4d8f!important;}.photo-report-card{border:1px solid #ccc!important;break-inside:avoid;}
-.photo-side{min-height:200px!important;}.sec,.sec-hdr,.sec-body{background:#fff!important;border-color:#ccc!important;break-inside:avoid;}
-.sec-hdr{color:#1a4d8f!important;background:#f0f4f8!important;}
-*{color:#000!important;text-shadow:none!important;box-shadow:none!important;}
-.stat-num,.field-name,.msg-log-sender{color:#1a4d8f!important;}
-.unit-table th{background:#f0f4f8!important;color:#1a4d8f!important;}
-.field-key{color:#1a4d8f!important;}}
+body{min-height:100vh;display:flex;flex-direction:column;overflow-y:auto;background:var(--bg-base)}
+.report{max-width:1100px;width:100%;margin:0 auto;flex:1}
+.report-cover{background:var(--bg-panel);border-bottom:3px solid var(--accent);padding:28px 32px;text-align:center}
+.report-cover .logo{width:48px;height:48px;border-radius:50%;margin-bottom:6px}
+.report-cover h1{font-size:22px;font-weight:700;letter-spacing:3px;color:#fff;text-transform:uppercase;margin-bottom:4px}
+.report-cover .subtitle{font-family:var(--font-mono);font-size:10px;color:var(--accent);letter-spacing:2px}
+.report-cover .meta-row{display:flex;justify-content:center;gap:32px;margin-top:10px;font-family:var(--font-mono);font-size:9px;color:var(--text-dim)}
+.report-toolbar{background:var(--bg-panel);border-bottom:1px solid var(--border-color);padding:8px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:100}
+.report-toolbar label{font-family:var(--font-mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;white-space:nowrap}
+.report-toolbar input[type=date]{background:var(--bg-surface);border:1px solid var(--border-color);color:#fff;font-family:var(--font-mono);font-size:10px;padding:5px 8px;border-radius:var(--radius)}
+.report-body{padding:20px 24px;display:flex;flex-direction:column;gap:22px}
+.sec{border:1px solid var(--border-color);border-radius:6px;overflow:hidden;background:var(--bg-panel)}
+.sec-hdr{background:var(--accent-dim);border-bottom:1px solid var(--border-color);padding:12px 20px;font-family:var(--font-mono);font-size:10px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;font-weight:700}
+.sec-body{padding:20px}
+.stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--border-color);border-radius:6px;overflow:hidden}
+.stat-item{background:var(--bg-panel);padding:16px 20px;text-align:center}
+.stat-num{font-family:var(--font-mono);font-size:28px;font-weight:700;color:var(--accent)}
+.stat-lbl{font-family:var(--font-mono);font-size:8px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-top:4px}
+.unit-table{width:100%;border-collapse:collapse;font-size:var(--font-xs)}
+.unit-table th{background:rgba(0,0,0,.25);color:var(--accent);font-family:var(--font-mono);font-size:9px;letter-spacing:1px;padding:10px 14px;text-align:left;text-transform:uppercase;border-bottom:1px solid var(--border-color)}
+.unit-table td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text-secondary)}
+.unit-table .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}.unit-table .num{font-family:var(--font-mono);font-weight:700;text-align:center}
+.photo-gallery{display:flex;flex-direction:column;gap:24px}
+.photo-report-card{display:grid;grid-template-columns:1fr 1fr;gap:0;background:var(--bg-surface);border:1px solid var(--border-color);border-radius:8px;overflow:hidden}
+.photo-side{position:relative;min-height:280px;overflow:hidden;cursor:pointer;background:rgba(0,0,0,.3)}
+.photo-side img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.photo-side .photo-badge{position:absolute;top:12px;left:12px;background:rgba(0,0,0,.7);color:#fff;font-family:var(--font-mono);font-size:9px;padding:4px 10px;border-radius:3px;z-index:2}
+.photo-side .photo-index-badge{position:absolute;top:12px;right:12px;background:var(--accent);color:#000;font-family:var(--font-mono);font-size:9px;font-weight:700;padding:4px 10px;border-radius:3px;z-index:2}
+.info-side{padding:20px 24px;display:flex;flex-direction:column;justify-content:center;gap:10px}
+.info-side .field-name{font-size:22px;font-weight:700;color:#fff;line-height:1.3}
+.info-side .field-row{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:var(--font-xs)}
+.info-side .field-key{font-family:var(--font-mono);color:var(--accent);font-size:9px;white-space:nowrap}
+.info-side .field-val{color:var(--text-dim)}
+.narrative-edit{width:100%;min-height:140px;background:rgba(0,0,0,.3);border:1px solid var(--border-color);color:var(--text-primary);font-family:var(--font-sans);font-size:var(--font-sm);padding:14px;line-height:1.8;resize:vertical;border-radius:var(--radius);outline:none}
+.msg-log{max-height:400px;overflow-y:auto;font-size:var(--font-xs)}
+.msg-log-row{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.msg-log-time{font-family:var(--font-mono);color:var(--text-dim);min-width:80px;font-size:9px}
+.msg-log-sender{color:var(--accent);font-weight:600;min-width:110px}
+.msg-log-body{flex:1;color:var(--text-secondary)}
+.empty{text-align:center;padding:40px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}
+@media(max-width:768px){.photo-report-card{grid-template-columns:1fr!important}}
+@media print{body{background:#fff!important;color:#000!important;overflow:visible!important}.report-toolbar,.btn{display:none!important}.report{padding:0!important;max-width:none!important}.sec,.sec-body{background:#fff!important;border-color:#ccc!important;break-inside:avoid}.sec-hdr{color:#1a4d8f!important;background:#f0f4f8!important}*{color:#000!important;text-shadow:none!important;box-shadow:none!important}.stat-num,.field-name,.msg-log-sender{color:#1a4d8f!important}}
 </style>
 </head>
 <body>
 <div class="report">
-  <div class="report-cover"><img class="logo" src="icon-192.png"><h1 id="cover-title">Operations Report</h1><div class="subtitle">O P E R A T I O N S &nbsp; P E R S O N N E L &nbsp; M O N I T O R</div><div class="meta-row"><span><strong id="cover-unit">ALL UNITS</strong></span><span><strong id="cover-date"></strong></span><span><strong id="cover-event"></strong></span></div></div>
-  <div class="report-toolbar"><label>UNIT:</label><select class="select" id="f-unit" onchange="refresh()" style="width:auto;min-width:170px;"><option value="">ALL UNITS</option></select><span style="color:var(--text-dim);margin:0 6px;">|</span><label>FROM:</label><input type="date" id="f-from" onchange="refresh()"><label>TO:</label><input type="date" id="f-to" onchange="refresh()"><button class="btn btn-sm" onclick="document.getElementById('f-from').value='';document.getElementById('f-to').value='';refresh();">ALL TIME</button><button class="btn btn-sm btn-success" onclick="setToday();">TODAY</button><button class="btn btn-sm btn-warning" onclick="setThisWeek();">THIS WEEK</button><span style="flex:1;"></span><button class="btn btn-sm" onclick="window.print()">PRINT</button><button class="btn btn-primary btn-sm" onclick="refresh()">REFRESH</button><a class="btn btn-sm" href="commander.html">COMMANDER</a><a class="btn btn-sm" href="admin.html">ADMIN</a><span id="last-upd" class="mono text-dim" style="font-size:9px;"></span></div>
-  <div class="report-body" id="report-body"><div class="sec"><div class="sec-body empty">Loading report...</div></div></div>
+<div class="report-cover"><img class="logo" src="icon-192.png"><h1 id="cover-title">Operations Report</h1><div class="subtitle">OPERATIONS PERSONNEL MONITOR</div><div class="meta-row"><span><strong id="cover-unit">ALL UNITS</strong></span><span><strong id="cover-date"></strong></span><span><strong id="cover-event"></strong></span></div></div>
+<div class="report-toolbar"><label>UNIT:</label><select class="select" id="f-unit" onchange="R()" style="width:auto;min-width:170px"><option value="">ALL UNITS</option></select><span style="color:var(--text-dim);margin:0 6px">|</span><label>FROM:</label><input type="date" id="f-from" onchange="R()"><label>TO:</label><input type="date" id="f-to" onchange="R()"><button class="btn btn-sm" onclick="document.getElementById('f-from').value='';document.getElementById('f-to').value='';R()">ALL</button><button class="btn btn-sm btn-success" onclick="T()">TODAY</button><button class="btn btn-sm btn-warning" onclick="W()">WEEK</button><span style="flex:1"></span><button class="btn btn-sm" onclick="window.print()">PRINT</button><button class="btn btn-primary btn-sm" onclick="R()">REFRESH</button><a class="btn btn-sm" href="commander.html">COMMANDER</a><a class="btn btn-sm" href="admin.html">ADMIN</a><span id="last-upd" class="mono text-dim" style="font-size:9px"></span></div>
+<div class="report-body" id="report-body"><div class="sec"><div class="sec-body empty">Loading report...</div></div></div>
 </div>
 <script src="opm-core.js"></script>
 <script>
-function fmtDT(v){return String(v||'').replace('T',' ');}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function extractLabeled(b,l){if(!b)return'';var m=b.match(new RegExp(l+':\\s*(.+?)(?:\\n|$)','i'));return m?m[1].trim():'';}
-function photoDescription(p){return p.photoDesc||p.description||extractLabeled(p.body,'Description')||'Photo report';}
-function photoWhere(p){return p.photoWhere||extractLabeled(p.body,'Where')||p.post||'';}
-function photoWhy(p){return p.photoWhy||extractLabeled(p.body,'Why/Purpose')||extractLabeled(p.body,'Why')||'';}
-function photoCapture(p){return p.captureTime||extractLabeled(p.body,'Captured')||p.time||'';}
 var _chart=null;
 
+function esc(s){return String(s||'').replace(/&/g,'amp;').replace(/</g,'lt;').replace(/>/g,'gt;').replace(/"/g,'quot;');}
+
 function ensureConfig(){
-  try{var r=localStorage.getItem('opm_config_v2')||localStorage.getItem('tms_config');var c=r?JSON.parse(r):{};return(c&&c.sheetUrl&&c.teams&&Array.isArray(c.teams)&&c.teams.length)?c:null;}catch(e){return null;}
+  try{var r=localStorage.getItem('opm_config_v2')||localStorage.getItem('tms_config');var c=r?JSON.parse(r):{};return(c&&c.sheetUrl&&c.teams&&Array.isArray(c.teams)&&c.teams.length)?c:null}catch(e){return null}
 }
 
-function populateUnits(){
-  var cfg=ensureConfig()||{};
-  var teams=Array.isArray(cfg.teams)?cfg.teams:[];
-  var sel=document.getElementById('f-unit');if(!sel)return teams;
-  var cur=sel.value;sel.innerHTML='<option value="">ALL UNITS</option>';
-  if(teams.length){teams.forEach(function(t){var o=document.createElement('option');o.value=t.name;o.textContent=t.name;if(t.name===cur)o.selected=true;sel.appendChild(o);});}
-  else{sel.innerHTML='<option value="">ALL UNITS</option><option disabled>-- No units yet --</option>';}
-  return teams;
+function PU(){
+  var cfg=ensureConfig()||{};var teams=Array.isArray(cfg.teams)?cfg.teams:[];
+  var sel=document.getElementById('f-unit');if(!sel)return;
+  sel.innerHTML='<option value="">ALL UNITS</option>';
+  teams.forEach(function(t){var o=document.createElement('option');o.value=t.name;o.textContent=t.name;sel.appendChild(o)});
 }
 
-function setToday(){var d=new Date().toISOString().substring(0,10);document.getElementById('f-from').value=d;document.getElementById('f-to').value=d;refresh();}
-function setThisWeek(){var n=new Date(),d=n.getDay();var m=new Date(n);m.setDate(n.getDate()-(d===0?6:d-1));var s=new Date(m);s.setDate(m.getDate()+6);document.getElementById('f-from').value=m.toISOString().substring(0,10);document.getElementById('f-to').value=s.toISOString().substring(0,10);refresh();}
+function T(){var d=new Date().toISOString().substring(0,10);document.getElementById('f-from').value=d;document.getElementById('f-to').value=d;R()}
+function W(){var n=new Date(),day=n.getDay();var m=new Date(n);m.setDate(n.getDate()-(day===0?6:day-1));var s=new Date(m);s.setDate(m.getDate()+6);document.getElementById('f-from').value=m.toISOString().substring(0,10);document.getElementById('f-to').value=s.toISOString().substring(0,10);R()}
 
-async function fetchData(){
+async function Q(){
   var url=OPM.SHEET_URL();if(!url)return null;
   var from=document.getElementById('f-from').value,to=document.getElementById('f-to').value;
-  try{var p=new URLSearchParams({action:'getDashboardData',t:Date.now()});if(from)p.set('dateFrom',from+' 00:00:00');if(to)p.set('dateTo',to+' 23:59:59');var r=await fetch(url+'?'+p,{cache:'no-store'});return await r.json();}catch(e){return null;}
+  try{var p=new URLSearchParams({action:'getDashboardData',t:Date.now()});if(from)p.set('dateFrom',from+' 00:00:00');if(to)p.set('dateTo',to+' 23:59:59');var r=await fetch(url+'?'+p,{cache:'no-store'});return await r.json()}catch(e){return null}
 }
 
-async function refresh(){
-  var cfg=ensureConfig();populateUnits();
-  if(!cfg){document.getElementById('report-body').innerHTML='<div class="sec"><div class="sec-body empty">Waiting for Commander to load configuration...<br><br><button class="btn btn-warning btn-sm" onclick="refresh()">REFRESH</button></div></div>';return;}
+async function R(){
+  PU();var cfg=ensureConfig();
+  if(!cfg){document.getElementById('report-body').innerHTML='<div class="sec"><div class="sec-body empty">Waiting for Commander to load configuration...<br><br><button class="btn btn-warning btn-sm" onclick="R()">REFRESH</button></div></div>';return}
   OPM.saveConfig(cfg);
-  if(_chart){_chart.destroy();_chart=null;}
+  if(_chart){_chart.destroy();_chart=null}
   document.getElementById('report-body').innerHTML='<div class="sec"><div class="sec-body empty">Loading report...</div></div>';
-  var data=await fetchData();document.getElementById('last-upd').textContent='Updated: '+OPM.formatTime();
+  var data=await Q();document.getElementById('last-upd').textContent='Updated: '+OPM.formatTime();
   var su=document.getElementById('f-unit').value||'ALL UNITS',df=document.getElementById('f-from').value||'beginning',dt=document.getElementById('f-to').value||'present';
-  var c2=OPM.getConfig();document.getElementById('cover-title').textContent=(c2.eventName||'Operations Report');document.getElementById('cover-unit').textContent=su;document.getElementById('cover-date').textContent=df+'  '+dt;document.getElementById('cover-event').textContent=c2.unit||c2.location||'';
-  if(!data||!data.summary||(data.summary.totalMessages===0&&data.summary.totalPersonnel===0)){document.getElementById('report-body').innerHTML='<div class="sec"><div class="sec-body empty">No data for <strong>'+su+'</strong> on <strong>'+df+'  '+dt+'</strong><br><br><button class="btn btn-primary btn-sm" onclick="setToday();">TODAY</button> <button class="btn btn-warning btn-sm" onclick="setThisWeek();">THIS WEEK</button> <button class="btn btn-sm" onclick="refresh();">ALL TIME</button></div></div>';return;}
-  build(data,su,df,dt);
+  var c2=OPM.getConfig();
+  document.getElementById('cover-title').textContent=(c2.eventName||'Operations Report');
+  document.getElementById('cover-unit').textContent=su;
+  document.getElementById('cover-date').textContent=df+'  '+dt;
+  document.getElementById('cover-event').textContent=c2.unit||c2.location||'';
+  if(!data||!data.summary||(data.summary.totalMessages===0&&data.summary.totalPersonnel===0)){
+    document.getElementById('report-body').innerHTML='<div class="sec"><div class="sec-body empty">No data for '+su+' on '+df+'  '+dt+'</div></div>';return
+  }
+  B(data,su,df,dt);
 }
 
-function build(data,su,df,dt){
-  var s=data.summary;var unitData=Array.isArray(data.unitData)?data.unitData:[];var photos=data.photos||[];var all=data.allMessages||[];var perTeam=data.personnelByTeam||{};var colors=['#00e5ff','#00ff88','#ff6b35','#ffd166','#a29bfe','#fd79a8','#55efc4'];
-  if(su!=='ALL UNITS'){unitData=unitData.filter(function(u){return u.team===su;});photos=photos.filter(function(p){return p.team===su;});all=all.filter(function(m){return m.team===su;});var fpt={};if(perTeam[su])fpt[su]=perTeam[su];perTeam=fpt;}
-  var tMsgs=unitData.reduce(function(a,u){return a+(u.messages||0);},0),tTasks=unitData.reduce(function(a,u){return a+(u.tasks||0);},0),tIncs=unitData.reduce(function(a,u){return a+(u.incidents||0);},0),tPhotos=unitData.reduce(function(a,u){return a+(u.photos||0);},0);
-  var unitNames=unitData.map(function(u){return u.team;}),unitTasks=unitData.map(function(u){return u.tasks||0;}),unitPhotos=unitData.map(function(u){return u.photos||0;});
-  var html='';
-  html+='<div class="sec"><div class="sec-hdr">EXECUTIVE SUMMARY</div><div class="sec-body"><div class="stats-bar">';
-  html+='<div class="stat-item"><div class="stat-num">'+tMsgs+'</div><div class="stat-lbl">Communications</div></div>';
-  html+='<div class="stat-item"><div class="stat-num" style="color:var(--success);">'+tTasks+'</div><div class="stat-lbl">Tasks Accomplished</div></div>';
-  html+='<div class="stat-item"><div class="stat-num">'+tPhotos+'</div><div class="stat-lbl">Photo Reports</div></div>';
-  html+='<div class="stat-item"><div class="stat-num" style="color:var(--warning);">'+tIncs+'</div><div class="stat-lbl">Incidents Logged</div></div>';
-  html+='<div class="stat-item"><div class="stat-num">'+(su!=='ALL UNITS'?(perTeam[su]||0):s.totalPersonnel)+'</div><div class="stat-lbl">'+(su!=='ALL UNITS'?'Staff in Unit':'Personnel Deployed')+'</div></div>';
-  html+='<div class="stat-item"><div class="stat-num" style="color:var(--success);">'+(su!=='ALL UNITS'?(perTeam[su]||0):s.onlineNow)+'</div><div class="stat-lbl">Currently Active</div></div></div></div></div>';
-  if(unitNames.length>0){html+='<div class="sec"><div class="sec-hdr">UNIT PERFORMANCE BREAKDOWN<span style="font-size:8px;color:var(--text-dim);letter-spacing:0;">PERIOD: '+df+'  '+dt+'</span></div><div class="sec-body">';
-    html+='<table class="unit-table"><thead><tr><th></th><th>UNIT / SECTOR</th><th class="num">PHOTO REPORTS</th><th class="num">TASKS</th><th class="num">INCIDENTS</th><th class="num">COMMS</th></tr></thead><tbody>';
-    unitData.forEach(function(u,i){html+='<tr><td><span class="dot" style="background:'+colors[i%7]+';"></span></td><td><strong>'+esc(u.team)+'</strong></td><td class="num">'+(u.photos||0)+'</td><td class="num" style="color:var(--success);">'+(u.tasks||0)+'</td><td class="num" style="color:'+((u.incidents||0)>0?'var(--warning)':'var(--text-dim)')+';">'+(u.incidents||0)+'</td><td class="num">'+(u.messages||0)+'</td></tr>';});
-    html+='</tbody></table><div style="margin-top:16px;height:200px;"><canvas id="chart-perf"></canvas></div></div></div>';}
+function B(data,su,df,dt){
+  var s=data.summary;var ud=Array.isArray(data.unitData)?data.unitData:[];var photos=data.photos||[];var all=data.allMessages||[];var pt=data.personnelByTeam||{};var colors=['#00e5ff','#00ff88','#ff6b35','#ffd166','#a29bfe','#fd79a8','#55efc4'];
+  if(su!=='ALL UNITS'){ud=ud.filter(function(u){return u.team===su});photos=photos.filter(function(p){return p.team===su});all=all.filter(function(m){return m.team===su});var fp={};if(pt[su])fp[su]=pt[su];pt=fp}
+  var tm=ud.reduce(function(a,u){return a+(u.messages||0)},0),tt=ud.reduce(function(a,u){return a+(u.tasks||0)},0),ti=ud.reduce(function(a,u){return a+(u.incidents||0)},0),tp=ud.reduce(function(a,u){return a+(u.photos||0)},0);
+  var un=ud.map(function(u){return u.team}),ut=ud.map(function(u){return u.tasks||0}),up=ud.map(function(u){return u.photos||0});
+  var h='';
 
-  // PHOTO INDEX + GALLERY
-  if(photos.length>0){var bu={};photos.forEach(function(p){var u=p.team||'UNASSIGNED';if(!bu[u])bu[u]=[];bu[u].push(p);});
-    html+='<div class="sec"><div class="sec-hdr">PHOTO REPORT INDEX ('+photos.length+')</div><div class="sec-body">';
-    Object.keys(bu).sort().forEach(function(u){html+='<div class="photo-index"><h4 style="color:'+colors[unitNames.indexOf(u)%7]+';">'+esc(u)+' ('+bu[u].length+' reports)</h4><div class="photo-index-grid">';
-      bu[u].forEach(function(p,i){html+='<div class="photo-index-item"><div class="photo-index-num">#'+(i+1)+'</div><div><div class="photo-index-desc">'+esc(photoDescription(p))+'</div>';var w=photoWhere(p);if(w)html+='<div class="photo-index-where">'+esc(w)+'</div>';html+='</div></div>';});html+='</div></div>';});html+='</div></div>';
+  // Summary
+  var pers=(su!=='ALL UNITS'?(pt[su]||0):s.totalPersonnel);
+  var actv=(su!=='ALL UNITS'?(pt[su]||0):s.onlineNow);
+  h+='<div class="sec"><div class="sec-hdr">EXECUTIVE SUMMARY</div><div class="sec-body"><div class="stats-bar">';
+  h+='<div class="stat-item"><div class="stat-num">'+tm+'</div><div class="stat-lbl">Communications</div></div>';
+  h+='<div class="stat-item"><div class="stat-num" style="color:var(--success)">'+tt+'</div><div class="stat-lbl">Tasks Accomplished</div></div>';
+  h+='<div class="stat-item"><div class="stat-num">'+tp+'</div><div class="stat-lbl">Photo Reports</div></div>';
+  h+='<div class="stat-item"><div class="stat-num" style="color:var(--warning)">'+ti+'</div><div class="stat-lbl">Incidents</div></div>';
+  h+='<div class="stat-item"><div class="stat-num">'+pers+'</div><div class="stat-lbl">Personnel</div></div>';
+  h+='<div class="stat-item"><div class="stat-num" style="color:var(--success)">'+actv+'</div><div class="stat-lbl">Online</div></div>';
+  h+='</div></div></div>';
 
-    html+='<div class="sec"><div class="sec-hdr">FIELD PHOTO DOCUMENTATION ('+photos.length+')</div><div class="sec-body"><div class="photo-gallery">';
-    photos.slice(0,20).forEach(function(p,i){var m=(p.url||'').match(/[?&]id=([a-zA-Z0-9_-]+)/);var e=m?'https://lh3.googleusercontent.com/d/'+m[1]:p.url;var d=photoDescription(p),w=photoWhere(p),y=photoWhy(p),c=photoCapture(p);var uc=colors[unitNames.indexOf(p.team)%7]||'var(--accent)';
-      html+='<div class="photo-report-card"><div class="photo-side" onclick="window.open(\''+esc(p.url)+'\')"><img src="'+esc(e)+'" loading="lazy" onerror="this.parentElement.style.display=\'none\'"><span class="photo-badge" style="background:'+uc+';color:#000;">'+esc(p.team||'')+'</span><span class="photo-index-badge">#'+(i+1)+'</span></div><div class="info-side"><div class="field-name">'+esc(d)+'</div><div class="field-row">';if(w)html+='<span class="field-key">Location</span><span class="field-val">'+esc(w)+'</span>';if(c)html+='<span class="field-key">Captured</span><span class="field-val">'+esc(fmtDT(c))+'</span>';html+='<span class="field-key">Unit</span><span class="field-val" style="color:'+uc+';font-weight:600;">'+esc(p.team||'')+'</span><span class="field-key">By</span><span class="field-val">'+esc(p.sender||'')+'</span></div>';if(y)html+='<div class="field-purpose">"'+esc(y)+'"</div>';html+='</div></div>';});
-    html+='</div>';if(photos.length>20)html+='<div style="text-align:center;padding:14px;color:var(--text-dim);font-family:var(--font-mono);font-size:10px;">Showing 20 of '+photos.length+' reports.</div>';html+='</div></div>';}
+  // Unit table
+  if(un.length>0){
+    h+='<div class="sec"><div class="sec-hdr">UNIT PERFORMANCE<span style="font-size:8px;color:var(--text-dim)">'+df+'  '+dt+'</span></div><div class="sec-body">';
+    h+='<table class="unit-table"><thead><tr><th></th><th>UNIT</th><th class="num">PHOTOS</th><th class="num">TASKS</th><th class="num">INC</th><th class="num">COMMS</th></tr></thead><tbody>';
+    ud.forEach(function(u,i){h+='<tr><td><span class="dot" style="background:'+colors[i%7]+'"></span></td><td><strong>'+esc(u.team)+'</strong></td><td class="num">'+(u.photos||0)+'</td><td class="num" style="color:var(--success)">'+(u.tasks||0)+'</td><td class="num" style="color:'+((u.incidents||0)>0?'var(--warning)':'var(--text-dim)')+'">'+(u.incidents||0)+'</td><td class="num">'+(u.messages||0)+'</td></tr>'});
+    h+='</tbody></table><div style="margin-top:16px;height:200px"><canvas id="chart-perf"></canvas></div>';
+    h+='</div></div>';
+  }
 
-  // NARRATIVE
-  var nar='PERIOD: '+df+' to '+dt+' | UNIT: '+su+'\n\nDuring this period, '+tMsgs+' communications were recorded, '+tTasks+' tasks accomplished, '+tPhotos+' photo reports submitted, and '+tIncs+' incidents logged.\n\n';
-  html+='<div class="sec"><div class="sec-hdr">OPERATIONS NARRATIVE <span style="font-size:8px;color:var(--text-dim);letter-spacing:0;">EDITABLE - SAVE BEFORE PRINTING</span></div><div class="sec-body"><textarea class="narrative-edit" id="narrative-text">'+esc(nar)+'</textarea><div class="flex gap-sm" style="margin-top:10px;"><button class="btn btn-success btn-sm" onclick="saveNarrative()">SAVE NARRATIVE</button><button class="btn btn-sm" onclick="resetNarrative()">RESET</button><span id="nar-saved" style="display:none;font-family:var(--font-mono);font-size:10px;color:var(--success);align-self:center;">SAVED</span></div></div></div>';
+  // Photos
+  if(photos.length>0){
+    h+='<div class="sec"><div class="sec-hdr">FIELD PHOTOS ('+photos.length+')</div><div class="sec-body"><div class="photo-gallery">';
+    photos.slice(0,20).forEach(function(p,i){
+      var m=(p.url||'').match(/[?&]id=([a-zA-Z0-9_-]+)/);var e=m?'https://lh3.googleusercontent.com/d/'+m[1]:p.url;
+      var uc=colors[un.indexOf(p.team)%7]||'var(--accent)';
+      h+='<div class="photo-report-card"><div class="photo-side"><img src="'+esc(e)+'" loading="lazy"><span class="photo-badge" style="background:'+uc+';color:#000">'+esc(p.team||'')+'</span><span class="photo-index-badge">#'+(i+1)+'</span></div><div class="info-side"><div class="field-name">'+esc((p.photoDesc||p.description||p.body||'Photo').substring(0,120))+'</div><div class="field-row"><span class="field-key">Unit</span><span class="field-val" style="color:'+uc+'">'+esc(p.team||'')+'</span><span class="field-key">By</span><span class="field-val">'+esc(p.sender||'')+'</span></div></div></div>'
+    });
+    h+='</div></div></div>';
+  }
 
-  // COMMUNICATIONS LOG
-  if(all.length>0){html+='<div class="sec"><div class="sec-hdr">COMMUNICATIONS LOG ('+all.length+')</div><div class="sec-body"><div class="msg-log">';all.slice().reverse().slice(0,80).forEach(function(m){html+='<div class="msg-log-row"><span class="msg-log-time">'+esc((m.time||'').substring(0,19))+'</span><span class="msg-log-sender">'+esc(m.sender||'')+(m.team?' ['+esc(m.team)+']':'')+'</span><span class="msg-log-body">'+esc((m.body||'').substring(0,130))+(m.photo?'  [photo]':'')+'</span></div>';});html+='</div>';if(all.length>80)html+='<div style="text-align:center;padding:8px;color:var(--text-dim);font-family:var(--font-mono);font-size:10px;">Latest 80 of '+all.length+' messages</div>';html+='</div></div>';}
+  // Narrative
+  var nar='PERIOD: '+df+' to '+dt+' | UNIT: '+su+'\n\nDuring this period, '+tm+' communications were recorded. '+tt+' tasks accomplished, '+tp+' photo reports submitted, and '+ti+' incidents logged.\n\nGenerated by OPM on '+OPM.formatDateTime()+'.';
+  h+='<div class="sec"><div class="sec-hdr">NARRATIVE <span style="font-size:8px;color:var(--text-dim)">EDITABLE</span></div><div class="sec-body"><textarea class="narrative-edit" id="narrative-text">'+esc(nar)+'</textarea><div class="flex gap-sm" style="margin-top:10px"><button class="btn btn-success btn-sm" onclick="SN()">SAVE</button><button class="btn btn-sm" onclick="RN()">RESET</button><span id="nar-saved" style="display:none;font-family:var(--font-mono);font-size:10px;color:var(--success)">SAVED</span></div></div></div>';
 
-  document.getElementById('report-body').innerHTML=html;
-  setTimeout(function(){var cn=document.getElementById('chart-perf');if(cn&&unitNames.length>0){_chart=new Chart(cn,{type:'bar',data:{labels:unitNames,datasets:[{label:'Photo Reports',data:unitPhotos,backgroundColor:colors.slice(0,unitNames.length),borderWidth:0,borderRadius:3},{label:'Tasks',data:unitTasks,backgroundColor:colors.slice(0,unitNames.length).map(function(c){return c+'44';}),borderWidth:0,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6a80b0',font:{family:'Share Tech Mono',size:10}}}},scales:{x:{ticks:{color:'#6a80b0',font:{size:9},maxRotation:45},grid:{color:'#1e326020'}},y:{ticks:{color:'#6a80b0',font:{size:9}},grid:{color:'#1e326030'},beginAtZero:true}}});};var nt=document.getElementById('narrative-text');if(nt){_origNarrative=nt.value;var key='nar_'+su.replace(/[^a-z0-9]/gi,'_')+'_'+(df||'any')+'_'+(dt||'any');var c3=OPM.getConfig();if(c3[key])nt.value=c3[key];}},300);
+  // Comms log
+  if(all.length>0){
+    h+='<div class="sec"><div class="sec-hdr">COMMUNICATIONS LOG ('+all.length+')</div><div class="sec-body"><div class="msg-log">';
+    all.slice().reverse().slice(0,80).forEach(function(m){h+='<div class="msg-log-row"><span class="msg-log-time">'+esc((m.time||'').substring(0,19))+'</span><span class="msg-log-sender">'+esc(m.sender||'')+(m.team?' ['+esc(m.team)+']':'')+'</span><span class="msg-log-body">'+esc((m.body||'').substring(0,130))+(m.photo?' [photo]':'')+'</span></div>'});
+    h+='</div></div></div>';
+  }
+
+  document.getElementById('report-body').innerHTML=h;
+
+  // Chart
+  if(un.length>0){setTimeout(function(){var c=document.getElementById('chart-perf');if(c){_chart=new Chart(c,{type:'bar',data:{labels:un,datasets:[{label:'Photos',data:up,backgroundColor:colors.slice(0,un.length),borderWidth:0,borderRadius:3},{label:'Tasks',data:ut,backgroundColor:colors.slice(0,un.length).map(function(x){return x+'44'}),borderWidth:0,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6a80b0',font:{family:'Share Tech Mono',size:10}}}},scales:{x:{ticks:{color:'#6a80b0',font:{size:9},maxRotation:45},grid:{color:'#1e326020'}},y:{ticks:{color:'#6a80b0',font:{size:9}},grid:{color:'#1e326030'},beginAtZero:true}}})}},300)}
+
+  // Narrative restore
+  var nt=document.getElementById('narrative-text');if(nt){_origNarrative=nt.value;var key='nar_'+su.replace(/[^a-z0-9]/gi,'_')+'_'+(df||'any')+'_'+(dt||'any');var c3=OPM.getConfig();if(c3[key])nt.value=c3[key]}
 }
-}
 
+}
 var _origNarrative='';
-function saveNarrative(){var nt=document.getElementById('narrative-text');if(!nt)return;var su2=document.getElementById('f-unit').value||'ALL UNITS',df2=document.getElementById('f-from').value||'any',dt2=document.getElementById('f-to').value||'any';var c4=OPM.getConfig();c4['nar_'+su2.replace(/[^a-z0-9]/gi,'_')+'_'+df2+'_'+dt2]=nt.value.trim();OPM.saveConfig(c4);document.getElementById('nar-saved').style.display='inline';setTimeout(function(){document.getElementById('nar-saved').style.display='none';},2000);}
-function resetNarrative(){if(_origNarrative)document.getElementById('narrative-text').value=_origNarrative;}
+function SN(){var nt=document.getElementById('narrative-text');if(!nt)return;var su2=document.getElementById('f-unit').value||'ALL UNITS',df2=document.getElementById('f-from').value||'any',dt2=document.getElementById('f-to').value||'any';var c4=OPM.getConfig();c4['nar_'+su2.replace(/[^a-z0-9]/gi,'_')+'_'+df2+'_'+dt2]=nt.value.trim();OPM.saveConfig(c4);document.getElementById('nar-saved').style.display='inline';setTimeout(function(){document.getElementById('nar-saved').style.display='none'},2000)}
+function RN(){if(_origNarrative)document.getElementById('narrative-text').value=_origNarrative}
 
-document.addEventListener('DOMContentLoaded',function(){populateUnits();if(!ensureConfig()){document.getElementById('report-body').innerHTML='<div class="sec"><div class="sec-body empty">Waiting for Commander to load configuration...<br><br><button class="btn btn-warning btn-sm" onclick="refresh()">REFRESH</button></div></div>';return;}setToday();});
+document.addEventListener('DOMContentLoaded',function(){PU();if(!ensureConfig()){document.getElementById('report-body').innerHTML='<div class="sec"><div class="sec-body empty">Waiting for Commander to load configuration...<br><br><button class="btn btn-warning btn-sm" onclick="R()">REFRESH</button></div></div>';return}T()});
 </script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2320e111cda09d4',t:'MTc4NTM5MDMwMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
