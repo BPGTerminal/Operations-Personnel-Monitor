@@ -78,23 +78,25 @@ function loadTab(name){
 }
 function switchTab(name){loadTab(name);}
 
-// Preload Commander first (saves config), then dashboard gets it
+// Start Commander immediately. Dashboard loads after Commander has config.
 loadTab('commander');
 
-// Once Commander is loaded and config is saved, preload dashboard silently
-var _preloadedDashboard = false;
-setTimeout(function checkConfig(){
-  var raw = localStorage.getItem('opm_config_v2') || localStorage.getItem('tms_config');
-  var cfg = null;
-  try { cfg = JSON.parse(raw || '{}'); } catch(e) { cfg = {}; }
-  if (cfg && cfg.sheetUrl && cfg.teams && Array.isArray(cfg.teams) && cfg.teams.length && !_preloadedDashboard) {
-    _preloadedDashboard = true;
-    document.getElementById('iframe-dashboard').src = 'dashboard.html';
-    loaded.dashboard = true;
-  } else if (!_preloadedDashboard) {
-    setTimeout(checkConfig, 1000);
-  }
-}, 2000);
+var _dashLoading = false;
+function tryLoadDash(){
+  if(_dashLoading) return;
+  try{
+    var raw = localStorage.getItem('opm_config_v2') || localStorage.getItem('tms_config');
+    var cfg = JSON.parse(raw||'{}');
+    if(cfg && cfg.sheetUrl && cfg.teams && Array.isArray(cfg.teams) && cfg.teams.length){
+      _dashLoading = true;
+      document.getElementById('iframe-dashboard').src = 'dashboard.html';
+      loaded.dashboard = true;
+    } else {
+      setTimeout(tryLoadDash, 1500);
+    }
+  }catch(e){ setTimeout(tryLoadDash, 1500); }
+}
+setTimeout(tryLoadDash, 3000);
 </script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
 </body>
