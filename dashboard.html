@@ -151,16 +151,11 @@ body{min-height:100vh;display:flex;flex-direction:column;overflow-y:auto;backgro
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 function fmtDT(v){return String(v||'').replace('T',' ');}
-function extractLabeled(body,label){
-  if(!body)return'';
-  var m=body.match(new RegExp(label+':\\s*(.+?)(?:\\n|$)','i'));
-  return m?m[1].trim():'';
-}
+function extractLabeled(body,label){if(!body)return'';var m=body.match(new RegExp(label+':\s*(.+?)(?:\n|$)','i'));return m?m[1].trim():'';}
 function photoDescription(p){return p.photoDesc||p.description||extractLabeled(p.body,'Description')||'Photo report';}
 function photoWhere(p){return p.photoWhere||extractLabeled(p.body,'Where')||p.post||'';}
 function photoWhy(p){return p.photoWhy||extractLabeled(p.body,'Why/Purpose')||extractLabeled(p.body,'Why')||'';}
 function photoCapture(p){return p.captureTime||extractLabeled(p.body,'Captured')||p.time||'';}
-
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 var _chart=null;
@@ -194,22 +189,18 @@ async function refresh(){
   document.getElementById('report-body').innerHTML='<div class="sec"><div class="sec-body empty">Loading report...</div></div>';
   var data=await fetchData();
   document.getElementById('last-upd').textContent='Updated: '+OPM.formatTime();
-
   var selUnit=document.getElementById('f-unit').value||'ALL UNITS';
   var df=document.getElementById('f-from').value||'beginning';
   var dt=document.getElementById('f-to').value||'present';
   var cfg=OPM.getConfig();
-
   document.getElementById('cover-title').textContent=(cfg.eventName||'Operations Report');
   document.getElementById('cover-unit').textContent=selUnit;
   document.getElementById('cover-date').textContent=df+'  '+dt;
   document.getElementById('cover-event').textContent=cfg.unit||cfg.location||'';
-
   if(!data||!data.summary||(data.summary.totalMessages===0&&data.summary.totalPersonnel===0)){
     document.getElementById('report-body').innerHTML='<div class="sec"><div class="sec-body empty">No data for <strong>'+selUnit+'</strong> on <strong>'+df+'  '+dt+'</strong><br><br><button class="btn btn-primary btn-sm" onclick="setToday();">TODAY</button> <button class="btn btn-warning btn-sm" onclick="setThisWeek();">THIS WEEK</button> <button class="btn btn-sm" onclick="refresh();">ALL TIME</button></div></div>';
     return;
   }
-
   build(data,selUnit,df,dt);
 }
 
@@ -236,11 +227,10 @@ function build(data,selUnit,df,dt){
   var unitNames=unitData.map(function(u){return u.team;});
   var unitTasks=unitData.map(function(u){return u.tasks||0;});
   var unitPhotos=unitData.map(function(u){return u.photos||0;});
-  var unitMessages=unitData.map(function(u){return u.messages||0;});
 
   var html='';
 
-  // ── EXECUTIVE SUMMARY ────────────────────
+  // EXECUTIVE SUMMARY
   html+='<div class="sec"><div class="sec-hdr">EXECUTIVE SUMMARY</div><div class="sec-body"><div class="stats-bar">';
   html+='<div class="stat-item"><div class="stat-num">'+totalMsgs+'</div><div class="stat-lbl">Communications</div></div>';
   html+='<div class="stat-item"><div class="stat-num" style="color:var(--success);">'+totalTasks+'</div><div class="stat-lbl">Tasks Accomplished</div></div>';
@@ -250,156 +240,95 @@ function build(data,selUnit,df,dt){
   html+='<div class="stat-item"><div class="stat-num" style="color:var(--success);">'+(selUnit!=='ALL UNITS'?(perTeam[selUnit]||0):s.onlineNow)+'</div><div class="stat-lbl">Currently Active</div></div>';
   html+='</div></div></div>';
 
-  // ── UNIT PERFORMANCE TABLE ───────────────
+  // UNIT PERFORMANCE TABLE
   if(unitNames.length>0){
     html+='<div class="sec"><div class="sec-hdr">UNIT PERFORMANCE BREAKDOWN<span style="font-size:8px;color:var(--text-dim);letter-spacing:0;">PERIOD: '+df+'  '+dt+'</span></div><div class="sec-body">';
     html+='<table class="unit-table"><thead><tr><th></th><th>UNIT / SECTOR</th><th class="num">PHOTO REPORTS</th><th class="num">TASKS</th><th class="num">INCIDENTS</th><th class="num">COMMS</th></tr></thead><tbody>';
     unitData.forEach(function(u,i){
-      html+='<tr><td><span class="dot" style="background:'+(colors[i%7])+'"></span></td><td><strong>'+esc(u.team)+'</strong></td><td class="num">'+(u.photos||0)+'</td><td class="num" style="color:var(--success);">'+(u.tasks||0)+'</td><td class="num" style="color:'+((u.incidents||0)>0?'var(--warning)':'var(--text-dim)')+';">'+(u.incidents||0)+'</td><td class="num">'+(u.messages||0)+'</td></tr>';
+      html+='<tr><td><span class="dot" style="background:'+colors[i%7]+';"></span></td><td><strong>'+esc(u.team)+'</strong></td><td class="num">'+(u.photos||0)+'</td><td class="num" style="color:var(--success);">'+(u.tasks||0)+'</td><td class="num" style="color:'+((u.incidents||0)>0?'var(--warning)':'var(--text-dim)')+';">'+(u.incidents||0)+'</td><td class="num">'+(u.messages||0)+'</td></tr>';
     });
     html+='</tbody></table>';
     html+='<div style="margin-top:16px;height:200px;"><canvas id="chart-perf"></canvas></div>';
     html+='</div></div>';
   }
 
-  // ── INSPECTION REPORTS ────────────────────
-  var inspections = all.filter(function(m){return m.type==='inspection';});
+  // INSPECTION REPORTS
+  var inspections=all.filter(function(m){return m.type==='inspection';});
   if(inspections.length>0){
-    // Build per-unit combined inspection data
-    var unitInspections = {}; // {unitName: {inspector, time, sections: {section: [{label, photos}]}, remarks}}
+    var uiMap={};
     inspections.forEach(function(ins){
-      var team = ins.team || 'UNASSIGNED';
-      if(!unitInspections[team]){
-        unitInspections[team] = {inspector: ins.sender||'', time: ins.time||'', sections: {}, remarks: []};
-      }
-      // Parse photos
-      var photoMap = {};
-      try{
-        var pd = JSON.parse(ins.photo||'[]');
-        if(Array.isArray(pd)){
-          pd.forEach(function(p){
-            photoMap[p.label] = (p.urls||[]).map(function(u){
-              var m2 = (u||'').match(/[?&]id=([a-zA-Z0-9_-]+)/);
-              return {embed: m2 ? 'https://lh3.googleusercontent.com/d/'+m2[1] : u, raw: u};
-            });
-          });
-        }
-      }catch(e){}
-
-      var lines = (ins.body||'').split('\n');
+      var team=ins.team||'UNASSIGNED';
+      if(!uiMap[team])uiMap[team]={inspector:ins.sender||'',time:ins.time||'',sections:{},remarks:[]};
+      var pm={};
+      try{var pd=JSON.parse(ins.photo||'[]');if(Array.isArray(pd))pd.forEach(function(p){pm[p.label]=(p.urls||[]).map(function(u){var m2=(u||'').match(/[?&]id=([a-zA-Z0-9_-]+)/);return{embed:m2?'https://lh3.googleusercontent.com/d/'+m2[1]:u,raw:u};});});}catch(e){}
+      var lines=(ins.body||'').split('
+');
       lines.forEach(function(line){
-        if(line.indexOf('\u2713 ') !== -1){
-          var clean = line.replace('\u2713 ','').trim();
-          var label = clean.replace(/ \(.*\)$/,'');
-          var sec = '';
-          var m3 = clean.match(/\((.+)\)$/);
-          if(m3) sec = m3[1];
-          if(!sec) sec = 'General';
-          if(!unitInspections[team].sections[sec]) unitInspections[team].sections[sec] = [];
-          unitInspections[team].sections[sec].push({label: label, photos: photoMap[label]||[]});
+        if(line.indexOf('✓ ')!==-1){
+          var clean=line.replace('✓ ','').trim();
+          var label=clean.replace(/ \(.*\)$/,'');
+          var sec='';var m3=clean.match(/\((.+)\)$/);if(m3)sec=m3[1];if(!sec)sec='General';
+          if(!uiMap[team].sections[sec])uiMap[team].sections[sec]=[];
+          uiMap[team].sections[sec].push({label:label,photos:pm[label]||[]});
         }
-        if(line.indexOf('Remarks: ') !== -1){
-          unitInspections[team].remarks.push(line.substring(9).trim());
-        }
+        if(line.indexOf('Remarks: ')!==-1)uiMap[team].remarks.push(line.substring(9).trim());
       });
     });
 
-    var unitNames = Object.keys(unitInspections).sort();
-
-    if(unitNames.length > 0){
-      html+='<div class="sec"><div class="sec-hdr">DAILY INSPECTION REPORT'+(unitNames.length>1?'S':'')+' ('+inspections.length+' Inspector'+(inspections.length>1?'s':'')+')</div><div class="sec-body">';
-
-      // Per-unit sections
-      unitNames.forEach(function(unit){
-        var ui = unitInspections[unit];
-        var sectionKeys = Object.keys(ui.sections).sort();
-        var totalUnitItems = 0;
-        sectionKeys.forEach(function(k){totalUnitItems += ui.sections[k].length;});
-
-        html+='<div style="border:2px solid '+(colors[(unitNames.indexOf(unit))%7]||'var(--border-color)')+' ;border-radius:8px;margin-bottom:16px;overflow:hidden;">';
-        html+='<div style="background:rgba(0,0,0,.3);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-color);">';
-        html+='<div><span style="font-size:15px;font-weight:700;color:#fff;">'+esc(unit)+'</span><span style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim);margin-left:10px;">Inspected by: '+esc(ui.inspector)+'</span></div>';
-        html+='<span style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim);">'+esc((ui.time||'').substring(0,19))+'</span></div>';
-
-        html+='<div style="padding:14px 16px;">';
-
-        sectionKeys.forEach(function(sec){
-          html+='<div style="margin-bottom:10px;"><div style="font-family:var(--font-mono);font-size:9px;color:var(--accent);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">'+esc(sec)+'</div>';
-          ui.sections[sec].forEach(function(item){
-            html+='<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.03);">';
-            html+='<div style="font-size:13px;color:var(--text-secondary);"><span style="color:var(--success);font-weight:700;">✓</span> '+esc(item.label)+'</div>';
-            if(item.photos.length>0){
-              html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;margin-left:22px;">';
-              item.photos.forEach(function(ph){
-                html+='<img src="'+esc(ph.embed)+'" style="width:110px;height:82px;object-fit:cover;border-radius:4px;border:1px solid var(--border-color);cursor:pointer;" onclick="window.open(\''+esc(ph.raw)+'\')" loading="lazy">';
-              });
-              html+='</div>';
-            }
+    var unitNames2=Object.keys(uiMap).sort();
+    html+='<div class="sec"><div class="sec-hdr">DAILY INSPECTION REPORT'+(unitNames2.length>1?'S':'')+' ('+inspections.length+' Inspector'+(inspections.length>1?'s':'')+')</div><div class="sec-body">';
+    unitNames2.forEach(function(unit){
+      var ui=uiMap[unit];
+      var sectionKeys=Object.keys(ui.sections).sort();
+      var totalUnitItems=0;sectionKeys.forEach(function(k){totalUnitItems+=ui.sections[k].length;});
+      html+='<div style="border:2px solid '+colors[unitNames2.indexOf(unit)%7]+';border-radius:8px;margin-bottom:16px;overflow:hidden;">';
+      html+='<div style="background:rgba(0,0,0,.3);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-color);">';
+      html+='<div><span style="font-size:15px;font-weight:700;color:#fff;">'+esc(unit)+'</span><span style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim);margin-left:10px;">Inspected by: '+esc(ui.inspector)+'</span></div>';
+      html+='<span style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim);">'+esc((ui.time||'').substring(0,19))+'</span></div>';
+      html+='<div style="padding:14px 16px;">';
+      sectionKeys.forEach(function(sec){
+        html+='<div style="margin-bottom:10px;"><div style="font-family:var(--font-mono);font-size:9px;color:var(--accent);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">'+esc(sec)+'</div>';
+        ui.sections[sec].forEach(function(item){
+          html+='<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.03);">';
+          html+='<div style="font-size:13px;color:var(--text-secondary);"><span style="color:var(--success);font-weight:700;">✓</span> '+esc(item.label)+'</div>';
+          if(item.photos.length>0){
+            html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;margin-left:22px;">';
+            item.photos.forEach(function(ph){html+='<img src="'+esc(ph.embed)+'" style="width:110px;height:82px;object-fit:cover;border-radius:4px;border:1px solid var(--border-color);cursor:pointer;" onclick="window.open(''+esc(ph.raw)+'')" loading="lazy">';});
             html+='</div>';
-          });
+          }
           html+='</div>';
         });
-
-        // Unit remarks
-        if(ui.remarks.length>0){
-          html+='<div style="margin-top:8px;padding:10px 12px;background:rgba(255,170,0,.06);border-left:3px solid var(--warning);border-radius:0 4px 4px 0;">';
-          html+='<div style="font-family:var(--font-mono);font-size:9px;color:var(--warning);letter-spacing:1px;margin-bottom:4px;">REMARKS</div>';
-          ui.remarks.forEach(function(r){html+='<div style="font-size:12px;color:var(--text-secondary);font-style:italic;">'+esc(r)+'</div>';});
-          html+='</div>';
-        }
-
-        // Per-unit mini-narrative
-        html+='<div style="margin-top:10px;font-size:12px;color:var(--text-dim);line-height:1.6;">';
-        html+=esc(unit)+' conducted a comprehensive inspection of '+totalUnitItems+' items across '+sectionKeys.length+' categor'+(sectionKeys.length>1?'ies':'y')+'. ';
-        html+='All '+totalUnitItems+' inspected items were found satisfactory and in compliance with terminal standards.';
-        if(ui.remarks.length>0) html+=' '+ui.remarks.length+' observation'+(ui.remarks.length>1?'s':'')+' '+ (ui.remarks.length>1?'were':'was')+' noted for follow-up.';
         html+='</div>';
-
-        html+='</div></div>';
       });
-
-      // Combined narrative summary at the bottom
-      var grandTotal = 0, totalRemarks = 0;
-      unitNames.forEach(function(u){var ui2=unitInspections[u];Object.keys(ui2.sections).forEach(function(k){grandTotal+=ui2.sections[k].length;});totalRemarks+=ui2.remarks.length;});
-      var allCats = [];
-      unitNames.forEach(function(u){Object.keys(unitInspections[u].sections).forEach(function(k){if(allCats.indexOf(k)<0)allCats.push(k);});});
-
-      html+='<div class="narrative" style="margin-top:8px;">';
-      html+='<h3>CONSOLIDATED INSPECTION FINDINGS</h3>';
-      html+='<p>';
-      html+='On '+(df||'this date')+', a total of <strong>'+inspections.length+' inspection'+(inspections.length>1?'s':'')+'</strong> '+(inspections.length>1?'were':'was')+' conducted covering <strong>'+unitNames.length+' unit'+(unitNames.length>1?'s':'')+'</strong> — '+unitNames.map(function(u){return unitInspections[u].inspector+' ('+u+')';}).join(', ')+'. ';
-      html+='Collectively, <strong>'+grandTotal+' checklist items</strong> were inspected and passed across <strong>'+allCats.length+' inspection categories</strong>: '+allCats.join(', ')+'. ';
-      if(totalRemarks>0){
-        html+='<strong>'+totalRemarks+' observation'+(totalRemarks>1?'s':'')+'</strong> '+(totalRemarks>1?'were':'was')+' recorded during these inspections. ';
+      if(ui.remarks.length>0){
+        html+='<div style="margin-top:8px;padding:10px 12px;background:rgba(255,170,0,.06);border-left:3px solid var(--warning);border-radius:0 4px 4px 0;">';
+        html+='<div style="font-family:var(--font-mono);font-size:9px;color:var(--warning);letter-spacing:1px;margin-bottom:4px;">REMARKS</div>';
+        ui.remarks.forEach(function(r){html+='<div style="font-size:12px;color:var(--text-secondary);font-style:italic;">'+esc(r)+'</div>';});
+        html+='</div>';
       }
-      html+='No critical deficiencies or safety hazards requiring immediate command intervention were identified. All units demonstrated compliance with terminal policies, operational standards, and maintenance protocols. ';
-      html+='The inspection findings indicate that daily operations are being conducted in accordance with BPGT/LGU rules and regulations. ';
-      if(totalRemarks>0){
-        html+='Minor observations noted by inspectors should be addressed by the respective unit heads within their regular duty cycles.';
-      }
-      html+='</p>';
-      html+='</div>';
-
+      html+='<div style="margin-top:10px;font-size:12px;color:var(--text-dim);line-height:1.6;">'+esc(unit)+' conducted inspection of '+totalUnitItems+' items across '+sectionKeys.length+' categor'+(sectionKeys.length>1?'ies':'y')+'. All items satisfactory.'+(ui.remarks.length>0?' '+ui.remarks.length+' observation(s) noted.':'')+'</div>';
       html+='</div></div>';
-    }
+    });
 
-  // ── PHOTO REPORT INDEX ───────────────────
+    // Consolidated findings
+    var grandTotal=0,totalR=0,allCats=[];
+    unitNames2.forEach(function(u){var ui2=uiMap[u];Object.keys(ui2.sections).forEach(function(k){grandTotal+=ui2.sections[k].length;if(allCats.indexOf(k)<0)allCats.push(k);});totalR+=ui2.remarks.length;});
+    html+='<div class="narrative" style="margin-top:8px;"><h3>CONSOLIDATED INSPECTION FINDINGS</h3><p>On '+(df||'this date')+', <strong>'+inspections.length+' inspection'+(inspections.length>1?'s':'')+'</strong> '+(inspections.length>1?'were':'was')+' conducted across '+unitNames2.length+' unit(s): '+unitNames2.map(function(u){return uiMap[u].inspector+' ('+u+')';}).join(', ')+'. Collectively <strong>'+grandTotal+' checklist items</strong> inspected across '+allCats.length+' categories: '+allCats.join(', ')+'. ';
+    if(totalR>0)html+='<strong>'+totalR+' observation(s)</strong> were recorded. ';
+    html+='No critical deficiencies requiring immediate command intervention were identified. All units demonstrated compliance with terminal policies and standards.</p></div>';
+    html+='</div></div>';
+  }
 
-  // ── PHOTO REPORT INDEX ───────────────────
+  // PHOTO REPORT INDEX
   if(photos.length>0){
-    // Group photos by unit
     var byUnit={};photos.forEach(function(p){var u=p.team||'UNASSIGNED';if(!byUnit[u])byUnit[u]=[];byUnit[u].push(p);});
-
     html+='<div class="sec"><div class="sec-hdr">PHOTO REPORT INDEX ('+photos.length+')</div><div class="sec-body">';
     Object.keys(byUnit).sort().forEach(function(unit){
-      html+='<div class="photo-index"><h4 style="color:'+(colors[unitNames.indexOf(unit)%7]||'var(--accent)')+';">'+esc(unit)+' ('+byUnit[unit].length+' reports)</h4>';
+      html+='<div class="photo-index"><h4 style="color:'+colors[unitNames.indexOf(unit)%7]+';">'+esc(unit)+' ('+byUnit[unit].length+' reports)</h4>';
       html+='<div class="photo-index-grid">';
       byUnit[unit].forEach(function(p,i){
-        html+='<div class="photo-index-item">';
-        html+='<div class="photo-index-num">#'+(i+1)+'</div>';
-        html+='<div><div class="photo-index-desc">'+esc(photoDescription(p))+'</div>';
-        var w=photoWhere(p);
-        if(w)html+='<div class="photo-index-where">'+esc(w)+'</div>';
+        html+='<div class="photo-index-item"><div class="photo-index-num">#'+(i+1)+'</div><div><div class="photo-index-desc">'+esc(photoDescription(p))+'</div>';
+        var w=photoWhere(p);if(w)html+='<div class="photo-index-where">'+esc(w)+'</div>';
         html+='</div></div>';
       });
       html+='</div></div>';
@@ -407,129 +336,104 @@ function build(data,selUnit,df,dt){
     html+='</div></div>';
   }
 
-  // ── PHOTO GALLERY (large format) ─────────
+  // FIELD PHOTO DOCUMENTATION (editable)
   if(photos.length>0){
-    html+='<div class="sec"><div class="sec-hdr">FIELD PHOTO DOCUMENTATION ('+photos.length+')</div><div class="sec-body">';
-    html+='<div class="photo-gallery">';
+    html+='<div class="sec"><div class="sec-hdr">FIELD PHOTO DOCUMENTATION ('+photos.length+')</div><div class="sec-body"><div class="photo-gallery">';
     photos.slice(0,20).forEach(function(p,i){
       var m=(p.url||'').match(/[?&]id=([a-zA-Z0-9_-]+)/);
       var embed=m?'https://lh3.googleusercontent.com/d/'+m[1]:p.url;
-      var desc=photoDescription(p);
-      var where=photoWhere(p);
-      var why=photoWhy(p);
-      var cap=photoCapture(p);
+      var desc=photoDescription(p),where=photoWhere(p),why=photoWhy(p),cap=photoCapture(p);
       var unitColor=colors[unitNames.indexOf(p.team)%7]||'var(--accent)';
-
-      var pid = 'photox_'+i;
-      html+='<div class="photo-report-card" id="'+pid+'">';
-      // Photo side
-      html+='<div class="photo-side" onclick="window.open(\''+esc(p.url)+'\')" title="Click to open full photo">';
-      html+='<img src="'+esc(embed)+'" loading="lazy" onerror="this.parentElement.style.display=\'none\'">';
+      var pid='photox_'+i;
+      html+='<div class="photo-report-card" data-photoid="'+pid+'">';
+      html+='<div class="photo-side" onclick="window.open(''+esc(p.url)+'')" title="Click to open full photo">';
+      html+='<img src="'+esc(embed)+'" loading="lazy" onerror="this.parentElement.style.display='none'">';
       html+='<span class="photo-badge" style="background:'+unitColor+';color:#000;">'+esc(p.team||'')+'</span>';
-      html+='<span class="photo-index-badge">#'+(i+1)+'</span>';
-      html+='</div>';
-      // Info side — EDITABLE
+      html+='<span class="photo-index-badge">#'+(i+1)+'</span></div>';
       html+='<div class="info-side">';
-      html+='<textarea class="photo-edit-desc" id="'+pid+'_desc" data-original="'+esc(desc)+'" onchange="markPhotoEdited(\''+pid+'\')">'+esc(desc)+'</textarea>';
+      html+='<textarea class="photo-edit-desc" data-photofield="desc" data-original="'+esc(desc)+'">'+esc(desc)+'</textarea>';
       html+='<div class="field-row">';
-      html+='<span class="field-key">Location</span><input class="photo-edit-input" id="'+pid+'_where" value="'+esc(where)+'" data-original="'+esc(where)+'" onchange="markPhotoEdited(\''+pid+'\')">';
-      html+='<span class="field-key">Captured</span><input class="photo-edit-input" id="'+pid+'_cap" value="'+esc(fmtDT(cap))+'" data-original="'+esc(fmtDT(cap))+'" onchange="markPhotoEdited(\''+pid+'\')">';
+      html+='<span class="field-key">Location</span><input class="photo-edit-input" data-photofield="where" value="'+esc(where)+'" data-original="'+esc(where)+'">';
+      html+='<span class="field-key">Captured</span><input class="photo-edit-input" data-photofield="cap" value="'+esc(fmtDT(cap))+'" data-original="'+esc(fmtDT(cap))+'" placeholder="YYYY-MM-DD HH:MM">';
       html+='<span class="field-key">Unit</span><span class="field-val" style="color:'+unitColor+';font-weight:600;">'+esc(p.team||'')+'</span>';
-      html+='<span class="field-key">By</span><span class="field-val">'+esc(p.sender||'')+'</span>';
-      html+='</div>';
-      html+='<textarea class="photo-edit-purpose" id="'+pid+'_why" placeholder="Why / Purpose..." data-original="'+esc(why)+'" onchange="markPhotoEdited(\''+pid+'\')">'+esc(why)+'</textarea>';
-      html+='<div class="photo-edit-indicator" id="'+pid+'_indicator" style="display:none;font-family:var(--font-mono);font-size:8px;color:var(--warning);margin-top:4px;">EDITED</div>';
+      html+='<span class="field-key">By</span><span class="field-val">'+esc(p.sender||'')+'</span></div>';
+      html+='<textarea class="photo-edit-purpose" data-photofield="why" data-original="'+esc(why)+'" placeholder="Why / Purpose...">'+esc(why)+'</textarea>';
+      html+='<div class="photo-edit-indicator" style="display:none;font-family:var(--font-mono);font-size:8px;color:var(--warning);margin-top:4px;">EDITED</div>';
       html+='</div></div>';
     });
     html+='</div>';
-    if(photos.length>20)html+='<div style="text-align:center;padding:14px;color:var(--text-dim);font-family:var(--font-mono);font-size:10px;">Showing 20 of '+photos.length+' photo reports. Full catalog available in Photo Report Index above.</div>';
+    if(photos.length>20)html+='<div style="text-align:center;padding:14px;color:var(--text-dim);font-family:var(--font-mono);font-size:10px;">Showing 20 of '+photos.length+' photo reports.</div>';
     html+='</div></div>';
   }
 
-  // ── NARRATIVE (rich paragraph incorporating all report data) ──
-  var narrativeAuto = '';
-  narrativeAuto += 'PERIOD: ' + df + ' to ' + dt + ' | UNIT: ' + selUnit + '\n\n';
-  narrativeAuto += 'For the reporting period, operations were conducted with ' + s.totalPersonnel + ' personnel deployed across ' + Object.keys(perTeam).length + ' units, of which ' + s.onlineNow + ' were logged as actively online at the time of this report. ';
-  narrativeAuto += 'A total of ' + totalMsgs + ' communications were exchanged, comprising ' + totalTasks + ' task accomplishments, ' + totalPhotos + ' photo reports, and ' + totalIncs + ' incidents logged.\n\n';
+  // NARRATIVE
+  var narrativeAuto='PERIOD: '+df+' to '+dt+' | UNIT: '+selUnit+'
 
-  // Unit-by-unit breakdown
-  if (unitNames.length > 1 || (unitNames.length === 1 && selUnit === 'ALL UNITS')) {
-    narrativeAuto += 'The following summarizes the performance of each unit during the period:\n\n';
-    unitData.forEach(function(u) {
-      var t2 = u.tasks || 0, p2 = u.photos || 0, i2 = u.incidents || 0, m2 = u.messages || 0;
-      narrativeAuto += u.team + ': ' + t2 + ' task' + (t2 !== 1 ? 's' : '') + ' accomplished, ' + p2 + ' photo report' + (p2 !== 1 ? 's' : '') + ' submitted' + (i2 > 0 ? ', ' + i2 + ' incident' + (i2 !== 1 ? 's' : '') + ' logged' : '') + ', and ' + m2 + ' communication' + (m2 !== 1 ? 's' : '') + ' exchanged.\n';
-    });
-    narrativeAuto += '\n';
+';
+  narrativeAuto+='For the reporting period, operations were conducted with '+s.totalPersonnel+' personnel deployed across '+Object.keys(perTeam).length+' units, of which '+s.onlineNow+' were logged as actively online. A total of '+totalMsgs+' communications were exchanged, comprising '+totalTasks+' task accomplishments, '+totalPhotos+' photo reports, and '+totalIncs+' incidents logged.
+
+';
+  if(unitNames.length>1||(unitNames.length===1&&selUnit==='ALL UNITS')){
+    narrativeAuto+='Unit performance summary:
+
+';
+    unitData.forEach(function(u){narrativeAuto+=u.team+': '+(u.tasks||0)+' task(s), '+(u.photos||0)+' photo(s)'+((u.incidents||0)>0?', '+(u.incidents||0)+' incident(s)':'')+', '+(u.messages||0)+' communication(s).
+';});
+    narrativeAuto+='
+';
   }
+  if(photos.length>0){
+    narrativeAuto+='Photo reports documented the following:
 
-  // Photo report descriptions
-  if (photos.length > 0) {
-    narrativeAuto += 'Photo reports submitted from the field documented the following:\n\n';
-    var photoByUnit = {};
-    photos.forEach(function(p) {
-      var u = p.team || 'UNASSIGNED';
-      if (!photoByUnit[u]) photoByUnit[u] = [];
-      photoByUnit[u].push(p);
-    });
-    Object.keys(photoByUnit).sort().forEach(function(unit) {
-      var unitPhotos = photoByUnit[unit];
-      narrativeAuto += unit + ':\n';
-      unitPhotos.slice(0, 5).forEach(function(p) {
-        var desc = photoDescription(p) || 'Photo report';
-        var where = photoWhere(p);
-        narrativeAuto += '  - ' + desc + (where ? ' at ' + where : '') + ' (by ' + (p.sender || 'Unknown') + ')\n';
-      });
-      if (unitPhotos.length > 5) narrativeAuto += '  - ... and ' + (unitPhotos.length - 5) + ' more photo reports\n';
-      narrativeAuto += '\n';
+';
+    var pub={};photos.forEach(function(p){var u=p.team||'UNASSIGNED';if(!pub[u])pub[u]=[];pub[u].push(p);});
+    Object.keys(pub).sort().forEach(function(unit){
+      narrativeAuto+=unit+':
+';
+      pub[unit].slice(0,5).forEach(function(p){narrativeAuto+='  - '+photoDescription(p)+(photoWhere(p)?' at '+photoWhere(p):'')+' (by '+p.sender+')
+';});
+      if(pub[unit].length>5)narrativeAuto+='  - ... and '+(pub[unit].length-5)+' more
+';
+      narrativeAuto+='
+';
     });
   }
-
-  // Inspection results
-  var inspections = all.filter(function(m){return m.type==='inspection';});
-  if (inspections.length > 0) {
-    narrativeAuto += 'Daily inspections were conducted by unit supervisors. The following inspection reports were submitted:\n\n';
-    inspections.slice().reverse().forEach(function(ins) {
-      var lines = (ins.body || '').split('\n');
-      narrativeAuto += ins.sender + ' (' + ins.team + ') conducted an inspection. ';
-      var items = [];
-      var remarks = '';
-      lines.forEach(function(line) {
-        if (line.indexOf('\u2713 ') !== -1) items.push(line.replace('\u2713 ', '').trim());
-        if (line.indexOf('Remarks: ') !== -1) remarks = line.substring(9).trim();
-      });
-      narrativeAuto += items.length + ' item' + (items.length !== 1 ? 's' : '') + ' inspected: ' + items.map(function(it) { return it.replace(/ \(.*\)$/, ''); }).join('; ') + '.';
-      if (remarks) narrativeAuto += ' Remarks: ' + remarks;
-      narrativeAuto += '\n\n';
+  if(inspections.length>0){
+    narrativeAuto+='Daily inspections were conducted by unit supervisors. ';
+    inspections.slice().reverse().forEach(function(ins){
+      var lines=(ins.body||'').split('
+'),items=[],remarks='';
+      lines.forEach(function(l){if(l.indexOf('✓ ')!==-1)items.push(l.replace('✓ ','').trim().replace(/ \(.*\)$/,''));if(l.indexOf('Remarks: ')!==-1)remarks=l.substring(9).trim();});
+      narrativeAuto+=ins.sender+' ('+ins.team+'): '+items.length+' items inspected';
+      if(items.length>0)narrativeAuto+=' ('+items.slice(0,3).join('; ')+(items.length>3?'; ...':'')+')';
+      if(remarks)narrativeAuto+='. Remarks: '+remarks;
+      narrativeAuto+='. ';
     });
-  }
+    narrativeAuto+='
 
-  // Incidents
-  if (totalIncs > 0) {
-    narrativeAuto += 'A total of ' + totalIncs + ' incident' + (totalIncs !== 1 ? 's' : '') + ' ' + (totalIncs !== 1 ? 'were' : 'was') + ' logged during the reporting period. All incidents were properly documented and addressed by the respective unit. Details are available in the Communications Log section of this report.\n\n';
+';
   }
+  if(totalIncs>0)narrativeAuto+='A total of '+totalIncs+' incident(s) were logged. All properly documented.
 
-  // Closing
-  narrativeAuto += 'This report was generated by the Operations Personnel Monitor (OPM) system on ' + OPM.formatDateTime() + '. All data presented herein is based on real-time field reports submitted by personnel through the OPM mobile application and verified by unit supervisors. For any discrepancies or clarifications, please contact the undersigned.\n\n';
-  var cfg3 = OPM.getConfig();
-  narrativeAuto += 'Prepared by:\n' + (cfg3.commander || 'Commander') + '\n' + (cfg3.unit || '(Unit/EOC Name)') + '\n' + (cfg3.location || '');
+';
+  var cfg3=OPM.getConfig();
+  narrativeAuto+='This report was generated by the OPM system on '+OPM.formatDateTime()+'. All data is based on real-time field reports and verified by unit supervisors.
+
+Prepared by:
+'+(cfg3.commander||'Commander')+'
+'+(cfg3.unit||'(Unit)')+'
+'+(cfg3.location||'');
 
   html+='<div class="sec"><div class="sec-hdr">OPERATIONS NARRATIVE <span style="font-size:8px;color:var(--text-dim);letter-spacing:0;">EDITABLE  SAVE BEFORE PRINTING</span></div><div class="sec-body">';
   html+='<textarea class="narrative-edit" id="narrative-text">'+esc(narrativeAuto)+'</textarea>';
-  html+='<div class="flex gap-sm" style="margin-top:10px;">';
-  html+='<button class="btn btn-success btn-sm" onclick="saveNarrative()">SAVE NARRATIVE</button>';
-  html+='<button class="btn btn-sm" onclick="resetNarrative()">RESET</button>';
-  html+='<span id="nar-saved" style="display:none;font-family:var(--font-mono);font-size:10px;color:var(--success);align-self:center;">SAVED</span>';
-  html+='</div></div></div>';
+  html+='<div class="flex gap-sm" style="margin-top:10px;"><button class="btn btn-success btn-sm" onclick="saveNarrative()">SAVE NARRATIVE</button><button class="btn btn-sm" onclick="resetNarrative()">RESET</button><span id="nar-saved" style="display:none;font-family:var(--font-mono);font-size:10px;color:var(--success);align-self:center;">SAVED</span></div>';
+  html+='</div></div>';
 
-  // ── MESSAGE LOG ──────────────────────────
+  // COMMUNICATIONS LOG
   if(all.length>0){
-    html+='<div class="sec"><div class="sec-hdr">COMMUNICATIONS LOG ('+all.length+')</div><div class="sec-body">';
-    html+='<div class="msg-log">';
-    all.slice().reverse().slice(0,80).forEach(function(m){
-      html+='<div class="msg-log-row"><span class="msg-log-time">'+esc((m.time||'').substring(0,19))+'</span><span class="msg-log-sender">'+esc(m.sender||'')+(m.team?' ['+esc(m.team)+']':'')+'</span><span class="msg-log-body">'+esc((m.body||'').substring(0,130))+(m.photo?'  [photo]':'')+'</span></div>';
-    });
-    html+='</div>';
-    if(all.length>80)html+='<div style="text-align:center;padding:8px;color:var(--text-dim);font-family:var(--font-mono);font-size:10px;">Latest 80 of '+all.length+' messages</div>';
+    html+='<div class="sec"><div class="sec-hdr">COMMUNICATIONS LOG ('+all.length+')</div><div class="sec-body"><div class="msg-log">';
+    all.slice().reverse().slice(0,80).forEach(function(m){html+='<div class="msg-log-row"><span class="msg-log-time">'+esc((m.time||'').substring(0,19))+'</span><span class="msg-log-sender">'+esc(m.sender||'')+(m.team?' ['+esc(m.team)+']':'')+'</span><span class="msg-log-body">'+esc((m.body||'').substring(0,130))+(m.photo?'  [photo]':'')+'</span></div>';});
+    html+='</div>';if(all.length>80)html+='<div style="text-align:center;padding:8px;color:var(--text-dim);font-family:var(--font-mono);font-size:10px;">Latest 80 of '+all.length+' messages</div>';
     html+='</div></div>';
   }
 
@@ -542,56 +446,50 @@ function build(data,selUnit,df,dt){
       _chart=new Chart(canvas,{type:'bar',data:{labels:unitNames,datasets:[
         {label:'Photo Reports',data:unitPhotos,backgroundColor:colors.slice(0,unitNames.length),borderWidth:0,borderRadius:3},
         {label:'Tasks',data:unitTasks,backgroundColor:colors.slice(0,unitNames.length).map(function(c){return c+'44';}),borderWidth:0,borderRadius:3}
-      ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6a80b0',font:{family:'Share Tech Mono',size:10}}}},scales:{x:{ticks:{color:'#6a80b0',font:{size:9},maxRotation:45},grid:{color:'#1e326020'}},y:{ticks:{color:'#6a80b0',font:{size:9}},grid:{color:'#1e326030'},beginAtZero:true}}}});
+      ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6a80b0',font:{family:'Share Tech Mono',size:10}}}},scales:{x:{ticks:{color:'#6a80b0',font:{size:9},maxRotation:45},grid:{color:'#1e326020'}},y:{ticks:{color:'#6a80b0',font:{size:9}},grid:{color:'#1e326030'},beginAtZero:true}}});
     }
-    // Saved narrative
     var nt=document.getElementById('narrative-text');
-    if(nt){_origNarrative=nt.value;var key='nar_'+selUnit.replace(/[^a-z0-9]/gi,'_')+'_'+(df||'any')+'_'+(dt||'any');var cfg2=OPM.getConfig();if(cfg2[key])nt.value=cfg2[key];}
+    if(nt){_origNarrative=nt.value;var key='nar_'+selUnit.replace(/[^a-z0-9]/gi,'_')+'_'+(df||'any')+'_'+(dt||'any');var c2=OPM.getConfig();if(c2[key])nt.value=c2[key];}
   },300);
 }
+
+// Photo edit event delegation
+document.addEventListener('input',function(e){
+  var el=e.target.closest('[data-photofield]');if(!el)return;
+  var card=el.closest('[data-photoid]');if(!card)return;
+  var pid=card.dataset.photoid;
+  var ind=card.querySelector('.photo-edit-indicator');
+  if(ind){ind.style.display='inline';ind.textContent='EDITED';ind.style.color='var(--warning)';}
+  if(window._pts)clearTimeout(window._pts[pid]);
+  if(!window._pts)window._pts={};
+  window._pts[pid]=setTimeout(function(){
+    var de=card.querySelector('[data-photofield="desc"]');
+    var we=card.querySelector('[data-photofield="where"]');
+    var ce=card.querySelector('[data-photofield="cap"]');
+    var ye=card.querySelector('[data-photofield="why"]');
+    if(!de)return;
+    var c3=OPM.getConfig();if(!c3._pe)c3._pe={};
+    c3._pe[pid]={desc:de.value,where:we?we.value:'',cap:ce?ce.value:'',why:ye?ye.value:''};
+    OPM.saveConfig(c3);
+    if(ind){ind.textContent='✓ SAVED';ind.style.color='var(--success)';}
+    setTimeout(function(){if(ind)ind.style.display='none';},2500);
+  },1500);
+});
 
 var _origNarrative='';
 function saveNarrative(){
   var nt=document.getElementById('narrative-text');if(!nt)return;
-  var selUnit=document.getElementById('f-unit').value||'ALL UNITS';
-  var df=document.getElementById('f-from').value||'any',dt=document.getElementById('f-to').value||'any';
-  var cfg=OPM.getConfig();cfg['nar_'+selUnit.replace(/[^a-z0-9]/gi,'_')+'_'+df+'_'+dt]=nt.value.trim();OPM.saveConfig(cfg);
-  document.getElementById('nar-saved').style.display='inline';
-  setTimeout(function(){document.getElementById('nar-saved').style.display='none';},2000);
+  var su=document.getElementById('f-unit').value||'ALL UNITS';
+  var df2=document.getElementById('f-from').value||'any',dt2=document.getElementById('f-to').value||'any';
+  var c4=OPM.getConfig();c4['nar_'+su.replace(/[^a-z0-9]/gi,'_')+'_'+df2+'_'+dt2]=nt.value.trim();OPM.saveConfig(c4);
+  document.getElementById('nar-saved').style.display='inline';setTimeout(function(){document.getElementById('nar-saved').style.display='none';},2000);
 }
 function resetNarrative(){if(_origNarrative)document.getElementById('narrative-text').value=_origNarrative;}
 
-// Photo edit tracking
-function markPhotoEdited(pid){
-  var ind = document.getElementById(pid+'_indicator');
-  if(ind) ind.style.display = 'inline';
-  // Auto-save after 1.5 seconds of no typing
-  if(window._photoSaveTimers) clearTimeout(window._photoSaveTimers[pid]);
-  if(!window._photoSaveTimers) window._photoSaveTimers = {};
-  window._photoSaveTimers[pid] = setTimeout(function(){
-    var descEl = document.getElementById(pid+'_desc');
-    var whereEl = document.getElementById(pid+'_where');
-    var capEl = document.getElementById(pid+'_cap');
-    var whyEl = document.getElementById(pid+'_why');
-    if(!descEl) return;
-    var cfg = OPM.getConfig();
-    if(!cfg._photoEdits) cfg._photoEdits = {};
-    cfg._photoEdits[pid] = {
-      desc: descEl.value, where: whereEl ? whereEl.value : '',
-      cap: capEl ? capEl.value : '', why: whyEl ? whyEl.value : '',
-      originalDesc: descEl.dataset.original || '',
-      originalWhere: whereEl ? (whereEl.dataset.original || '') : '',
-      originalWhy: whyEl ? (whyEl.dataset.original || '') : ''
-    };
-    OPM.saveConfig(cfg);
-    if(ind) ind.textContent = '✓ SAVED';
-    if(ind) ind.style.color = 'var(--success)';
-    setTimeout(function(){ if(ind) ind.style.display = 'none'; }, 2000);
-  }, 1500);
-}
-
 document.addEventListener('DOMContentLoaded',function(){populateUnits();setToday();});
+};
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a229bbbdbd0bbd83',t:'MTc4NTMwMzA0NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
+
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2308bd52ea69590',t:'MTc4NTM3NDQ4Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
 </body>
 </html>
