@@ -4,7 +4,7 @@
    network-first for HTML, bypass for API endpoints.
    ═══════════════════════════════════════════════════════════════ */
 
-const CACHE_VERSION = 'opm-v5';
+const CACHE_VERSION = 'opm-v6';
 const CACHE_NAME_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_NAME_DYNAMIC = `${CACHE_VERSION}-dynamic`;
 
