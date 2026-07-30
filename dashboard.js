@@ -9,7 +9,7 @@ function pW(p){return p.photoWhere||exL(p.body,"Where")||p.post||""}
 function pY(p){return p.photoWhy||exL(p.body,"Why/Purpose")||exL(p.body,"Why")||""}
 function pC(p){return p.captureTime||exL(p.body,"Captured")||p.time||""}
 
-function G(){try{var r=localStorage.getItem("opm_config_v2")||localStorage.getItem("tms_config");var c=r?JSON.parse(r):{};return(c&&c.sheetUrl&&c.teams&&Array.isArray(c.teams)&&c.teams.length)?c:null}catch(e){return null}}
+function G(){try{var r=localStorage.getItem("opm_config_v2")||localStorage.getItem("tms_config");var c=r?JSON.parse(r):{};if(c&&c.sheetUrl){if(!c.teams||!Array.isArray(c.teams)||!c.teams.length){c.teams=[]}return c}return null}catch(e){return null}}
 
 function PU(){var cfg=G()||{};var t=Array.isArray(cfg.teams)?cfg.teams:[];var s=document.getElementById("unit");if(!s)return;s.innerHTML='<option value="">ALL UNITS</option>';t.forEach(function(v){var o=document.createElement("option");o.value=v.name;o.textContent=v.name;s.appendChild(o)})}
 
@@ -25,7 +25,7 @@ async function R(){
   document.getElementById("content").innerHTML='<div class="card"><div class="card-body empty">Loading report...</div></div>';
   var data=await Q();
   var su=document.getElementById("unit").value||"ALL UNITS",df=document.getElementById("from").value||"beginning",dt=document.getElementById("to").value||"present";
-  var c2=OPM.getConfig();document.getElementById("cover-title").textContent=(c2.eventName||"TERMINAL OPERATIONS AND MANAGEMENT REPORT");document.getElementById("cover-sub").textContent=(c2.location||"BROOKE'S POINT GOVERNMENT TERMINAL");
+  var c2=OPM.getConfig();document.getElementById("cover-title").textContent=(c2.eventName||"TERMINAL OPERATIONS AND MANAGEMENT REPORT");document.getElementById("cover-sub").textContent=(c2.location||"BROOKE'S POINT GRAND TERMINAL");
   if(!data||!data.summary||(data.summary.totalMessages===0&&data.summary.totalPersonnel===0)){document.getElementById("content").innerHTML='<div class="card"><div class="card-body empty">No data for <strong>'+esc(su)+'</strong> from <strong>'+esc(df)+'</strong> to <strong>'+esc(dt)+'</strong><br><br><button class="btn btn-sm" onclick="T()">TODAY</button> <button class="btn btn-sm" onclick="R()">ALL TIME</button></div></div>';return}
   B(data,su,df,dt)
 }
@@ -87,4 +87,5 @@ function SN(){var nt=document.getElementById("nar-text");if(!nt)return;var su2=d
 function RN(){if(_narOrig)document.getElementById("nar-text").value=_narOrig}
 
 document.addEventListener("DOMContentLoaded",function(){PU();var cfg=G();if(!cfg){document.getElementById("content").innerHTML='<div class="card"><div class="card-body empty">No backend configured.<br><br>Open <a href="admin.html" style="color:var(--accent)">Admin page</a> and save settings first.</div></div>';return}setTimeout(function(){T()},300)});
+console.log('[DASH] dashboard.js loaded');
 }
