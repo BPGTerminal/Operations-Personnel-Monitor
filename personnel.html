@@ -189,18 +189,29 @@ var INSPECTION_FORMS={
       {id:'tf_highway',label:'Highway corridor checkpoints operational'},
       {id:'tf_coordination',label:'TF coordination with PNP/HPG conducted'}]}
   ]},
-  'ADMINISTRATIVE UNIT':{title:'ADMINISTRATION INSPECTION',groups:[
-    {title:'Personnel Inspection',items:[
-      {id:'personnel_present',label:'All scheduled personnel present and at posts'},
-      {id:'uniform_compliance',label:'Personnel wearing proper uniform and ID'},
-      {id:'attendance_logged',label:'Attendance/time log properly recorded'},
-      {id:'admin_staff_tasked',label:'Admin staff assigned and performing clerical duties'},
-      {id:'grooming_standards',label:'Personnel meet grooming and appearance standards'}]},
-    {title:'Watchmen & Security',items:[
-      {id:'watchmen_present',label:'Watchmen at designated posts'},
-      {id:'logbook_checked',label:'Watchmen log books reviewed — entries complete'},
-      {id:'incidents_logged',label:'Any incidents/hazards properly logged'},
-      {id:'facility_condition',label:'Facilities checked — no urgent repairs needed'}]}
+  'ADMINISTRATIVE UNIT':{title:'ADMINISTRATOR GRAND INSPECTION',groups:[
+    {title:'Terminal Bays & Transport (Operations)',items:[
+      {id:'ad_bays',label:'Transport groups properly organized in bays'},
+      {id:'ad_dispatch',label:'Dispatch schedules being followed'},
+      {id:'ad_traffic',label:'Traffic flow within terminal is orderly'},
+      {id:'ad_parking',label:'Vehicles parked in designated areas'},
+      {id:'ad_tf_deployed',label:'Task Force personnel deployed at posts'},
+      {id:'ad_citations',label:'Citation tickets properly issued and recorded'},
+      {id:'ad_tf_highway',label:'Highway corridor checkpoints operational'}]},
+    {title:'Personnel & Watchmen (Admin)',items:[
+      {id:'ad_present',label:'All scheduled personnel present and at posts'},
+      {id:'ad_uniform',label:'Personnel wearing proper uniform and ID'},
+      {id:'ad_logged',label:'Attendance/time log properly recorded'},
+      {id:'ad_watchmen',label:'Watchmen at designated posts'},
+      {id:'ad_logbook',label:'Watchmen log books reviewed'},
+      {id:'ad_policy',label:'Personnel adhering to BPGT/LGU rules'}]},
+    {title:'Facility & Utility',items:[
+      {id:'ad_clean',label:'Terminal floors, bays and walkways clean'},
+      {id:'ad_restrooms',label:'Restrooms clean and stocked'},
+      {id:'ad_lighting',label:'All terminal lighting functional'},
+      {id:'ad_water',label:'Water supply and plumbing functional'},
+      {id:'ad_equip',label:'Equipment on inventory accounted for'},
+      {id:'ad_supplies',label:'Cleaning supplies adequately stocked'}]}
   ]},
   'UTILITY UNIT':{title:'UTILITY & MAINTENANCE INSPECTION',groups:[
     {title:'Cleanliness & Orderliness',items:[
@@ -401,5 +412,5 @@ function joinMeet(){if(meetUrl)window.open(meetUrl,'_blank');else alert('No acti
 </script>
 <script>if('serviceWorker'in navigator){window.addEventListener('load',async function(){var k=await caches.keys();for(var i=0;i<k.length;i++){if(k[i]!=='opm-v3')await caches.delete(k[i]);}navigator.serviceWorker.register('./sw.js').then(function(r){console.log('[OPM] SW:',r.scope);}).catch(function(e){console.log('[OPM] SW:',e);});});}</script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a22989120be2220f',t:'MTc4NTMwMDk2OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a23394bd0fb0850f',t:'MTc4NTQwNjMwNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
