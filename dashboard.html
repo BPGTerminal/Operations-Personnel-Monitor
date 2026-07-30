@@ -131,10 +131,28 @@ function photoCapture(p){return p.captureTime||extractLabeled(p.body,'Captured')
 var _chart=null;
 
 function populateUnits(){
-  var cfg=OPM.getConfig();var teams=Array.isArray(cfg.teams)?cfg.teams:[];
-  var sel=document.getElementById('f-unit');var cur=sel.value;
-  sel.innerHTML='<option value="">ALL UNITS</option>';
-  teams.forEach(function(t){var o=document.createElement('option');o.value=t.name;o.textContent=t.name;if(t.name===cur)o.selected=true;sel.appendChild(o);});
+  // Force reload config from localStorage — don't use stale in-memory cache
+  var cfg = OPM.loadConfig(); // fresh from localStorage
+  if (!cfg || !cfg.teams || !cfg.teams.length) {
+    // Retry once
+    cfg = OPM.loadConfig();
+  }
+  var teams = (cfg && Array.isArray(cfg.teams)) ? cfg.teams : [];
+  var sel = document.getElementById('f-unit');
+  var cur = sel ? sel.value : '';
+  if (!sel) return;
+  sel.innerHTML = '<option value="">ALL UNITS</option>';
+  if (teams.length === 0) {
+    // Show a retry button
+    sel.innerHTML = '<option value="">ALL UNITS</option><option value="" disabled>⚠ No units loaded — refresh Commander first, then come back</option>';
+    return;
+  }
+  teams.forEach(function(t){
+    var o = document.createElement('option');
+    o.value = t.name; o.textContent = t.name;
+    if (t.name === cur) o.selected = true;
+    sel.appendChild(o);
+  });
 }
 
 function setToday(){var d=new Date().toISOString().substring(0,10);document.getElementById('f-from').value=d;document.getElementById('f-to').value=d;refresh();}
@@ -385,5 +403,5 @@ function resetNarrative(){if(_origNarrative)document.getElementById('narrative-t
 document.addEventListener('DOMContentLoaded',function(){populateUnits();setToday();});
 </script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2318e8b1ab408ed',t:'MTc4NTM4NTA3OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
