@@ -4,19 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>OPM — Operations Personnel Monitor</title>
-
 <link rel="manifest" href="opm-manifest.json">
 <meta name="theme-color" content="#00e5ff">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
-
 <link rel="stylesheet" href="opm-core.css">
-
 <style>
 body{height:100vh;display:flex;flex-direction:column;overflow:hidden;background:var(--bg-base);}
 .tab-bar{display:flex;background:var(--bg-panel);border-bottom:1px solid var(--border-color);flex-shrink:0;align-items:center;justify-content:space-between;padding:0 12px;height:44px;}
@@ -29,14 +25,12 @@ body{height:100vh;display:flex;flex-direction:column;overflow:hidden;background:
 .tab-content{flex:1;overflow:hidden;position:relative;}
 .tab-content iframe{width:100%;height:100%;border:none;display:none;}
 .tab-content iframe.active{display:block;}
-
 .loading-overlay{position:absolute;inset:0;background:var(--bg-base);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:13px;color:var(--text-dim);z-index:10;gap:12px;}
 .spinner{width:36px;height:36px;border:3px solid var(--border-color);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
-
 <div class="tab-bar">
   <div class="tab-left">
     <button class="tab-btn active" id="tab-commander" onclick="switchTab('commander')">🗺️ COMMANDER</button>
@@ -44,64 +38,53 @@ body{height:100vh;display:flex;flex-direction:column;overflow:hidden;background:
   </div>
   <div class="tab-right"><span class="tab-badge">OPM</span></div>
 </div>
-
 <div class="tab-content">
   <div id="loading-overlay" class="loading-overlay">
     <div class="spinner"></div>
     <div id="loading-text">Loading Commander...</div>
   </div>
-  <iframe id="iframe-commander" class="active" onload="iframeLoaded('commander')"></iframe>
-  <iframe id="iframe-dashboard" onload="iframeLoaded('dashboard')"></iframe>
+  <iframe id="iframe-commander" class="active"></iframe>
+  <iframe id="iframe-dashboard"></iframe>
 </div>
-
 <script>
 var _loaded = { commander: false, dashboard: false };
 var _loadTimeout = null;
 
-// Only load the active tab on startup
-(function init() {
-  var saved = localStorage.getItem('opm_active_tab') || 'commander';
-  loadTab(saved);
-  
-  // Safety: hide loading overlay after 25 seconds even if onload never fires
-  _loadTimeout = setTimeout(function() {
-    document.getElementById('loading-overlay').style.display = 'none';
-  }, 25000);
-})();
-
-function loadTab(name) {
-  document.getElementById('tab-commander').classList.toggle('active', name === 'commander');
-  document.getElementById('tab-dashboard').classList.toggle('active', name === 'dashboard');
-
-  var frame = document.getElementById('iframe-' + name);
-  var other = document.getElementById('iframe-' + (name === 'commander' ? 'dashboard' : 'commander'));
-
-  frame.classList.add('active');
-  other.classList.remove('active');
-
-  // Load iframe only if not already loaded
-  if (!_loaded[name]) {
-    frame.src = name + '.html';
-    document.getElementById('loading-overlay').style.display = 'flex';
-    document.getElementById('loading-text').textContent = 'Loading ' + (name === 'commander' ? 'Commander' : 'Dashboard') + '...';
-  } else {
-    document.getElementById('loading-overlay').style.display = 'none';
-  }
-
-  localStorage.setItem('opm_active_tab', name);
-}
-
-function switchTab(name) {
-  loadTab(name);
-}
+// Attach iframe load handlers
+document.getElementById('iframe-commander').addEventListener('load', function(){ iframeLoaded('commander'); });
+document.getElementById('iframe-dashboard').addEventListener('load', function(){ iframeLoaded('dashboard'); });
 
 function iframeLoaded(name) {
   _loaded[name] = true;
   document.getElementById('loading-overlay').style.display = 'none';
   if (_loadTimeout) { clearTimeout(_loadTimeout); _loadTimeout = null; }
 }
-</script>
 
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a22216b26d7302c2',t:'MTc4NTIyMjg4NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+function loadTab(name) {
+  document.getElementById('tab-commander').classList.toggle('active', name === 'commander');
+  document.getElementById('tab-dashboard').classList.toggle('active', name === 'dashboard');
+  var frame = document.getElementById('iframe-' + name);
+  var other = document.getElementById('iframe-' + (name === 'commander' ? 'dashboard' : 'commander'));
+  frame.classList.add('active');
+  other.classList.remove('active');
+  if (!_loaded[name]) {
+    frame.src = name + '.html';
+    document.getElementById('loading-overlay').style.display = 'flex';
+    document.getElementById('loading-text').textContent = 'Loading ' + (name === 'commander' ? 'Commander' : 'Dashboard') + '...';
+    _loadTimeout = setTimeout(function(){ document.getElementById('loading-overlay').style.display = 'none'; }, 25000);
+  } else {
+    document.getElementById('loading-overlay').style.display = 'none';
+  }
+  localStorage.setItem('opm_active_tab', name);
+}
+function switchTab(name) { loadTab(name); }
+
+// Startup
+(function initOpm() {
+  var saved = localStorage.getItem('opm_active_tab') || 'commander';
+  loadTab(saved);
+})();
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a230d71c5f920893',t:'MTc4NTM3NzU2Ng=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
+</body>
 </html>
