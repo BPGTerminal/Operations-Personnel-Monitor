@@ -9,44 +9,33 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="opm-core.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 body{min-height:100vh;display:flex;flex-direction:column;overflow-y:auto;background:var(--bg-base);}
 .report{max-width:1100px;width:100%;margin:0 auto;flex:1;}
-
-/* Cover */
 .report-cover{background:var(--bg-panel);border-bottom:3px solid var(--accent);padding:28px 32px;text-align:center;}
 .report-cover .logo{width:48px;height:48px;border-radius:50%;margin-bottom:6px;}
 .report-cover h1{font-size:22px;font-weight:700;letter-spacing:3px;color:#fff;text-transform:uppercase;margin-bottom:4px;}
 .report-cover .subtitle{font-family:var(--font-mono);font-size:10px;color:var(--accent);letter-spacing:2px;}
 .report-cover .meta-row{display:flex;justify-content:center;gap:32px;margin-top:10px;font-family:var(--font-mono);font-size:9px;color:var(--text-dim);flex-wrap:wrap;}
 .report-cover .meta-row span strong{color:var(--text-secondary);}
-
-/* Toolbar */
 .report-toolbar{background:var(--bg-panel);border-bottom:1px solid var(--border-color);padding:8px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:100;}
 .report-toolbar label{font-family:var(--font-mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;white-space:nowrap;}
 .report-toolbar input[type="date"]{background:var(--bg-surface);border:1px solid var(--border-color);color:#fff;font-family:var(--font-mono);font-size:10px;padding:5px 8px;border-radius:var(--radius);}
 .report-body{padding:20px 24px;display:flex;flex-direction:column;gap:22px;}
-
-/* Sections */
 .sec{border:1px solid var(--border-color);border-radius:6px;overflow:hidden;background:var(--bg-panel);}
 .sec-hdr{background:var(--accent-dim);border-bottom:1px solid var(--border-color);padding:12px 20px;font-family:var(--font-mono);font-size:10px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
 .sec-body{padding:20px;}
-
-/* Stats bar */
 .stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--border-color);border-radius:6px;overflow:hidden;}
 .stat-item{background:var(--bg-panel);padding:16px 20px;text-align:center;}
 .stat-num{font-family:var(--font-mono);font-size:28px;font-weight:700;color:var(--accent);line-height:1;}
 .stat-lbl{font-family:var(--font-mono);font-size:8px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-top:4px;}
-
-/* Unit table */
 .unit-table{width:100%;border-collapse:collapse;font-size:var(--font-xs);}
 .unit-table th{background:rgba(0,0,0,.25);color:var(--accent);font-family:var(--font-mono);font-size:9px;letter-spacing:1px;padding:10px 14px;text-align:left;text-transform:uppercase;border-bottom:1px solid var(--border-color);}
 .unit-table td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text-secondary);}
 .unit-table tr:hover td{background:var(--accent-dim);}
 .unit-table .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;}
 .unit-table .num{font-family:var(--font-mono);font-weight:700;text-align:center;}
-
-/* Photo Index */
 .photo-index{margin-bottom:16px;}
 .photo-index h4{font-family:var(--font-mono);font-size:11px;color:var(--accent);letter-spacing:1px;margin-bottom:4px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.06);}
 .photo-index-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;}
@@ -54,13 +43,8 @@ body{min-height:100vh;display:flex;flex-direction:column;overflow-y:auto;backgro
 .photo-index-num{font-family:var(--font-mono);color:var(--accent);font-weight:700;flex-shrink:0;min-width:20px;}
 .photo-index-desc{flex:1;line-height:1.4;color:var(--text-secondary);}
 .photo-index-where{font-family:var(--font-mono);font-size:8px;color:var(--text-dim);margin-top:2px;}
-
-/* Photo report cards — large format */
 .photo-gallery{display:flex;flex-direction:column;gap:24px;}
 .photo-report-card{display:grid;grid-template-columns:1fr 1fr;gap:0;background:var(--bg-surface);border:1px solid var(--border-color);border-radius:8px;overflow:hidden;}
-.photo-report-card:nth-child(even){grid-template-columns:1fr 1fr;}
-.photo-report-card:nth-child(even) .photo-side{order:2;}
-.photo-report-card:nth-child(even) .info-side{order:1;}
 .photo-side{position:relative;min-height:280px;overflow:hidden;cursor:pointer;background:rgba(0,0,0,.3);}
 .photo-side img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;transition:transform .3s;}
 .photo-side:hover img{transform:scale(1.03);}
@@ -72,22 +56,15 @@ body{min-height:100vh;display:flex;flex-direction:column;overflow-y:auto;backgro
 .info-side .field-key{font-family:var(--font-mono);color:var(--accent);font-size:9px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
 .info-side .field-val{color:var(--text-dim);word-break:break-word;}
 .info-side .field-purpose{font-size:13px;color:var(--text-secondary);line-height:1.5;font-style:italic;margin-top:4px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08);}
-
-/* Narrative */
 .narrative-edit{width:100%;min-height:140px;background:rgba(0,0,0,.3);border:1px solid var(--border-color);color:var(--text-primary);font-family:var(--font-sans);font-size:var(--font-sm);padding:14px;line-height:1.8;resize:vertical;border-radius:var(--radius);outline:none;}
 .narrative-edit:focus{border-color:var(--accent);}
-
-/* Message log */
 .msg-log{max-height:400px;overflow-y:auto;font-size:var(--font-xs);}
 .msg-log-row{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.03);}
 .msg-log-time{font-family:var(--font-mono);color:var(--text-dim);min-width:80px;flex-shrink:0;font-size:9px;}
 .msg-log-sender{color:var(--accent);font-weight:600;min-width:110px;flex-shrink:0;}
 .msg-log-body{flex:1;color:var(--text-secondary);}
-
 .empty{text-align:center;padding:40px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px;}
-
-@media(max-width:768px){.photo-report-card{grid-template-columns:1fr!important;}.photo-side{min-height:220px;}.photo-report-card:nth-child(even) .photo-side{order:0!important;}.photo-report-card:nth-child(even) .info-side{order:0!important;}}
-
+@media(max-width:768px){.photo-report-card{grid-template-columns:1fr!important;}.photo-side{min-height:220px;}}
 @media print{
   body{background:#fff!important;color:#000!important;overflow:visible!important;}
   .report-toolbar,.btn{display:none!important;}
@@ -104,12 +81,6 @@ body{min-height:100vh;display:flex;flex-direction:column;overflow-y:auto;backgro
   .photo-side .photo-badge{background:#f0f4f8!important;color:#000!important;border:1px solid #ccc;}
   .photo-side .photo-index-badge{background:#1a4d8f!important;color:#fff!important;}
 }
-.photo-edit-desc{width:100%;background:transparent;border:none;color:#fff;font-size:20px;font-weight:700;line-height:1.3;font-family:var(--font-sans);resize:none;outline:none;padding:0;min-height:60px;}
-.photo-edit-desc:focus{outline:1px solid var(--accent);border-radius:3px;padding:6px;}
-.photo-edit-input{width:100%;background:transparent;border:none;color:var(--text-dim);font-size:var(--font-xs);font-family:var(--font-sans);outline:none;padding:0;}
-.photo-edit-input:focus{outline:1px solid var(--accent);border-radius:2px;padding:2px 4px;color:var(--text-primary);}
-.photo-edit-purpose{width:100%;background:transparent;border:none;color:var(--text-secondary);font-size:13px;line-height:1.5;font-style:italic;font-family:var(--font-sans);resize:none;outline:none;padding:8px 0 0 0;margin-top:4px;border-top:1px solid rgba(255,255,255,.08);min-height:40px;}
-.photo-edit-purpose:focus{outline:1px solid var(--accent);border-radius:3px;padding:6px;}
 </style>
 </head>
 <body>
@@ -135,28 +106,27 @@ body{min-height:100vh;display:flex;flex-direction:column;overflow-y:auto;backgro
     <button class="btn btn-sm btn-success" onclick="setToday();">TODAY</button>
     <button class="btn btn-sm btn-warning" onclick="setThisWeek();">THIS WEEK</button>
     <span style="flex:1;"></span>
-    <button class="btn btn-sm" onclick="window.print()">🖨 PRINT</button>
-    <button class="btn btn-primary btn-sm" onclick="refresh()">🔄 REFRESH</button>
-    <a class="btn btn-sm" href="commander.html">▶ COMMANDER</a>
-    <a class="btn btn-sm" href="admin.html">⚙ ADMIN</a>
+    <button class="btn btn-sm" onclick="window.print()">PRINT</button>
+    <button class="btn btn-primary btn-sm" onclick="refresh()">REFRESH</button>
+    <a class="btn btn-sm" href="commander.html">COMMANDER</a>
+    <a class="btn btn-sm" href="admin.html">ADMIN</a>
     <span id="last-upd" class="mono text-dim" style="font-size:9px;"></span>
   </div>
 
   <div class="report-body" id="report-body">
-    <div class="sec"><div class="sec-body empty">⏳ Loading report...</div></div>
+    <div class="sec"><div class="sec-body empty">Loading report...</div></div>
   </div>
 </div>
 
 <script src="opm-core.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 function fmtDT(v){return String(v||'').replace('T',' ');}
-function extractLabeled(body,label){if(!body)return'';var m=body.match(new RegExp(label+':\s*(.+?)(?:\n|$)','i'));return m?m[1].trim():'';}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function extractLabeled(body,label){if(!body)return'';var m=body.match(new RegExp(label+':\\s*(.+?)(?:\\n|$)','i'));return m?m[1].trim():'';}
 function photoDescription(p){return p.photoDesc||p.description||extractLabeled(p.body,'Description')||'Photo report';}
 function photoWhere(p){return p.photoWhere||extractLabeled(p.body,'Where')||p.post||'';}
 function photoWhy(p){return p.photoWhy||extractLabeled(p.body,'Why/Purpose')||extractLabeled(p.body,'Why')||'';}
 function photoCapture(p){return p.captureTime||extractLabeled(p.body,'Captured')||p.time||'';}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 var _chart=null;
 
@@ -189,14 +159,17 @@ async function refresh(){
   document.getElementById('report-body').innerHTML='<div class="sec"><div class="sec-body empty">Loading report...</div></div>';
   var data=await fetchData();
   document.getElementById('last-upd').textContent='Updated: '+OPM.formatTime();
+
   var selUnit=document.getElementById('f-unit').value||'ALL UNITS';
   var df=document.getElementById('f-from').value||'beginning';
   var dt=document.getElementById('f-to').value||'present';
   var cfg=OPM.getConfig();
+
   document.getElementById('cover-title').textContent=(cfg.eventName||'Operations Report');
   document.getElementById('cover-unit').textContent=selUnit;
   document.getElementById('cover-date').textContent=df+'  '+dt;
   document.getElementById('cover-event').textContent=cfg.unit||cfg.location||'';
+
   if(!data||!data.summary||(data.summary.totalMessages===0&&data.summary.totalPersonnel===0)){
     document.getElementById('report-body').innerHTML='<div class="sec"><div class="sec-body empty">No data for <strong>'+selUnit+'</strong> on <strong>'+df+'  '+dt+'</strong><br><br><button class="btn btn-primary btn-sm" onclick="setToday();">TODAY</button> <button class="btn btn-warning btn-sm" onclick="setThisWeek();">THIS WEEK</button> <button class="btn btn-sm" onclick="refresh();">ALL TIME</button></div></div>';
     return;
@@ -210,7 +183,6 @@ function build(data,selUnit,df,dt){
   var photos=data.photos||[];
   var all=data.allMessages||[];
   var perTeam=data.personnelByTeam||{};
-  var daily=data.dailyActivity||[];
   var colors=['#00e5ff','#00ff88','#ff6b35','#ffd166','#a29bfe','#fd79a8','#55efc4'];
 
   if(selUnit!=='ALL UNITS'){
@@ -263,8 +235,8 @@ function build(data,selUnit,df,dt){
       try{var pd=JSON.parse(ins.photo||'[]');if(Array.isArray(pd))pd.forEach(function(p){pm[p.label]=(p.urls||[]).map(function(u){var m2=(u||'').match(/[?&]id=([a-zA-Z0-9_-]+)/);return{embed:m2?'https://lh3.googleusercontent.com/d/'+m2[1]:u,raw:u};});});}catch(e){}
       var lines=(ins.body||'').split('\n');
       lines.forEach(function(line){
-        if(line.indexOf('\u2713 '))!==-1){
-          var clean=line.replace('\u2713 '),'').trim();
+        if(line.indexOf('\u2713 ')!==-1){
+          var clean=line.replace('\u2713 ','').trim();
           var label=clean.replace(/ \(.*\)$/,'');
           var sec='';var m3=clean.match(/\((.+)\)$/);if(m3)sec=m3[1];if(!sec)sec='General';
           if(!uiMap[team].sections[sec])uiMap[team].sections[sec]=[];
@@ -289,10 +261,10 @@ function build(data,selUnit,df,dt){
         html+='<div style="margin-bottom:10px;"><div style="font-family:var(--font-mono);font-size:9px;color:var(--accent);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">'+esc(sec)+'</div>';
         ui.sections[sec].forEach(function(item){
           html+='<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.03);">';
-          html+='<div style="font-size:13px;color:var(--text-secondary);"><span style="color:var(--success);font-weight:700;">✓</span> '+esc(item.label)+'</div>';
+          html+='<span style="font-size:13px;color:var(--text-secondary);"><span style="color:var(--success);font-weight:700;">\u2713</span> '+esc(item.label)+'</span>';
           if(item.photos.length>0){
             html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;margin-left:22px;">';
-            item.photos.forEach(function(ph){html+='<img src="'+esc(ph.embed)+'" style="width:110px;height:82px;object-fit:cover;border-radius:4px;border:1px solid var(--border-color);cursor:pointer;" onclick="window.open(''+esc(ph.raw)+'')" loading="lazy">';});
+            item.photos.forEach(function(ph){html+='<img src="'+esc(ph.embed)+'" style="width:110px;height:82px;object-fit:cover;border-radius:4px;border:1px solid var(--border-color);cursor:pointer;" onclick="window.open(\''+esc(ph.raw)+'\')" loading="lazy">';});
             html+='</div>';
           }
           html+='</div>';
@@ -302,19 +274,18 @@ function build(data,selUnit,df,dt){
       if(ui.remarks.length>0){
         html+='<div style="margin-top:8px;padding:10px 12px;background:rgba(255,170,0,.06);border-left:3px solid var(--warning);border-radius:0 4px 4px 0;">';
         html+='<div style="font-family:var(--font-mono);font-size:9px;color:var(--warning);letter-spacing:1px;margin-bottom:4px;">REMARKS</div>';
-        ui.remarks.forEach(function(r){html+='<div style="font-size:12px;color:var(--text-secondary);font-style:italic;">'+esc(r)+'</div>';});
+        ui.remarks.forEach(function(r){html+='<span style="font-size:12px;color:var(--text-secondary);font-style:italic;">'+esc(r)+'</span>';});
         html+='</div>';
       }
       html+='<div style="margin-top:10px;font-size:12px;color:var(--text-dim);line-height:1.6;">'+esc(unit)+' conducted inspection of '+totalUnitItems+' items across '+sectionKeys.length+' categor'+(sectionKeys.length>1?'ies':'y')+'. All items satisfactory.'+(ui.remarks.length>0?' '+ui.remarks.length+' observation(s) noted.':'')+'</div>';
       html+='</div></div>';
     });
 
-    // Consolidated findings
     var grandTotal=0,totalR=0,allCats=[];
     unitNames2.forEach(function(u){var ui2=uiMap[u];Object.keys(ui2.sections).forEach(function(k){grandTotal+=ui2.sections[k].length;if(allCats.indexOf(k)<0)allCats.push(k);});totalR+=ui2.remarks.length;});
-    html+='<div class="narrative" style="margin-top:8px;"><h3>CONSOLIDATED INSPECTION FINDINGS</h3><p>On '+(df||'this date')+', <strong>'+inspections.length+' inspection'+(inspections.length>1?'s':'')+'</strong> '+(inspections.length>1?'were':'was')+' conducted across '+unitNames2.length+' unit(s): '+unitNames2.map(function(u){return uiMap[u].inspector+' ('+u+')';}).join(', ')+'. Collectively <strong>'+grandTotal+' checklist items</strong> inspected across '+allCats.length+' categories: '+allCats.join(', ')+'. ';
+    html+='<div class="narrative" style="margin-top:8px;"><h3>CONSOLIDATED INSPECTION FINDINGS</h3><p>On '+(df||'this date')+', <strong>'+inspections.length+' inspection'+(inspections.length>1?'s':'')+'</strong> '+(inspections.length>1?'were':'was')+' conducted across '+unitNames2.length+' unit(s): '+unitNames2.map(function(u){return uiMap[u].inspector+' ('+u+')';}).join(', ')+'. Collectively <strong>'+grandTotal+' checklist items</strong> inspected across '+allCats.length+' categories. ';
     if(totalR>0)html+='<strong>'+totalR+' observation(s)</strong> were recorded. ';
-    html+='No critical deficiencies requiring immediate command intervention were identified. All units demonstrated compliance with terminal policies and standards.</p></div>';
+    html+='No critical deficiencies identified. All units compliant with terminal policies and standards.</p></div>';
     html+='</div></div>';
   }
 
@@ -335,7 +306,7 @@ function build(data,selUnit,df,dt){
     html+='</div></div>';
   }
 
-  // FIELD PHOTO DOCUMENTATION (editable)
+  // FIELD PHOTO DOCUMENTATION
   if(photos.length>0){
     html+='<div class="sec"><div class="sec-hdr">FIELD PHOTO DOCUMENTATION ('+photos.length+')</div><div class="sec-body"><div class="photo-gallery">';
     photos.slice(0,20).forEach(function(p,i){
@@ -343,86 +314,34 @@ function build(data,selUnit,df,dt){
       var embed=m?'https://lh3.googleusercontent.com/d/'+m[1]:p.url;
       var desc=photoDescription(p),where=photoWhere(p),why=photoWhy(p),cap=photoCapture(p);
       var unitColor=colors[unitNames.indexOf(p.team)%7]||'var(--accent)';
-      var pid='photox_'+i;
-      html+='<div class="photo-report-card" data-photoid="'+pid+'">';
-      html+='<div class="photo-side" onclick="window.open(''+esc(p.url)+'')" title="Click to open full photo">';
-      html+='<img src="'+esc(embed)+'" loading="lazy" onerror="this.parentElement.style.display='none'">';
+      html+='<div class="photo-report-card">';
+      html+='<div class="photo-side" onclick="window.open(\''+esc(p.url)+'\')" title="Click to open full photo">';
+      html+='<img src="'+esc(embed)+'" loading="lazy" onerror="this.parentElement.style.display=\'none\'">';
       html+='<span class="photo-badge" style="background:'+unitColor+';color:#000;">'+esc(p.team||'')+'</span>';
       html+='<span class="photo-index-badge">#'+(i+1)+'</span></div>';
       html+='<div class="info-side">';
-      html+='<textarea class="photo-edit-desc" data-photofield="desc" data-original="'+esc(desc)+'">'+esc(desc)+'</textarea>';
+      html+='<div class="field-name">'+esc(desc)+'</div>';
       html+='<div class="field-row">';
-      html+='<span class="field-key">Location</span><input class="photo-edit-input" data-photofield="where" value="'+esc(where)+'" data-original="'+esc(where)+'">';
-      html+='<span class="field-key">Captured</span><input class="photo-edit-input" data-photofield="cap" value="'+esc(fmtDT(cap))+'" data-original="'+esc(fmtDT(cap))+'" placeholder="YYYY-MM-DD HH:MM">';
+      if(where)html+='<span class="field-key">Location</span><span class="field-val">'+esc(where)+'</span>';
+      if(cap)html+='<span class="field-key">Captured</span><span class="field-val">'+esc(fmtDT(cap))+'</span>';
       html+='<span class="field-key">Unit</span><span class="field-val" style="color:'+unitColor+';font-weight:600;">'+esc(p.team||'')+'</span>';
       html+='<span class="field-key">By</span><span class="field-val">'+esc(p.sender||'')+'</span></div>';
-      html+='<textarea class="photo-edit-purpose" data-photofield="why" data-original="'+esc(why)+'" placeholder="Why / Purpose...">'+esc(why)+'</textarea>';
-      html+='<div class="photo-edit-indicator" style="display:none;font-family:var(--font-mono);font-size:8px;color:var(--warning);margin-top:4px;">EDITED</div>';
+      if(why)html+='<div class="field-purpose">"'+esc(why)+'"</div>';
       html+='</div></div>';
     });
     html+='</div>';
-    if(photos.length>20)html+='<div style="text-align:center;padding:14px;color:var(--text-dim);font-family:var(--font-mono);font-size:10px;">Showing 20 of '+photos.length+' photo reports.</div>';
+    if(photos.length>20)html+='<div style="text-align:center;padding:14px;color:var(--text-dim);font-family:var(--font-mono);font-size:10px;">Showing 20 of '+photos.length+' reports.</div>';
     html+='</div></div>';
   }
 
   // NARRATIVE
-  var narrativeAuto='PERIOD: '+df+' to '+dt+' | UNIT: '+selUnit+'
+  var narrativeAuto='PERIOD: '+df+' to '+dt+' | UNIT: '+selUnit+'\n\n';
+  narrativeAuto+='During this reporting period, a total of '+totalMsgs+' communications were recorded, with '+totalTasks+' task accomplishments documented and '+totalPhotos+' photo reports submitted from the field.\n\n';
+  if(totalTasks>0)narrativeAuto+='Tasks accomplished spanned multiple operational areas. '+totalPhotos+' photo reports provide visual evidence of work completed, field conditions encountered, and incidents addressed.\n';
+  if(totalIncs>0)narrativeAuto+=totalIncs+' incidents were logged during this period, each documented with appropriate detail.\n';
+  else narrativeAuto+='No incidents were reported during this period, indicating smooth operations.\n';
 
-';
-  narrativeAuto+='For the reporting period, operations were conducted with '+s.totalPersonnel+' personnel deployed across '+Object.keys(perTeam).length+' units, of which '+s.onlineNow+' were logged as actively online. A total of '+totalMsgs+' communications were exchanged, comprising '+totalTasks+' task accomplishments, '+totalPhotos+' photo reports, and '+totalIncs+' incidents logged.
-
-';
-  if(unitNames.length>1||(unitNames.length===1&&selUnit==='ALL UNITS')){
-    narrativeAuto+='Unit performance summary:
-
-';
-    unitData.forEach(function(u){narrativeAuto+=u.team+': '+(u.tasks||0)+' task(s), '+(u.photos||0)+' photo(s)'+((u.incidents||0)>0?', '+(u.incidents||0)+' incident(s)':'')+', '+(u.messages||0)+' communication(s).
-';});
-    narrativeAuto+='
-';
-  }
-  if(photos.length>0){
-    narrativeAuto+='Photo reports documented the following:
-
-';
-    var pub={};photos.forEach(function(p){var u=p.team||'UNASSIGNED';if(!pub[u])pub[u]=[];pub[u].push(p);});
-    Object.keys(pub).sort().forEach(function(unit){
-      narrativeAuto+=unit+':
-';
-      pub[unit].slice(0,5).forEach(function(p){narrativeAuto+='  - '+photoDescription(p)+(photoWhere(p)?' at '+photoWhere(p):'')+' (by '+p.sender+')
-';});
-      if(pub[unit].length>5)narrativeAuto+='  - ... and '+(pub[unit].length-5)+' more
-';
-      narrativeAuto+='
-';
-    });
-  }
-  if(inspections.length>0){
-    narrativeAuto+='Daily inspections were conducted by unit supervisors. ';
-    inspections.slice().reverse().forEach(function(ins){
-      var lines=(ins.body||'').split('\n'),items=[],remarks='';
-      lines.forEach(function(l){if(l.indexOf('\u2713 '))!==-1)items.push(l.replace('\u2713 '),'').trim().replace(/ \(.*\)$/,''));if(l.indexOf('Remarks: ')!==-1)remarks=l.substring(9).trim();});
-      narrativeAuto+=ins.sender+' ('+ins.team+'): '+items.length+' items inspected';
-      if(items.length>0)narrativeAuto+=' ('+items.slice(0,3).join('; ')+(items.length>3?'; ...':'')+')';
-      if(remarks)narrativeAuto+='. Remarks: '+remarks;
-      narrativeAuto+='. ';
-    });
-    narrativeAuto+='
-
-';
-  }
-  if(totalIncs>0)narrativeAuto+='A total of '+totalIncs+' incident(s) were logged. All properly documented.
-
-';
-  var cfg3=OPM.getConfig();
-  narrativeAuto+='This report was generated by the OPM system on '+OPM.formatDateTime()+'. All data is based on real-time field reports and verified by unit supervisors.
-
-Prepared by:
-'+(cfg3.commander||'Commander')+'
-'+(cfg3.unit||'(Unit)')+'
-'+(cfg3.location||'');
-
-  html+='<div class="sec"><div class="sec-hdr">OPERATIONS NARRATIVE <span style="font-size:8px;color:var(--text-dim);letter-spacing:0;">EDITABLE  SAVE BEFORE PRINTING</span></div><div class="sec-body">';
+  html+='<div class="sec"><div class="sec-hdr">OPERATIONS NARRATIVE <span style="font-size:8px;color:var(--text-dim);letter-spacing:0;">EDITABLE - SAVE BEFORE PRINTING</span></div><div class="sec-body">';
   html+='<textarea class="narrative-edit" id="narrative-text">'+esc(narrativeAuto)+'</textarea>';
   html+='<div class="flex gap-sm" style="margin-top:10px;"><button class="btn btn-success btn-sm" onclick="saveNarrative()">SAVE NARRATIVE</button><button class="btn btn-sm" onclick="resetNarrative()">RESET</button><span id="nar-saved" style="display:none;font-family:var(--font-mono);font-size:10px;color:var(--success);align-self:center;">SAVED</span></div>';
   html+='</div></div>';
@@ -437,7 +356,7 @@ Prepared by:
 
   document.getElementById('report-body').innerHTML=html;
 
-  // Chart + narrative restore
+  // Render chart + restore saved narrative
   setTimeout(function(){
     var canvas=document.getElementById('chart-perf');
     if(canvas&&unitNames.length>0){
@@ -451,46 +370,20 @@ Prepared by:
   },300);
 }
 
-// Photo edit event delegation
-document.addEventListener('input',function(e){
-  var el=e.target.closest('[data-photofield]');if(!el)return;
-  var card=el.closest('[data-photoid]');if(!card)return;
-  var pid=card.dataset.photoid;
-  var ind=card.querySelector('.photo-edit-indicator');
-  if(ind){ind.style.display='inline';ind.textContent='EDITED';ind.style.color='var(--warning)';}
-  if(window._pts)clearTimeout(window._pts[pid]);
-  if(!window._pts)window._pts={};
-  window._pts[pid]=setTimeout(function(){
-    var de=card.querySelector('[data-photofield="desc"]');
-    var we=card.querySelector('[data-photofield="where"]');
-    var ce=card.querySelector('[data-photofield="cap"]');
-    var ye=card.querySelector('[data-photofield="why"]');
-    if(!de)return;
-    var c3=OPM.getConfig();if(!c3._pe)c3._pe={};
-    c3._pe[pid]={desc:de.value,where:we?we.value:'',cap:ce?ce.value:'',why:ye?ye.value:''};
-    OPM.saveConfig(c3);
-    if(ind){ind.textContent='✓ SAVED';ind.style.color='var(--success)';}
-    setTimeout(function(){if(ind)ind.style.display='none';},2500);
-  },1500);
-});
+}
 
 var _origNarrative='';
 function saveNarrative(){
   var nt=document.getElementById('narrative-text');if(!nt)return;
   var su=document.getElementById('f-unit').value||'ALL UNITS';
   var df2=document.getElementById('f-from').value||'any',dt2=document.getElementById('f-to').value||'any';
-  var c4=OPM.getConfig();c4['nar_'+su.replace(/[^a-z0-9]/gi,'_')+'_'+df2+'_'+dt2]=nt.value.trim();OPM.saveConfig(c4);
+  var c3=OPM.getConfig();c3['nar_'+su.replace(/[^a-z0-9]/gi,'_')+'_'+df2+'_'+dt2]=nt.value.trim();OPM.saveConfig(c3);
   document.getElementById('nar-saved').style.display='inline';setTimeout(function(){document.getElementById('nar-saved').style.display='none';},2000);
 }
 function resetNarrative(){if(_origNarrative)document.getElementById('narrative-text').value=_origNarrative;}
 
 document.addEventListener('DOMContentLoaded',function(){populateUnits();setToday();});
-};
 </script>
-
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2308bd52ea69590',t:'MTc4NTM3NDQ4Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a230d6dba8440893',t:'MTc4NTM3NzU1NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2311e91e8fadd5d',t:'MTc4NTM4MDQ5Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a23142c098d1277e',t:'MTc4NTM4MTk3NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a23165402b6d1089',t:'MTc4NTM4MzM4OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
 </body>
 </html>
