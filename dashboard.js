@@ -51,12 +51,16 @@ async function R(){
 }
 
 function B(data,su,df,dt){
-  var s=data.summary;var ud=Array.isArray(data.unitData)?data.unitData:[];var photos=data.photos||[];var all=data.allMessages||[];var pt=data.personnelByTeam||{};
-  if(su!=="ALL UNITS"){ud=ud.filter(function(u){return u.team===su});photos=photos.filter(function(p){return p.team===su});all=all.filter(function(m){return m.team===su});var fp={};if(pt[su])fp[su]=pt[su];pt=fp}
+  var s=data.summary,ud=Array.isArray(data.unitData)?data.unitData:[],photos=data.photos||[],all=data.allMessages||[],pt=data.personnelByTeam||{};
+  if(su!=="ALL UNITS"){
+    ud=ud.filter(function(u){return u.team&&u.team.toUpperCase()===su.toUpperCase()});
+    photos=photos.filter(function(p){return p.team&&p.team.toUpperCase()===su.toUpperCase()});
+    all=all.filter(function(m){return m.team&&m.team.toUpperCase()===su.toUpperCase()});
+    var fp={};if(pt[su])fp[su]=pt[su];pt=fp
+  }
   var tm=ud.reduce(function(a,u){return a+(u.messages||0)},0),tt=ud.reduce(function(a,u){return a+(u.tasks||0)},0),ti=ud.reduce(function(a,u){return a+(u.incidents||0)},0),tp=ud.reduce(function(a,u){return a+(u.photos||0)},0);
   var un=ud.map(function(u){return u.team}),ut=ud.map(function(u){return u.tasks||0}),up=ud.map(function(u){return u.photos||0});
   var pers=(su!=="ALL UNITS"?(pt[su]||0):s.totalPersonnel),actv=(su!=="ALL UNITS"?(pt[su]||0):s.onlineNow);
-
   var h="";
   h+=C("EXECUTIVE SUMMARY","",S(tm,tt,tp,ti,pers,actv));
   if(un.length>0){h+=C("UNIT PERFORMANCE","PERIOD: "+esc(df)+" "+esc(dt),UT(ud,un))}
@@ -67,11 +71,10 @@ function B(data,su,df,dt){
   h+=C("NARRATIVE","EDITABLE",'<textarea class="narrative-box" id="nar-text">'+esc(nar)+'</textarea><div class="flex gap-sm" style="margin-top:10px"><button class="btn btn-success btn-sm" onclick="SN()">SAVE</button><button class="btn btn-sm" onclick="RN()">RESET</button><span id="nar-ok" style="display:none;font-family:var(--font-mono);font-size:10px;color:var(--success)">SAVED</span></div>');
   if(all.length>0){h+=CL(all)}
   document.getElementById("content").innerHTML=h;
-  // Chart skipped for now to avoid brace issues
   var nt=document.getElementById("nar-text");if(nt){_narOrig=nt.value;var key="nar_"+su.replace(/[^a-z0-9]/gi,"_")+"_"+(df||"any")+"_"+(dt||"any");var c3=OPM.getConfig();if(c3&&c3[key])nt.value=c3[key]}
 }
 
-function C(hdr,sub,body){return'<div class="card"><div class="card-hdr">'+hdr+" "+sub+'</div><div class="card-body">'+body+'</div></div>'}
+function C(hdrfunction C(hdr,sub,body){return'<div class="card"><div class="card-hdr">'+hdr+" "+sub+'</div><div class="card-body">'+body+'</div></div>'}
 function S(m,tt,tp,ti,p,a){return'<div class="stats"><div><div class="n">'+m+'</div><div class="l">Messages</div></div><div><div class="n" style="color:var(--success)">'+tt+'</div><div class="l">Tasks</div></div><div><div class="n">'+tp+'</div><div class="l">Photos</div></div><div><div class="n" style="color:var(--warning)">'+ti+'</div><div class="l">Incidents</div></div><div><div class="n">'+p+'</div><div class="l">Personnel</div></div><div><div class="n" style="color:var(--success)">'+a+'</div><div class="l">Online</div></div></div>'}
 
 function UT(ud,un){var h='<table><tr><th></th><th>UNIT</th><th class="num">PHOTOS</th><th class="num">TASKS</th><th class="num">INC</th><th class="num">COMMS</th></tr>';ud.forEach(function(u,i){h+='<tr><td><span class="dot" style="background:'+CO[i%7]+'"></span></td><td><strong>'+esc(u.team)+'</strong></td><td class="num">'+(u.photos||0)+'</td><td class="num" style="color:var(--success)">'+(u.tasks||0)+'</td><td class="num" style="color:'+((u.incidents||0)>0?"var(--warning)":"var(--text-dim)")+'">'+(u.incidents||0)+'</td><td class="num">'+(u.messages||0)+'</td></tr>'});h+='</table><div style="margin-top:14px;height:200px"><canvas id="chart"></canvas></div>';return h}
