@@ -27,7 +27,7 @@ function G(){
   }catch(e){return null}
 }
 
-function PU(){var cfg=G()||{};var t=Array.isArray(cfg.teams)?cfg.teams:[];var s=document.getElementById("unit");if(!s)return;s.innerHTML='<option value="">ALL UNITS</option>';if(t.length>0){t.forEach(function(v){var o=document.createElement("option");o.value=v.name;o.textContent=v.name;s.appendChild(o)})}}
+function PU(){var cfg=G()||{};var t=Array.isArray(cfg.teams)?cfg.teams:[];var s=document.getElementById("unit");if(!s)return;var cur=s.value;s.innerHTML='<option value="">ALL UNITS</option>';t.forEach(function(v){var o=document.createElement("option");o.value=v.name;o.textContent=v.name;if(v.name===cur)o.selected=true;s.appendChild(o)})}
 
 function T(){var d=new Date().toISOString().substring(0,10);document.getElementById("from").value=d;document.getElementById("to").value=d;R()}
 function W(){var n=new Date(),day=n.getDay();var m=new Date(n);m.setDate(n.getDate()-(day===0?6:day-1));var s=new Date(m);s.setDate(m.getDate()+6);document.getElementById("from").value=m.toISOString().substring(0,10);document.getElementById("to").value=s.toISOString().substring(0,10);R()}
