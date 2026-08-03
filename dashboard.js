@@ -74,7 +74,7 @@ function B(data,su,df,dt){
   var nt=document.getElementById("nar-text");if(nt){_narOrig=nt.value;var key="nar_"+su.replace(/[^a-z0-9]/gi,"_")+"_"+(df||"any")+"_"+(dt||"any");var c3=OPM.getConfig();if(c3&&c3[key])nt.value=c3[key]}
 }
 
-function C(hdrfunction C(hdr,sub,body){return'<div class="card"><div class="card-hdr">'+hdr+" "+sub+'</div><div class="card-body">'+body+'</div></div>'}
+function C(hdr,sub,body){return'<div class="card"><div class="card-hdr">'+hdr+" "+sub+'</div><div class="card-body">'+body+'</div></div>'}
 function S(m,tt,tp,ti,p,a){return'<div class="stats"><div><div class="n">'+m+'</div><div class="l">Messages</div></div><div><div class="n" style="color:var(--success)">'+tt+'</div><div class="l">Tasks</div></div><div><div class="n">'+tp+'</div><div class="l">Photos</div></div><div><div class="n" style="color:var(--warning)">'+ti+'</div><div class="l">Incidents</div></div><div><div class="n">'+p+'</div><div class="l">Personnel</div></div><div><div class="n" style="color:var(--success)">'+a+'</div><div class="l">Online</div></div></div>'}
 
 function UT(ud,un){var h='<table><tr><th></th><th>UNIT</th><th class="num">PHOTOS</th><th class="num">TASKS</th><th class="num">INC</th><th class="num">COMMS</th></tr>';ud.forEach(function(u,i){h+='<tr><td><span class="dot" style="background:'+CO[i%7]+'"></span></td><td><strong>'+esc(u.team)+'</strong></td><td class="num">'+(u.photos||0)+'</td><td class="num" style="color:var(--success)">'+(u.tasks||0)+'</td><td class="num" style="color:'+((u.incidents||0)>0?"var(--warning)":"var(--text-dim)")+'">'+(u.incidents||0)+'</td><td class="num">'+(u.messages||0)+'</td></tr>'});h+='</table><div style="margin-top:14px;height:200px"><canvas id="chart"></canvas></div>';return h}
