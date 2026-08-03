@@ -11,6 +11,12 @@ body {
 body.map-max { grid-template-columns: 1fr 0; }
 body.map-max .sidebar { display: none; }
 
+body.comms-max { grid-template-columns: 0 1fr; }
+body.comms-max #map-container { display: none; }
+body.comms-max .sidebar { max-width: 100%; }
+body.comms-max .sidebar-section.personnel { display: none; }
+body.comms-max .compose { position: relative; }
+
 /* ── Header ────────────────────────────── */
 .header {
   grid-column: 1 / -1; background: var(--bg-panel);
