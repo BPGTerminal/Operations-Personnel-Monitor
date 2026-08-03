@@ -42,7 +42,7 @@ async function R(){
   var data=await Q();
   var su=document.getElementById("unit").value||"ALL UNITS",df=document.getElementById("from").value||"beginning",dt=document.getElementById("to").value||"present";
   var c2=OPM.getConfig();
-  document.getElementById("cover-title").textContent=(c2.eventName||"TERMINAL OPERATIONS AND MANAGEMENT REPORT");
+  document.getElementById("cover-title").textContent=(c2.eventName&&c2.eventName!=="Operations Report"&&c2.eventName!=="OPM"?c2.eventName:"TERMINAL OPERATIONS AND MANAGEMENT REPORT");
   document.getElementById("cover-sub").textContent=(c2.location||"BROOKE'S POINT GRAND TERMINAL");
   if(!data||!data.summary||(data.summary.totalMessages===0&&data.summary.totalPersonnel===0)){
     document.getElementById("content").innerHTML='<div class="card"><div class="card-body empty">No data for '+esc(su)+' from '+esc(df)+' to '+esc(dt)+'<br><br><button class="btn btn-sm" onclick="T()">TODAY</button> <button class="btn btn-sm" onclick="R()">ALL TIME</button></div></div>';return
