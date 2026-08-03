@@ -9,14 +9,30 @@ function pW(p){return p.photoWhere||exL(p.body,"Where")||p.post||""}
 function pY(p){return p.photoWhy||exL(p.body,"Why/Purpose")||exL(p.body,"Why")||""}
 function pC(p){return p.captureTime||exL(p.body,"Captured")||p.time||""}
 
-function G(){try{var r=localStorage.getItem("opm_config_v2")||localStorage.getItem("tms_config");var c=r?JSON.parse(r):{};if(c&&c.sheetUrl){if(!c.teams||!Array.isArray(c.teams))c.teams=[];return c}return null}catch(e){return null}}
+function G(){
+  try {
+    var r=localStorage.getItem("opm_config_v2")||localStorage.getItem("tms_config");
+    var c=r?JSON.parse(r):{};
+    // Also check OPM global
+    if(!c.sheetUrl && typeof OPM !== "undefined" && OPM.getConfig){
+      var oc = OPM.getConfig();
+      if(oc && oc.sheetUrl) c.sheetUrl = oc.sheetUrl;
+    }
+    // Accept config as long as there's a sheetUrl
+    if(c&&c.sheetUrl){
+      if(!c.teams||!Array.isArray(c.teams))c.teams=[];
+      return c;
+    }
+    return null;
+  }catch(e){return null}
+}
 
-function PU(){var cfg=G()||{};var t=Array.isArray(cfg.teams)?cfg.teams:[];var s=document.getElementById("unit");if(!s)return;s.innerHTML='<option value="">ALL UNITS</option>';t.forEach(function(v){var o=document.createElement("option");o.value=v.name;o.textContent=v.name;s.appendChild(o)})}
+function PU(){var cfg=G()||{};var t=Array.isArray(cfg.teams)?cfg.teams:[];var s=document.getElementById("unit");if(!s)return;s.innerHTML='<option value="">ALL UNITS</option>';if(t.length>0){t.forEach(function(v){var o=document.createElement("option");o.value=v.name;o.textContent=v.name;s.appendChild(o)})}}
 
 function T(){var d=new Date().toISOString().substring(0,10);document.getElementById("from").value=d;document.getElementById("to").value=d;R()}
 function W(){var n=new Date(),day=n.getDay();var m=new Date(n);m.setDate(n.getDate()-(day===0?6:day-1));var s=new Date(m);s.setDate(m.getDate()+6);document.getElementById("from").value=m.toISOString().substring(0,10);document.getElementById("to").value=s.toISOString().substring(0,10);R()}
 
-async function Q(){var url=OPM.SHEET_URL();if(!url)return null;var fr=document.getElementById("from").value,to=document.getElementById("to").value;try{var p=new URLSearchParams({action:"getDashboardData",t:Date.now()});if(fr)p.set("dateFrom",fr+" 00:00:00");if(to)p.set("dateTo",to+" 23:59:59");var r=await fetch(url+"?"+p,{cache:"no-store"});return await r.json()}catch(e){return null}}
+async function Q(){var url=OPM.SHEET_URL();if(!url){try{var r=localStorage.getItem("opm_config_v2")||localStorage.getItem("tms_config");var c=r?JSON.parse(r):{};url=c.sheetUrl||""}catch(e){}}if(!url)return null;var fr=document.getElementById("from").value,to=document.getElementById("to").value;try{var p=new URLSearchParams({action:"getDashboardData",t:Date.now()});if(fr)p.set("dateFrom",fr+" 00:00:00");if(to)p.set("dateTo",to+" 23:59:59");var r=await fetch(url+"?"+p,{cache:"no-store"});return await r.json()}catch(e){return null}}
 
 async function R(){
   PU();var cfg=G();
@@ -105,4 +121,4 @@ function CL(function CL(all){var h='<div class="card"><div class="card-hdr">COMM
 function SN(){var nt=document.getElementById("nar-text");if(!nt)return;var su2=document.getElementById("unit").value||"ALL UNITS",df2=document.getElementById("from").value||"any",dt2=document.getElementById("to").value||"any";var c4=OPM.getConfig();if(!c4)c4={};c4["nar_"+su2.replace(/[^a-z0-9]/gi,"_")+"_"+df2+"_"+dt2]=nt.value.trim();OPM.saveConfig(c4);var ok=document.getElementById("nar-ok");if(ok){ok.style.display="inline";setTimeout(function(){ok.style.display="none"},2000)}}
 function RN(){if(_narOrig)document.getElementById("nar-text").value=_narOrig}
 
-document.addEventListener("DOMContentLoaded",function(){PU();var cfg=G();if(!cfg){document.getElementById("content").innerHTML='<div class="card"><div class="card-body empty">No backend configured. Open Admin page and save settings first.</div></div>';return}setTimeout(function(){T()},300)});
+document.addEventListener("DOMContentLoaded",function(){PU();var cfg=G();if(!cfg||!cfg.sheetUrl){document.getElementById("content").innerHTML='<div class="card"><div class="card-body empty">No backend configured. Open <a href="admin.html" style="color:var(--accent)">Admin page</a> and save settings first.<br><br><small>If settings are already saved, try clicking REFRESH.</small></div></div>';return}setTimeout(function(){T()},300)});
