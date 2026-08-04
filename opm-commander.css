@@ -13,8 +13,9 @@ body.map-max .sidebar { display: none; }
 
 body.comms-max { grid-template-columns: 0 1fr; }
 body.comms-max #map-container { display: none; }
-body.comms-max .sidebar { max-width: 100%; }
+body.comms-max .sidebar { max-width: none; width: 100%; display: flex; }
 body.comms-max .sidebar-section.personnel { display: none; }
+body.comms-max .sidebar-section.comms { flex: 1; }
 body.comms-max .compose { position: relative; }
 
 /* ── Header ────────────────────────────── */
