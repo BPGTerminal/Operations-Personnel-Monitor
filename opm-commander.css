@@ -24,6 +24,11 @@ body.comms-max .sidebar-section.comms { flex: 1; display: flex; flex-direction: 
 body.comms-max .sidebar-section.comms .section-content { flex: 1; overflow-y: auto; }
 body.comms-max .compose { position: relative; flex-shrink: 0; }
 
+/* Bigger photos + text when comms is maximized */
+body.comms-max .msg-photo { max-height: 400px !important; width: auto; max-width: 100%; }
+body.comms-max .message { font-size: var(--font-md); }
+body.comms-max .msg-body { font-size: var(--font-md); line-height: 1.6; }
+
 /* ── Header ────────────────────────────── */
 .header {
   grid-column: 1 / -1; background: var(--bg-panel);
