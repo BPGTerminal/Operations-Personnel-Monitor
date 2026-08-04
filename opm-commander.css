@@ -16,12 +16,13 @@ body.map-max .sidebar { display: none; }
 body.comms-max #comms-restore-btn { display: inline-block; }
 body.comms-max #comms-max-btn { display: none; }
 
-body.comms-max { grid-template-columns: 0 1fr; }
+body.comms-max { grid-template-columns: 1fr; }
 body.comms-max #map-container { display: none; }
-body.comms-max .sidebar { max-width: none; width: 100%; display: flex; }
+body.comms-max .sidebar { grid-column: 1; max-width: none; width: 100%; display: flex; }
 body.comms-max .sidebar-section.personnel { display: none; }
-body.comms-max .sidebar-section.comms { flex: 1; }
-body.comms-max .compose { position: relative; }
+body.comms-max .sidebar-section.comms { flex: 1; display: flex; flex-direction: column; }
+body.comms-max .sidebar-section.comms .section-content { flex: 1; overflow-y: auto; }
+body.comms-max .compose { position: relative; flex-shrink: 0; }
 
 /* ── Header ────────────────────────────── */
 .header {
