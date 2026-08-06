@@ -113,37 +113,7 @@ body{min-height:100vh;display:flex;flex-direction:column;align-items:center;over
 </div>
 <div class="compose-bar" id="compose-bar"><div class="compose-row"><button class="photo-btn" onclick="takePhoto()">📷</button><input type="text" id="msg-input" placeholder="Type message..."><button class="btn btn-primary btn-sm" onclick="sendMsg()">SEND</button></div></div>
 <button id="meet-fab" onclick="joinMeet()">🎥</button><button id="inspect-fab" onclick="openInspection()">📋</button>
-<input type="file" id="photo-input" accept="image/*" capture="environment" onchange="handlePhoto(event,'camera')" style="display:none;">
-<input type="file" id="gallery-input" accept="image/*" onchange="handlePhoto(event,'gallery')" style="display:none;">
-<div class="inspect-modal" id="photo-source-sheet" onclick="if(event.target===this)document.getElementById('photo-source-sheet').style.display='none'" style="display:none;">
-  <div class="inspect-card" style="max-width:380px;">
-    <div class="inspect-hdr"><span>📸 PHOTO ACCOMPLISHMENT</span><span onclick="document.getElementById('photo-source-sheet').style.display='none'" style="cursor:pointer;color:var(--text-dim);font-size:20px;">✕</span></div>
-    <div style="padding:16px;display:flex;flex-direction:column;gap:10px;">
-      <button class="btn btn-primary btn-block" onclick="document.getElementById('photo-source-sheet').style.display='none';document.getElementById('photo-input').click();">📷 TAKE NEW PHOTO</button>
-      <button class="btn btn-success btn-block" onclick="document.getElementById('photo-source-sheet').style.display='none';document.getElementById('gallery-input').click();">🖼️ CHOOSE FROM GALLERY</button>
-      <button class="btn btn-sm btn-block" onclick="document.getElementById('photo-source-sheet').style.display='none';">CANCEL</button>
-    </div>
-  </div>
-</div>
-
-
-<!-- PHOTO REPORT FORM -->
-<div class="inspect-modal" id="photo-report-modal" onclick="if(event.target===this)closePhotoReport()" style="display:none;">
-  <div class="inspect-card" style="max-height:94vh;">
-    <div class="inspect-hdr"><span>📸 DESCRIBE PHOTO REPORT</span><span onclick="closePhotoReport()" style="cursor:pointer;color:var(--text-dim);font-size:20px;">✕</span></div>
-    <div class="inspect-body">
-      <img id="photo-report-preview" style="width:100%;max-height:200px;object-fit:cover;border-radius:6px;border:1px solid var(--border-color);" alt="Photo preview">
-      <div class="field-group"><label class="field-label">Description / Accomplishment *</label><textarea class="inspect-textarea" id="photo-desc" placeholder="What task or accomplishment does this photo show?" style="min-height:72px;"></textarea></div>
-      <div class="field-group"><label class="field-label">Time Captured</label><input class="input" type="datetime-local" id="photo-report-time" style="font-size:var(--font-sm);color:var(--text-primary);"></div>
-      <div class="field-group"><label class="field-label">Where / Location</label><input class="input" type="text" id="photo-report-where" placeholder="Where was this photo taken?"></div>
-      <div class="field-group"><label class="field-label">Why / Purpose</label><textarea class="inspect-textarea" id="photo-why" placeholder="Why was this photo taken? e.g. proof of accomplishment, incident documentation..." style="min-height:50px;"></textarea></div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-primary flex-1" id="photo-send-btn" onclick="submitPhotoReport()">📤 SEND REPORT</button>
-        <button class="btn btn-sm" onclick="closePhotoReport()">CANCEL</button>
-      </div>
-    </div>
-  </div>
-</div>
+<input type="file" id="photo-input" accept="image/*" capture="environment" onchange="handlePhoto(event)" style="display:none;">
 
 <div class="inspect-modal" id="inspect-modal" onclick="if(event.target===this)closeInspection()">
   <div class="inspect-card">
@@ -153,17 +123,6 @@ body{min-height:100vh;display:flex;flex-direction:column;align-items:center;over
       <button class="btn btn-warning btn-sm flex-1" onclick="submitInspection()">📤 SUBMIT INSPECTION</button>
     </div>
   </div>
-<div class="inspect-modal" id="inspect-photo-source-sheet" onclick="if(event.target===this)document.getElementById('inspect-photo-source-sheet').style.display='none'" style="display:none;">
-  <div class="inspect-card" style="max-width:380px;">
-    <div class="inspect-hdr"><span>📸 INSPECTION PHOTO</span><span onclick="document.getElementById('inspect-photo-source-sheet').style.display='none'" style="cursor:pointer;color:var(--text-dim);font-size:20px;">✕</span></div>
-    <div style="padding:16px;display:flex;flex-direction:column;gap:10px;">
-      <button class="btn btn-primary btn-block" onclick="captureInspectPhoto('camera')">📷 TAKE NEW PHOTO</button>
-      <button class="btn btn-success btn-block" onclick="captureInspectPhoto('gallery')">🖼️ CHOOSE FROM GALLERY</button>
-      <button class="btn btn-sm btn-block" onclick="document.getElementById('inspect-photo-source-sheet').style.display='none';">CANCEL</button>
-    </div>
-  </div>
-</div>
-
 </div>
 <div style="text-align:center;padding:16px 0 80px;font-family:var(--font-mono);"><div style="font-size:9px;color:var(--accent);letter-spacing:2px;opacity:.8;">-=pagong=-</div><div style="font-size:8px;color:var(--text-dim);opacity:.75;margin-top:4px;">© 2026 · OPM · OPERATIONS PERSONNEL MONITOR</div></div>
 
@@ -172,6 +131,7 @@ body{min-height:100vh;display:flex;flex-direction:column;align-items:center;over
 var me=null,curLat=null,curLng=null,fetchTimer=null,locTimer=null,approvalTimer=null,meetUrl=null;
 var _inspectPhotos={};
 var FALLBACK_TEAMS=[{name:'ADMINISTRATIVE UNIT',code:'ADMIN26',color:'#00e5ff'},{name:'OPERATIONS UNIT',code:'OPS26',color:'#00ff88'},{name:'UTILITY UNIT',code:'UTIL26',color:'#ff6b35'},{name:'SAFETY & SECURITY',code:'SEC26',color:'#ffd166'},{name:'TASK FORCE',code:'TF26',color:'#a29bfe'}];
+var CK=String.fromCharCode(10003);
 
 var INSPECTION_FORMS={
   'OPERATIONS UNIT':{title:'OPERATIONS INSPECTION',groups:[
@@ -272,7 +232,6 @@ function addInspectPhoto(itemId,event){
     reader.onload=function(ev){
       if(!_inspectPhotos[itemId])_inspectPhotos[itemId]=[];
       _inspectPhotos[itemId].push(ev.target.result);
-      // Update thumbnails
       var container=document.getElementById('thumbs_'+itemId);
       if(container){
         _inspectPhotos[itemId].forEach(function(url,i){
@@ -291,6 +250,9 @@ function closeInspection(){document.getElementById('inspect-modal').classList.re
 
 async function submitInspection(){
   if(!me)return;
+  var btn=document.querySelector('#inspect-modal .btn-warning');
+  if(btn){btn.textContent='UPLOADING...';btn.disabled=true}
+
   var form=INSPECTION_FORMS[me.team]||{title:'DAILY INSPECTION',groups:[{title:'General',items:[{id:'area_secure',label:'Area secure and orderly'}]}]};
   var checked=[];
   form.groups.forEach(function(g){
@@ -301,28 +263,49 @@ async function submitInspection(){
       }
     });
   });
-  if(checked.length===0){OPM.toast('No items checked','warning');return;}
+  if(checked.length===0){OPM.toast('No items checked','warning');if(btn){btn.textContent='SUBMIT INSPECTION';btn.disabled=false}return}
+
+  var totalPhotos=0;checked.forEach(function(c){totalPhotos+=c.photos.length});
+  if(btn&&totalPhotos>0)btn.textContent='UPLOADING '+totalPhotos+' PHOTOS...';
+
+  // Upload ALL photos in PARALLEL with 15s timeout each
+  var uploadPromises=[];
+  checked.forEach(function(c,i){
+    c.photos.forEach(function(photoData,j){
+      var p=Promise.race([
+        fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'uploadPhoto',sender:me.name,photoData:photoData})})
+          .then(function(r){return r.json()}).then(function(d){return d.photoUrl||''}),
+        new Promise(function(_,reject){setTimeout(function(){reject(new Error('timeout'))},15000)})
+      ]).catch(function(){return ''});
+      uploadPromises.push({promise:p,itemIndex:i});
+    });
+  });
+
+  // Wait for ALL photos in parallel (not sequential)
+  var results=await Promise.all(uploadPromises.map(function(u){return u.promise}));
+
+  // Map results back
+  results.forEach(function(url,idx){
+    var itemIdx=uploadPromises[idx].itemIndex;
+    if(!checked[itemIdx].photoUrls)checked[itemIdx].photoUrls=[];
+    if(url)checked[itemIdx].photoUrls.push(url);
+  });
+
+  var allPhotoUrls=[];var successCount=0;
+  checked.forEach(function(c){
+    var urls=c.photoUrls||[];
+    if(urls.length>0)successCount+=urls.length;
+    allPhotoUrls.push({id:c.id,label:c.label,section:c.section,urls:urls});
+  });
+
+  if(btn)btn.textContent='SENDING...';
+
   var remarks=document.getElementById('insp-remarks');var remarksText=remarks?remarks.value.trim():'';
 
   var body=me.team+' DAILY INSPECTION — '+OPM.formatTime()+'\n';
   body+=checked.length+' items inspected\n';
-  checked.forEach(function(c){body+='✓ '+c.label+' ('+c.section+')\n';});
+  checked.forEach(function(c){body+=CK+' '+c.label+' ('+c.section+')\n'});
   if(remarksText)body+='\nRemarks: '+remarksText;
-
-  // Upload all photos, get URLs
-  var allPhotoUrls=[];
-  for(var i=0;i<checked.length;i++){
-    var urls=[];
-    for(var j=0;j<checked[i].photos.length;j++){
-      try{
-        var ur=await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'uploadPhoto',sender:me.name,photoData:checked[i].photos[j]})});
-        var ud=await ur.json();
-        urls.push(ud.photoUrl||'');
-      }catch(e){}
-    }
-    checked[i].photoUrls=urls;
-    allPhotoUrls.push({id:checked[i].id,label:checked[i].label,section:checked[i].section,urls:urls});
-  }
 
   try{
     await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({
@@ -330,26 +313,25 @@ async function submitInspection(){
       photoUrls:JSON.stringify(allPhotoUrls),
       inspectionData:JSON.stringify({results:checked,remarks:remarksText,team:me.team,name:me.name,time:OPM.formatTime()})
     })});
-    closeInspection();fetchMsgs();OPM.toast('Inspection submitted','success');
-  }catch(e){OPM.toast('Submit failed','error');}
+    closeInspection();fetchMsgs();
+    var msg='Inspection submitted';
+    if(successCount>0)msg+=', '+successCount+' photo(s) uploaded';
+    OPM.toast(msg,'success');
+  }catch(e){OPM.toast('Submit failed — check connection','error');if(btn){btn.textContent='SUBMIT INSPECTION';btn.disabled=false}}
 }
 
 function isSupervisor(){return me&&INSPECTION_FORMS[me.team];}
 
-// ── SETUP ──
 function showSetup(){var c=OPM.getConfig();document.getElementById('sw-sheet-url').value=c.sheetUrl||'';document.getElementById('sw-csv-url').value=c.settingsCsvUrl||'';document.getElementById('setup-overlay').style.display='flex';}
 async function connectSetup(){var su=document.getElementById('sw-sheet-url').value.trim(),cu=document.getElementById('sw-csv-url').value.trim(),er=document.getElementById('sw-err');if(!su||!su.includes('script.google.com')){er.textContent='Enter valid Apps Script URL';return;}if(!cu||!cu.includes('docs.google.com')){er.textContent='Enter valid CSV URL';return;}er.style.color='var(--success)';er.textContent='Saving...';OPM.saveConfig({sheetUrl:su,settingsCsvUrl:cu});localStorage.setItem('opm_setup_done','1');er.textContent='Connected!';setTimeout(function(){document.getElementById('setup-overlay').style.display='none';loadTeamsNow();startGPS();},800);}
 
-// ── TEAMS ──
 function loadTeamsNow(){var s=document.getElementById('l-team'),e=document.getElementById('event-name-disp'),c=OPM.getConfig(),cached=null;try{cached=JSON.parse(localStorage.getItem('opm_teams_cache'));}catch(x){}if(!cached||!cached.length)try{cached=c.teams;}catch(x){}if(cached&&cached.length){populateTeams(cached);e.textContent=(c.eventName||'OPM').toUpperCase();fetchTeamsFromServer();return;}populateTeams(FALLBACK_TEAMS);e.textContent=(c.eventName||'OPM').toUpperCase();fetchTeamsFromServer();}
 function populateTeams(t){var s=document.getElementById('l-team');s.innerHTML='<option value="">— Select your team —</option>';t.forEach(function(t){var o=document.createElement('option');o.value=t.name;o.textContent=t.name;s.appendChild(o);});}
 function parseCSV(t){var c={};t.trim().split('\n').forEach(function(l){var i=l.indexOf(',');if(i<0)return;var k=l.substring(0,i).replace(/"/g,'').trim(),v=l.substring(i+1).trim();if(v.startsWith('"')&&v.endsWith('"'))v=v.slice(1,-1).replace(/""/g,'"');if(k&&k!=='Key')c[k]=v;});return c;}
 async function fetchTeamsFromServer(){var c=OPM.getConfig(),t=null,en=null;if(c.settingsCsvUrl){try{var r=await fetch(c.settingsCsvUrl+'&t='+Date.now());var p=parseCSV(await r.text());if(p.teams){t=typeof p.teams==='string'?JSON.parse(p.teams):p.teams;if(t&&t.length)en=p.eventName;}}catch(e){}}if(!t&&c.sheetUrl){try{var r2=await fetch(c.sheetUrl+'?action=getSettings&t='+Date.now());var d2=await r2.json();if(d2.settings&&d2.settings.teams){t=typeof d2.settings.teams==='string'?JSON.parse(d2.settings.teams):d2.settings.teams;if(t&&t.length)en=d2.settings.eventName;}}catch(e){}}if(t&&t.length){populateTeams(t);if(en)document.getElementById('event-name-disp').textContent=en.toUpperCase();try{localStorage.setItem('opm_teams_cache',JSON.stringify(t));}catch(e){}OPM.saveConfig({teams:t,eventName:en||c.eventName});}}
 
-// ── GPS ──
 function startGPS(){if(!navigator.geolocation){document.getElementById('gps-status').innerHTML='<span style="color:var(--danger);">📍 NO GPS</span>';return;}var a=0;function tg(){a++;document.getElementById('gps-status').innerHTML='<span style="color:var(--warning);">📍 searching ('+a+'/5)</span>';navigator.geolocation.getCurrentPosition(function(p){curLat=p.coords.latitude.toFixed(6);curLng=p.coords.longitude.toFixed(6);var q=p.coords.accuracy<30?'good':p.coords.accuracy<100?'fair':'poor';document.getElementById('gps-status').innerHTML='<span class="gps-quality '+q+'"></span>📍 '+curLat+', '+curLng;if(me)sendLocation(false);},function(e){if(a<5)setTimeout(tg,5000);else document.getElementById('gps-status').innerHTML='<span style="color:#ffaa00;">📍 unavailable</span>';},{enableHighAccuracy:true,timeout:15000,maximumAge:0});}tg();navigator.geolocation.watchPosition(function(p){curLat=p.coords.latitude.toFixed(6);curLng=p.coords.longitude.toFixed(6);document.getElementById('gps-status').innerHTML='<span class="gps-quality good"></span>📍 '+curLat+', '+curLng;},function(){},{enableHighAccuracy:true,maximumAge:30000});}
 
-// ── LOGIN ──
 async function doLogin(){var n=document.getElementById('l-name').value.trim(),t=document.getElementById('l-team').value,p=document.getElementById('l-post').value.trim(),c=document.getElementById('l-code').value.trim();if(!n||!t||!p||!c){alert('Fill all fields.');return;}var b=document.getElementById('login-btn');b.textContent='CHECKING...';b.disabled=true;var cfg=OPM.getConfig(),teams=cfg.teams||FALLBACK_TEAMS,tObj=teams.find(function(x){return x.name===t;});if(tObj&&tObj.code&&tObj.code.toUpperCase()!==c.toUpperCase()){alert('Wrong access code.');b.textContent='REQUEST ACCESS ▶';b.disabled=false;return;}b.textContent='REQUESTING...';try{var did=OPM.getDeviceId(),url=OPM.SHEET_URL();var cr=await fetch(url,{method:'POST',body:JSON.stringify({action:'checkApproval',deviceId:did})});var cd=await cr.json();if(cd.status==='APPROVED'){me={devId:did,name:n,team:t,post:p,color:tObj?tObj.color:'#00e5ff'};localStorage.setItem('opm_pending',JSON.stringify(me));enterApp();return;}var rr=await fetch(url,{method:'POST',body:JSON.stringify({action:'requestApproval',deviceId:did,name:n,team:t,post:p})});var rd=await rr.json();me={devId:did,name:n,team:t,post:p,color:tObj?tObj.color:'#00e5ff'};localStorage.setItem('opm_pending',JSON.stringify(me));if(rd.status==='APPROVED')enterApp();else if(rd.status==='REJECTED')showRejected();else showWaiting();}catch(e){alert('Cannot reach server.');}b.textContent='REQUEST ACCESS ▶';b.disabled=false;}
 function showLogin(){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById('login-screen').classList.add('active');if(approvalTimer){clearInterval(approvalTimer);approvalTimer=null;}}
 function showWaiting(){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById('waiting-screen').classList.add('active');document.getElementById('wait-name').textContent=me.name;document.getElementById('wait-detail').textContent=me.team+' · '+me.post;approvalTimer=setInterval(pollApproval,5000);}
@@ -363,54 +345,13 @@ async function sendLocation(m){if(!me)return;if(!curLat&&m){alert('GPS not ready
 async function fetchMsgs(){try{var r=await fetch(OPM.SHEET_URL()+'?action=getMessages&t='+Date.now());var d=await r.json();document.getElementById('last-sync').textContent='SYNC: '+OPM.formatTime();document.getElementById('status-txt').textContent='ONLINE';document.getElementById('status-icon').style.color='var(--success)';if(d.messages)renderMsgs(d.messages);}catch(e){document.getElementById('status-txt').textContent='OFFLINE';document.getElementById('status-icon').style.color='var(--danger)';}}
 function renderMsgs(msgs){var l=document.getElementById('msg-list');if(!msgs||!msgs.length){l.innerHTML='<div style="padding:24px;text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">No messages yet.</div>';return;}var rev=[].concat(msgs).reverse(),cutoff=Date.now()-6*60*60*1000,activeMeet=null;for(var i=0;i<rev.length;i++){var m=rev[i];if(m.body&&m.type==='system'&&m.body.toLowerCase().indexOf('ended')>=0)break;var mm=(m.body||'').match(/(https:\/\/meet\.google\.com\/[\w-]+)/);if(mm){var mt=0;try{var dd=new Date(m.time||'');if(!isNaN(dd.getTime()))mt=dd.getTime();}catch(e){}if(mt>cutoff)activeMeet=mm[1];break;}}if(activeMeet){meetUrl=activeMeet;document.getElementById('meet-fab').classList.add('active');}else{meetUrl=null;document.getElementById('meet-fab').classList.remove('active');}l.innerHTML=rev.map(function(m){var cls=m.type==='broadcast'?'broadcast':m.type==='inspection'?'system':m.type==='system'?'system':'';var mm2=(m.body||'').match(/(https:\/\/meet\.google\.com\/[\w-]+)/);var bt=(m.body||'').replace(/(https:\/\/meet\.google\.com\/[\w-]+)/g,'').replace(/\n/g,'<br>');var mt2=0;try{var dd2=new Date(m.time||'');if(!isNaN(dd2.getTime()))mt2=dd2.getTime();}catch(e){}var rm=mm2&&mt2>cutoff&&activeMeet;return '<div class="msg-item '+cls+'"><div class="msg-sender">'+(m.type==='inspection'?'📋 ':'')+(m.sender||'')+(m.post?' · '+m.post:'')+'</div><div class="msg-body">'+bt+'</div>'+(m.photoUrl?'<img class="msg-photo" src="'+m.photoUrl+'" onclick="window.open(\''+m.photoUrl+'\')">':'')+(rm?'<a href="'+mm2[1]+'" target="_blank" rel="noopener" class="join-btn">▶ JOIN VIDEO CALL</a>':'')+'<div class="msg-time">'+(m.time||'')+'</div></div>';}).join('');}
 async function sendMsg(){var i=document.getElementById('msg-input'),b=i.value.trim();if(!b||!me)return;i.value='';try{await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'sendMessage',sender:me.name,team:me.team,post:me.post,body:b,type:'chat'})});fetchMsgs();}catch(e){i.value=b;alert('Send failed.');}}
-function takePhoto(){document.getElementById('photo-source-sheet').style.display='flex';}
-var _pendingPhotoData=null,_pendingPhotoFile=null;
-async function handlePhoto(e,source){var f=e.target.files[0];if(!f){e.target.value='';return;}
-  var reader=new FileReader();
-  reader.onload=function(ev){
-    var img=new Image();img.onload=function(){
-      var c=document.createElement('canvas'),M=800,s=Math.min(M/img.width,M/img.height,1);
-      c.width=img.width*s;c.height=img.height*s;c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-      _pendingPhotoData=c.toDataURL('image/jpeg',0.65);
-      _pendingPhotoFile=f;
-      // Show photo report form
-      document.getElementById('photo-report-time').value = toLocalDateTimeInput(new Date(f.lastModified || Date.now()));
-      document.getElementById('photo-report-where').value = me.post||'';
-      document.getElementById('photo-report-modal').style.display='flex';
-      document.getElementById('photo-desc').value='';document.getElementById('photo-why').value='';
-      document.getElementById('photo-report-preview').src=_pendingPhotoData;
-      document.getElementById('photo-send-btn').textContent='📤 SEND REPORT';document.getElementById('photo-send-btn').disabled=false;
-    };img.src=ev.target.result;
-  };reader.readAsDataURL(f);e.target.value='';}
-
-function closePhotoReport(){document.getElementById('photo-report-modal').style.display='none';_pendingPhotoData=null;_pendingPhotoFile=null;}
-function toLocalDateTimeInput(d){var y=d.getFullYear();var m=String(d.getMonth()+1).padStart(2,'0');var day=String(d.getDate()).padStart(2,'0');var h=String(d.getHours()).padStart(2,'0');var min=String(d.getMinutes()).padStart(2,'0');return y+'-'+m+'-'+day+'T'+h+':'+min;}
-
-async function submitPhotoReport(){
-  if(!_pendingPhotoData||!me)return;
-  var desc=document.getElementById('photo-desc').value.trim();
-  var captureTime=document.getElementById('photo-report-time').value;
-  var where=document.getElementById('photo-report-where').value.trim();
-  var why=document.getElementById('photo-why').value.trim();
-  if(!desc){OPM.toast('Please describe what this photo shows','warning');document.getElementById('photo-desc').focus();return;}
-  var btn=document.getElementById('photo-send-btn');btn.textContent='SENDING...';btn.disabled=true;
-  var body='Description: '+desc+'\n';
-  if(captureTime)body+='Captured: '+captureTime+'\n';
-  if(where)body+='Where: '+where+'\n';
-  if(why)body+='Why/Purpose: '+why+'\n';
-  if(curLat&&curLng)body+='GPS: '+Number(curLat).toFixed(6)+', '+Number(curLng).toFixed(6)+'\n';
-  try{
-    var ur=await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'uploadPhoto',sender:me.name,photoData:_pendingPhotoData})});
-    var ud=await ur.json();
-    await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'sendMessage',sender:me.name,team:me.team,post:me.post,body:body,type:'photo',photoUrl:ud.photoUrl,photoLat:curLat||'',photoLng:curLng||'',photoDesc:desc,captureTime:captureTime,photoWhere:where,photoWhy:why,target:'ALL'})});
-    closePhotoReport();fetchMsgs();OPM.toast('Photo report sent','success');
-  }catch(err){OPM.toast('Upload failed','error');btn.textContent='📤 SEND REPORT';btn.disabled=false;}
-}
+function takePhoto(){document.getElementById('photo-input').click();}
+async function handlePhoto(e){var f=e.target.files[0];if(!f){e.target.value='';return;}var r=new FileReader();r.onload=async function(ev){var img=new Image();img.onload=async function(){var c=document.createElement('canvas'),M=800,s=Math.min(M/img.width,M/img.height,1);c.width=img.width*s;c.height=img.height*s;c.getContext('2d').drawImage(img,0,0,c.width,c.height);var du=c.toDataURL('image/jpeg',0.65);try{var ur=await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'uploadPhoto',sender:me.name,photoData:du})});var ud=await ur.json();await fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'sendMessage',sender:me.name,team:me.team,post:me.post,body:'📸 Photo',type:'photo',photoUrl:ud.photoUrl,photoLat:curLat||'',photoLng:curLng||''})});fetchMsgs();}catch(err){alert('Upload failed.');}};img.src=ev.target.result;};r.readAsDataURL(f);e.target.value='';}
 function joinMeet(){if(meetUrl)window.open(meetUrl,'_blank');else alert('No active call.');}
 
 (function initApp(){document.getElementById('device-id-disp').textContent=OPM.getDeviceId().slice(-8);document.getElementById('l-code').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});document.getElementById('msg-input').addEventListener('keydown',function(e){if(e.key==='Enter')sendMsg();});var cfg=OPM.getConfig();if(!cfg.sheetUrl||!cfg.settingsCsvUrl){showSetup();return;}loadTeamsNow();startGPS();var p=JSON.parse(localStorage.getItem('opm_pending')||'null');if(p&&p.devId){me=p;fetch(OPM.SHEET_URL(),{method:'POST',body:JSON.stringify({action:'checkApproval',deviceId:p.devId})}).then(function(r){return r.json();}).then(function(d){if(d.status==='APPROVED')enterApp();else if(d.status==='PENDING')showWaiting();else if(d.status==='REJECTED'){localStorage.removeItem('opm_pending');showRejected();}}).catch(function(){enterApp();});}})();
 </script>
 <script>if('serviceWorker'in navigator){window.addEventListener('load',async function(){var k=await caches.keys();for(var i=0;i<k.length;i++){if(k[i]!=='opm-v3')await caches.delete(k[i]);}navigator.serviceWorker.register('./sw.js').then(function(r){console.log('[OPM] SW:',r.scope);}).catch(function(e){console.log('[OPM] SW:',e);});});}</script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a23394bd0fb0850f',t:'MTc4NTQwNjMwNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a26a24d39a14098a',t:'MTc4NTk3ODQzNw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
