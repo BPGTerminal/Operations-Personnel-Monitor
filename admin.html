@@ -240,7 +240,10 @@ body { min-height: 100vh; display: flex; flex-direction: column; overflow-y: aut
       <button class="btn btn-primary btn-block btn-lg" id="save-btn" onclick="saveAll()">💾 SAVE ALL SETTINGS TO GOOGLE SHEET</button>
       <div class="flex gap-sm">
         <button class="btn btn-danger btn-sm flex-1" onclick="runUtil('clearEventData')">🗑️ CLEAR EVENT DATA</button>
-        <button class="btn btn-warning btn-sm flex-1" onclick="purgeBeforeAug()">🗄️ PURGE BEFORE AUG 2026</button>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button class="btn btn-warning btn-sm" onclick="purgeBefore()">🗄️ PURGE BEFORE</button>
+          <input type="date" id="purge-date" value="2026-08-01" style="background:var(--bg-surface);border:1px solid var(--border-color);color:#fff;font-family:var(--font-mono);font-size:9px;padding:4px 6px;border-radius:3px;width:130px;">
+        </div>
         <button class="btn btn-warning btn-sm flex-1" onclick="runUtil('markAllOffline')">⬤ MARK ALL OFFLINE</button>
       </div>
       <p class="tip-text">Settings persist in Google Sheet — survives browser refresh, device change, everything. For a new event: update fields above → Save.</p>
@@ -507,10 +510,12 @@ async function saveAll() {
   btn.textContent = '💾 SAVE ALL SETTINGS TO GOOGLE SHEET'; btn.disabled = false;
 }
 
-async function purgeBeforeAug() {
-  if (!confirm('Delete all messages and photos BEFORE August 1, 2026?\n\nThis will permanently remove July and earlier data from the Messages sheet. Photos on Google Drive will NOT be deleted.')) return;
+async function purgeBefore() {
+  var dateVal = document.getElementById('purge-date').value;
+  if (!dateVal) { alert('Please select a date first.'); return; }
+  if (!confirm('Delete all messages and photos BEFORE ' + dateVal + '?\n\nThis will permanently remove older data from the Messages sheet. Photos on Google Drive will NOT be deleted.')) return;
   try {
-    const res = await fetch(SHEET_URL, { method:'POST', body:JSON.stringify({ action:'purgeOldData', date:'2026-08-01' }) });
+    const res = await fetch(SHEET_URL, { method:'POST', body:JSON.stringify({ action:'purgeOldData', date: dateVal }) });
     const d = await res.json();
     alert('Purged ' + (d.removed||0) + ' old messages. ' + (d.kept||0) + ' messages kept.');
   } catch(e) { alert('Purge failed. Try running purgeOldData() manually.'); }
@@ -525,6 +530,6 @@ async function runUtil(action) {
   } catch(e) { alert('Failed. Run '+action+'() manually in Apps Script editor.'); }
 }
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a28dd273db7d0978',t:'MTc4NjM1MjU1MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
-</body>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a28e4fbb8d5a8106',t:'MTc4NjM1NzY4Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
