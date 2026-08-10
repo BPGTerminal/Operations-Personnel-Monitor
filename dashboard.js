@@ -79,10 +79,48 @@ function S(m,tt,tp,ti,p,a){return'<div class="stats"><div><div class="n">'+m+'</
 
 function UT(ud,un){var h='<table><tr><th></th><th>UNIT</th><th class="num">PHOTOS</th><th class="num">TASKS</th><th class="num">INC</th><th class="num">COMMS</th></tr>';ud.forEach(function(u,i){h+='<tr><td><span class="dot" style="background:'+CO[i%7]+'"></span></td><td><strong>'+esc(u.team)+'</strong></td><td class="num">'+(u.photos||0)+'</td><td class="num" style="color:var(--success)">'+(u.tasks||0)+'</td><td class="num" style="color:'+((u.incidents||0)>0?"var(--warning)":"var(--text-dim)")+'">'+(u.incidents||0)+'</td><td class="num">'+(u.messages||0)+'</td></tr>'});h+='</table><div style="margin-top:14px;height:200px"><canvas id="chart"></canvas></div>';return h}
 
-function PG(photos,un){var h='<div class="card"><div class="card-hdr">PHOTO REPORTS ('+photos.length+')</div><div class="card-body"><div class="photo-grid">';photos.slice(0,60).forEach(function(p,i){var m=(p.url||"").match(/[?&]id=([a-zA-Z0-9_-]+)/),e=m?"https://lh3.googleusercontent.com/d/"+m[1]:p.url,uc=CO[un.indexOf(p.team)%7]||"var(--accent)",desc=pD(p),where=pW(p),why=pY(p),cap=pC(p);h+='<div class="photo-card"><div class="photo-side" onclick="window.open(\''+esc(p.url)+'\')"><img src="'+esc(e)+'" loading="lazy"><span class="pb" style="background:'+uc+'">'+esc(p.team||"")+'</span><span class="pn">#'+(i+1)+'</span></div><div class="info-side"><div class="fn">'+esc(desc)+'</div><div class="fr">';if(where)h+='<span class="fk">Location</span><span class="fv">'+esc(where)+'</span>';if(cap)h+='<span class="fk">Captured</span><span class="fv">'+esc(fmtD(cap))+'</span>';h+='<span class="fk">Unit</span><span class="fv" style="color:'+uc+';font-weight:600">'+esc(p.team||"")+'</span><span class="fk">By</span><span class="fv">'+esc(p.sender||"")+'</span></div>';if(why)h+='<div class="fp">"'+esc(why)+'"</div>';h+='</div></div>'});if(photos.length>60)h+='<div style="text-align:center;padding:14px;color:var(--text-dim);font-family:var(--font-mono);font-size:10px">Showing 60 of '+photos.length+' photo reports</div>';h+='</div></div></div>';return h}
+function PG(photos,un){
+  var sorted = [].concat(photos).sort(function(a,b){
+    var ta = (a.captureTime||a.time||'').toString();
+    var tb = (b.captureTime||b.time||'').toString();
+    return tb.localeCompare(ta);
+  });
+  var grouped = {};
+  sorted.forEach(function(p){
+    var u = p.team||'UNASSIGNED';
+    if(!grouped[u]) grouped[u] = [];
+    grouped[u].push(p);
+  });
+  var unitOrder = Object.keys(grouped).sort();
+  var total = photos.length;
+  var h = '<div class="card"><div class="card-hdr">PHOTO REPORTS ('+total+')</div><div class="card-body">';
+  unitOrder.forEach(function(unit){
+    var up = grouped[unit];
+    var uc = CO[un.indexOf(unit)%7]||'var(--accent)';
+    h += '<div style="margin-bottom:16px;border-bottom:2px solid '+uc+';padding-bottom:6px;">';
+    h += '<h3 style="font-family:var(--font-mono);font-size:11px;color:'+uc+';letter-spacing:1px;margin-bottom:6px;">'+esc(unit)+' ('+up.length+' reports)</h3>';
+    h += '<div style="font-size:12px;color:var(--text-dim);margin-bottom:10px;line-height:1.5;">'+up.length+' photo report(s) submitted.</div>';
+    h += '<div class="photo-grid">';
+    up.slice(0,50).forEach(function(p,i){
+      var m = (p.url||'').match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      var e = m ? ('https://lh3.googleusercontent.com/d/'+m[1]) : p.url;
+      var desc = pD(p), where = pW(p), why = pY(p), cap = pC(p);
+      h += '<div class="photo-card"><div class="photo-side" onclick="window.open(''+esc(p.url)+'')"><img src="'+esc(e)+'" loading="lazy"><span class="pb" style="background:'+uc+'">'+esc(p.team||'')+'</span><span class="pn">#'+(i+1)+'</span></div><div class="info-side"><div class="fn">'+esc(desc)+'</div><div class="fr">';
+      if(where) h += '<span class="fk">Location</span><span class="fv">'+esc(where)+'</span>';
+      if(cap) h += '<span class="fk">Captured</span><span class="fv">'+esc(fmtD(cap))+'</span>';
+      h += '<span class="fk">Unit</span><span class="fv" style="color:'+uc+';font-weight:600">'+esc(p.team||'')+'</span><span class="fk">By</span><span class="fv">'+esc(p.sender||'')+'</span></div>';
+      if(why) h += '<div class="fp">"'+esc(why)+'"</div>';
+      h += '</div></div>';
+    });
+    if(up.length > 50) h += '<div style="text-align:center;padding:10px;color:var(--text-dim);font-family:var(--font-mono);font-size:10px;">+ '+(up.length-50)+' more photos from '+esc(unit)+'</div>';
+    h += '</div></div>';
+  });
+  if(total > 80) h += '<div style="text-align:center;padding:10px;color:var(--text-dim);font-family:var(--font-mono);font-size:10px;">Showing 80 of '+total+' total photo reports</div>';
+  h += '</div></div>';
+  return h;
+}
 
-// -- INSPECTION REPORTS (simplified, no Chart dependency in rendering) --
-function IR(insp,df){
+function IRfunction IR(insp,df){
   var uiM={},CK="\u2713";
   insp.forEach(function(ins){
     var team=ins.team||"UNASSIGNED";if(!uiM[team])uiM[team]={inspector:ins.sender||"",time:ins.time||"",sections:{},remarks:[]};
