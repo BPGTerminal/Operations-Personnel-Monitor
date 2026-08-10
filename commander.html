@@ -26,6 +26,24 @@
 <link rel="stylesheet" href="opm-commander.css">
 </head>
 <body>
+<div id="opm-gate" style="
+  display:none;position:fixed;inset:0;z-index:999999;background:#0a0e1a;
+  flex-direction:column;align-items:center;justify-content:center;
+  font-family:var(--font-mono);padding:24px;
+">
+  <img src="icon-192.png" style="width:80px;height:80px;border-radius:50%;margin-bottom:8px;box-shadow:0 0 24px rgba(0,229,255,.4);" alt="OPM">
+  <div style="font-size:28px;font-weight:bold;color:#00e5ff;letter-spacing:4px;margin-bottom:2px;">OPM</div>
+  <div style="font-size:9px;color:rgba(0,229,255,.45);letter-spacing:3px;margin-bottom:28px;">COMMANDER ACCESS</div>
+  <div style="background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.2);border-radius:4px;padding:24px;width:100%;max-width:360px;">
+    <label style="font-size:9px;color:#00e5ff;letter-spacing:2px;display:block;margin-bottom:6px;">COMMANDER PASSWORD</label>
+    <input id="g-pw" type="password" placeholder="••••••" autocomplete="off" style="width:100%;background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.25);color:#fff;font-family:Share Tech Mono,monospace;font-size:18px;padding:12px 14px;outline:none;border-radius:2px;letter-spacing:4px;text-align:center;margin-bottom:10px;" onkeydown="if(event.key==='Enter')opmGateUnlock()">
+    <button onclick="opmGateUnlock()" style="width:100%;background:rgba(0,229,255,.15);border:1px solid #00e5ff;color:#00e5ff;font-family:Share Tech Mono,monospace;font-size:12px;letter-spacing:2px;padding:14px;cursor:pointer;border-radius:2px;">UNLOCK COMMANDER ▶</button>
+    <div id="g-err" style="font-size:10px;color:#ff3b5c;min-height:16px;text-align:center;margin-top:8px;"></div>
+    <div style="font-size:9px;color:rgba(255,255,255,.2);text-align:center;margin-top:10px;">Default: PAGONG — change in Admin settings</div>
+  </div>
+</div>
+
+
 
 <!-- ═══════════ HEADER ═══════════ -->
 <header class="header">
@@ -274,10 +292,31 @@ async function init() {
     return;
   } else if (!sessionStorage.getItem('opm_commander_gate') && localStorage.getItem('opm_commander_unlocked') === '1') {
     sessionStorage.setItem('opm_commander_gate', '1');
-    localStorage.setItem('opm_commander_unlocked', '1');
   }
 
   await startPolling();
+}
+
+
+function opmGateUnlock() {
+  var pw = (document.getElementById('g-pw').value||'').trim().toUpperCase();
+  var err = document.getElementById('g-err');
+  err.textContent = '';
+  var storedPw = 'PAGONG';
+  try { var cfg=OPM.getConfig(); if(cfg.commanderPw) storedPw=String(cfg.commanderPw).toUpperCase().trim(); } catch(e) {}
+  if(!pw){err.textContent='Enter your password.';return}
+  if(pw===storedPw){
+    sessionStorage.setItem('opm_commander_gate','1');
+    localStorage.setItem('opm_commander_unlocked','1');
+    var g=document.getElementById('opm-gate');
+    if(g){g.style.transition='opacity .3s';g.style.opacity='0';setTimeout(function(){g.style.display='none'},300)}
+    window._gateBlocking=false;
+    if(typeof init==='function')init();
+  }else{
+    err.textContent='Wrong password. Try again.';
+    document.getElementById('g-pw').value='';
+    document.getElementById('g-pw').focus();
+  }
 }
 
 function showCommanderGate() {
@@ -970,7 +1009,7 @@ function renderPhotoHtml(photoUrl) {
   return '<div style="margin-top:6px;"><a href="' + photoUrl + '" target="_blank" rel="noopener"><img class="msg-photo" src="' + photoUrl + '" loading="lazy" style="max-width:100%;border-radius:4px;border:1px solid var(--border-color);" onerror="this.style.display=\'none\';this.parentElement.nextElementSibling.style.display=\'block\';"></a><a href="' + photoUrl + '" target="_blank" rel="noopener" class="btn btn-sm" style="display:none;margin-top:6px;">Open Photo</a></div>';
 }
 
-function renderInspectionPhotosfunction renderInspectionPhotos(photoUrlsJson) {
+function renderInspectionPhotos(photoUrlsJson) {
   try {
     var items = typeof photoUrlsJson === 'string' ? JSON.parse(photoUrlsJson) : photoUrlsJson;
     if (!Array.isArray(items) || !items.length) return '';
@@ -1314,6 +1353,6 @@ if ('serviceWorker' in navigator) {
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1adaf8a1864dd3a',t:'MTc4NDAwMjMxMA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a25ac7163c22634b',t:'MTc4NTgxNzMxMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2617a555e28b4c7',t:'MTc4NTg4NzU2OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a28d723afa880953',t:'MTc4NjM0ODYwOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2617a555e28b4c7',t:'MTc4NTg4NzU2OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a28d9b490f4c9354',t:'MTc4NjM1MDI5MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
+</body>
 </html>
