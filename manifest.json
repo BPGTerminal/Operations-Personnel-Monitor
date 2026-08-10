@@ -2,7 +2,7 @@
   "name": "OPM — Operations Personnel Monitor",
   "short_name": "OPM",
   "description": "Real-time field personnel tracking, GPS mapping, comms log, and video command system for EOC operations",
-  "start_url": "./personnel.html",
+  "start_url": "./staff.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
@@ -27,7 +27,7 @@
     {
       "name": "Personnel Check-In",
       "short_name": "Check-In",
-      "url": "./personnel.html",
+      "url": "./staff.html",
       "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
     },
     {
