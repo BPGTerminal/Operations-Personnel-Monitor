@@ -172,11 +172,11 @@ function updateLocation(data) {
 
 function getAll() {
   var pSheet = ensureSheet(SHEET_PERSONNEL,['ID','Name','Team','Post','Lat','Lng','Online','LastSeen','DeviceId']);
-  var mSheet = ensureSheet(SHEET_MESSAGES,['Time','Sender','Team','Post','Body','Type','PhotoUrl','PhotoLat','PhotoLng','Target']);
+  var mSheet = ensureSheet(SHEET_MESSAGES,['Time','Sender','Team','Post','Body','Type','PhotoUrl','PhotoLat','PhotoLng','PhotoUrls','Target']);
   var rawP = getAllRows(pSheet), rawM = getAllRows(mSheet);
   return {
     personnel: rawP.map(function(r){return{id:String(r[0]||''),name:String(r[1]||''),team:String(r[2]||''),post:String(r[3]||''),lat:String(r[4]||''),lng:String(r[5]||''),online:String(r[6]||'').toUpperCase()==='TRUE',lastSeen:String(r[7]||''),deviceId:String(r[8]||'')};}),
-    messages: rawM.map(function(r){return{time:String(r[0]||''),sender:String(r[1]||''),team:String(r[2]||''),post:String(r[3]||''),body:String(r[4]||''),type:String(r[5]||'chat'),photoUrl:String(r[6]||''),photoLat:String(r[7]||''),photoLng:String(r[8]||''),target:String(r[9]||'ALL')};})
+    messages: rawM.map(function(r){return{time:String(r[0]||''),sender:String(r[1]||''),team:String(r[2]||''),post:String(r[3]||''),body:String(r[4]||''),type:String(r[5]||'chat'),photoUrl:String(r[6]||''),photoLat:String(r[7]||''),photoLng:String(r[8]||''),photoUrls:String(r[9]||''),target:String(r[10]||'ALL')};})
   };
 }
 
@@ -196,25 +196,48 @@ function markOneOffline(data) {
 
 // ═══════════════ MESSAGES ═══════════════
 function sendMessage(data) {
-  var sheet = ensureSheet(SHEET_MESSAGES,['Time','Sender','Team','Post','Body','Type','PhotoUrl','PhotoLat','PhotoLng','Target']);
-  sheet.appendRow([nowFull(),data.sender||data.name||'',data.team||'',data.post||'',data.body||'',data.type||'chat',data.photoUrl||'',data.photoLat||'',data.photoLng||'',data.target||'ALL']);
+  var sheet = ensureSheet(SHEET_MESSAGES,['Time','Sender','Team','Post','Body','Type','PhotoUrl','PhotoLat','PhotoLng','PhotoUrls','Target']);
+  sheet.appendRow([nowFull(),data.sender||data.name||'',data.team||'',data.post||'',data.body||'',data.type||'chat',data.photoUrl||'',data.photoLat||'',data.photoLng||'',data.photoUrls||'',data.target||'ALL']);
   return {status:'sent'};
 }
 
 function getMessages() {
-  var sheet = ensureSheet(SHEET_MESSAGES,['Time','Sender','Team','Post','Body','Type','PhotoUrl','PhotoLat','PhotoLng','Target']);
-  return {messages: getAllRows(sheet).map(function(r){return{time:String(r[0]||''),sender:String(r[1]||''),team:String(r[2]||''),post:String(r[3]||''),body:String(r[4]||''),type:String(r[5]||'chat'),photoUrl:String(r[6]||''),photoLat:String(r[7]||''),photoLng:String(r[8]||''),target:String(r[9]||'ALL')};})};
+  var sheet = ensureSheet(SHEET_MESSAGES,['Time','Sender','Team','Post','Body','Type','PhotoUrl','PhotoLat','PhotoLng','PhotoUrls','Target']);
+  return {messages: getAllRows(sheet).map(function(r){return{time:String(r[0]||''),sender:String(r[1]||''),team:String(r[2]||''),post:String(r[3]||''),body:String(r[4]||''),type:String(r[5]||'chat'),photoUrl:String(r[6]||''),photoLat:String(r[7]||''),photoLng:String(r[8]||''),photoUrls:String(r[9]||''),target:String(r[10]||'ALL')};})};
 }
 
 function uploadPhoto(data) {
   try {
-    var folders = DriveApp.getFoldersByName('OPM_Photos');
-    var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder('OPM_Photos');
-    var blob = Utilities.newBlob(Utilities.base64Decode((data.photoData||'').replace(/^data:image\/\ w+;base64,/, '')),'image/jpeg','OPM_'+new Date().getTime()+'.jpg');
+    var folderName = 'OPM_Photos';
+    var folders = DriveApp.getFoldersByName(folderName);
+    var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+    
+    var raw = data.photoData || '';
+    // Strip data URL prefix — works regardless of image type (jpeg, png, etc.)
+    var prefix = raw.indexOf(';base64,');
+    var base64 = prefix >= 0 ? raw.substring(prefix + 8) : raw;
+    
+    var blob = Utilities.newBlob(
+      Utilities.base64Decode(base64),
+      'image/jpeg',
+      'OPM_' + new Date().getTime() + '.jpg'
+    );
+    
     var file = folder.createFile(blob);
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-    return {status:'ok',photoUrl:file.getUrl(),photoId:file.getId()};
-  } catch(e) { return {status:'ok',photoUrl:data.photoData||'',note:'Drive failed: '+e.message}; }
+    
+    return {
+      status: 'ok',
+      photoUrl: file.getUrl(),
+      photoId: file.getId()
+    };
+  } catch(e) {
+    return {
+      status: 'error',
+      photoUrl: '',
+      error: e.message || 'Upload failed'
+    };
+  }
 }
 
 // ═══════════════ APPROVALS ═══════════════
@@ -262,8 +285,8 @@ function rejectUser(data) {
 function clearEventData() {
   var pSheet = ensureSheet(SHEET_PERSONNEL,['ID','Name','Team','Post','Lat','Lng','Online','LastSeen','DeviceId']);
   pSheet.clear(); pSheet.appendRow(['ID','Name','Team','Post','Lat','Lng','Online','LastSeen','DeviceId']);
-  var mSheet = ensureSheet(SHEET_MESSAGES,['Time','Sender','Team','Post','Body','Type','PhotoUrl','PhotoLat','PhotoLng','Target']);
-  mSheet.clear(); mSheet.appendRow(['Time','Sender','Team','Post','Body','Type','PhotoUrl','PhotoLat','PhotoLng','Target']);
+  var mSheet = ensureSheet(SHEET_MESSAGES,['Time','Sender','Team','Post','Body','Type','PhotoUrl','PhotoLat','PhotoLng','PhotoUrls','Target']);
+  mSheet.clear(); mSheet.appendRow(['Time','Sender','Team','Post','Body','Type','PhotoUrl','PhotoLat','PhotoLng','PhotoUrls','Target']);
   var aSheet = ensureSheet(SHEET_PENDING,['DeviceId','Name','Team','Post','Time','Status']);
   aSheet.clear(); aSheet.appendRow(['DeviceId','Name','Team','Post','Time','Status']);
   ensureSheet(SHEET_SETTINGS).getRange('B2').setValue(nowFull());
@@ -284,17 +307,34 @@ function logVideoCall(data) {
 // ═══════════════ DASHBOARD DATA ═══════════════
 
 function getDashboardData(data) {
-  var dateFrom = data.dateFrom || '';
-  var dateTo   = data.dateTo   || '';
+  // Extract YYYYMMDD from any timestamp format (works with spaces, dashes, slashes, words)
+  var dateFrom = (data.dateFrom || '').replace(/\D/g,'').substring(0,8);
+  var dateTo   = (data.dateTo   || '').replace(/\D/g,'').substring(0,8);
 
-  var messages = getAllRows(ensureSheet(SHEET_MESSAGES,['Time','Sender','Team','Post','Body','Type','PhotoUrl','PhotoLat','PhotoLng','Target']));
+  var messages = getAllRows(ensureSheet(SHEET_MESSAGES,['Time','Sender','Team','Post','Body','Type','PhotoUrl','PhotoLat','PhotoLng','PhotoUrls','Target']));
   var personnel = getAllRows(ensureSheet(SHEET_PERSONNEL,['ID','Name','Team','Post','Lat','Lng','Online','LastSeen','DeviceId']));
   var pending = getAllRows(ensureSheet(SHEET_PENDING,['DeviceId','Name','Team','Post','Time','Status']));
 
-  // Filter by date
+  // Filter by date — handles Date objects AND strings from Google Sheets
   var filtered = messages;
   if (dateFrom) {
-    filtered = filtered.filter(function(r){ var t=String(r[0]||''); return t>=dateFrom && (dateTo?t<=dateTo:true); });
+    filtered = filtered.filter(function(r){
+      var val = r[0]; // raw cell value — could be Date object or string
+      var t = '';
+      if (val instanceof Date) {
+        // Google Sheets returns Date objects via getValues()
+        t = Utilities.formatDate(val, 'Asia/Manila', 'yyyyMMdd');
+      } else {
+        // String fallback: extract YYYYMMDD
+        var s = String(val || '');
+        var m = s.match(/(\d{4})[-/ ](\d{2})[-/ ](\d{2})/);
+        if (m) { t = m[1] + m[2] + m[3]; }
+        else { t = s.replace(/\D/g,'').substring(0,8); }
+      }
+      if (!t || t.length < 8) return false;
+      if (dateTo) { return t >= dateFrom && t <= dateTo; }
+      return t >= dateFrom;
+    });
   }
 
   // Per-unit breakdown
@@ -350,7 +390,7 @@ function getDashboardData(data) {
 }
 
 function getPhotoLog(data) {
-  var msgs = getAllRows(ensureSheet(SHEET_MESSAGES,['Time','Sender','Team','Post','Body','Type','PhotoUrl','PhotoLat','PhotoLng','Target']));
+  var msgs = getAllRows(ensureSheet(SHEET_MESSAGES,['Time','Sender','Team','Post','Body','Type','PhotoUrl','PhotoLat','PhotoLng','PhotoUrls','Target']));
   return {photos:msgs.filter(function(r){return String(r[6]||'');}).map(function(r){return{url:String(r[6]||''),sender:String(r[1]||''),team:String(r[2]||''),time:String(r[0]||''),body:String(r[4]||''),lat:String(r[7]||''),lng:String(r[8]||'')};}).reverse()};
 }
 
@@ -394,7 +434,7 @@ function isIncident(body) {
 // ═══════════════ FIRST-RUN SETUP ═══════════════
 function setup() {
   ensureSheet(SHEET_PERSONNEL,['ID','Name','Team','Post','Lat','Lng','Online','LastSeen','DeviceId']);
-  ensureSheet(SHEET_MESSAGES,['Time','Sender','Team','Post','Body','Type','PhotoUrl','PhotoLat','PhotoLng','Target']);
+  ensureSheet(SHEET_MESSAGES,['Time','Sender','Team','Post','Body','Type','PhotoUrl','PhotoLat','PhotoLng','PhotoUrls','Target']);
   ensureSheet(SHEET_PENDING,['DeviceId','Name','Team','Post','Time','Status']);
   ensureSheet(SHEET_VIDEO,['Room','StartedBy','TimeStart','TimeEnd','Participants','Notes']);
   ensureSheet('ReportNotes',['Date','Unit','Notes','Author']);
