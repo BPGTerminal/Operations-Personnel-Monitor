@@ -143,12 +143,14 @@ function SIG(su){
   var h='<div class="card sig-block"><div class="card-hdr">SIGNATURES</div><div class="card-body">';
   h+='<div class="sig-section"><div class="sig-label">Prepared by:</div><div class="sig-line"></div><div class="sig-hint">Signature over Printed Name / Date</div></div>';
   if(su==="ALL UNITS"){
+    h+='<div class="sig-section"><div class="sig-label">Reviewed by:</div>';
     h+='<div class="sig-row-3">';
     h+='<div class="sig-col"><div class="sig-line"></div><div class="sig-name">ALONSO S. PERALTA</div><div class="sig-title">Utility &amp; Maintenance Unit Head</div></div>';
     h+='<div class="sig-col"><div class="sig-line"></div><div class="sig-name">JOSHIEL D. BELEN</div><div class="sig-title">Operations Unit Head</div></div>';
     h+='<div class="sig-col"><div class="sig-line"></div><div class="sig-name">CRISTIAN VICERA</div><div class="sig-title">Administrative Unit Head</div></div>';
     h+='</div>';
-  }else{var hd=HU(su);if(hd){h+='<div class="sig-row-1"><div class="sig-col"><div class="sig-line"></div><div class="sig-name">'+hd.name+'</div><div class="sig-title">'+hd.title+'</div></div></div>'}}
+    h+='</div>';
+  }else{var hd=HU(su);if(hd){h+='<div class="sig-section"><div class="sig-label">Reviewed by:</div><div class="sig-row-1"><div class="sig-col"><div class="sig-line"></div><div class="sig-name">'+hd.name+'</div><div class="sig-title">'+hd.title+'</div></div></div></div>'}}
   h+='<div class="sig-row-2">';
   h+='<div class="sig-col"><div class="sig-label">Noted by:</div><div class="sig-line"></div><div class="sig-name">JOEY SABENACIO HEREDERO</div><div class="sig-title">BPGT Administrator</div></div>';
   h+='<div class="sig-col"><div class="sig-label">Approved by:</div><div class="sig-line"></div><div class="sig-name">EDGAR P. LACANDAZO</div><div class="sig-title">Municipal Administrator</div></div>';
