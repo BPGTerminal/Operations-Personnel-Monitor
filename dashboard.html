@@ -109,6 +109,9 @@ td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--t
   .bar, .btn, .footer, button, a.btn, .inspect-add-photo,
   .pb, .pn, .photo-side .pb, .photo-side .pn,
   #toast-container, .modal-overlay { display: none !important; }
+  /* ── Ensure sig block children keep their display types ── */
+  .sig-row-3, .sig-row-2, .sig-row-1 { display: grid !important; }
+  .sig-col, .sig-section, .sig-label, .sig-line, .sig-hint, .sig-col .sig-name, .sig-col .sig-title { display: block !important; }
   /* ── Header ── */
   .header { border-bottom: 2px solid #1a4d8f !important; padding: 8px 0 4px !important; }
   .header img { max-width: 160px !important; max-height: 64px !important; }
@@ -169,18 +172,18 @@ td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--t
   /* ── Signatures (print) ── */
   .sig-block { page-break-before: auto; border: 1px solid #999 !important; }
   .sig-block .card-hdr { text-align: center !important; font-size: 11px !important; letter-spacing: 2px !important; border-bottom: 1px solid #999 !important; }
-  .sig-block .card-body { padding: 16px 20px !important; }
-  .sig-section { margin-bottom: 14px; }
-  .sig-label { font-family: 'Share Tech Mono', monospace !important; font-size: 10px !important; color: #1a4d8f !important; font-weight: 700 !important; margin-bottom: 6px; }
-  .sig-line { border-bottom: 1px solid #333 !important; margin-bottom: 6px; height: 30px; }
-  .sig-hint { font-family: 'Share Tech Mono', monospace !important; font-size: 7px !important; color: #666 !important; text-align: center; }
-  .sig-row-3 { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 16px; margin: 18px 0; }
-  .sig-row-2 { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 24px; margin: 18px 0; }
-  .sig-row-1 { display: grid !important; grid-template-columns: 1fr !important; max-width: 60%; margin: 18px auto; }
-  .sig-col { text-align: center; }
-  .sig-col .sig-line { border-bottom: 1px solid #333 !important; margin-bottom: 14px; height: 32px; }
-  .sig-col .sig-name { font-family: 'Share Tech Mono', monospace !important; font-size: 12px !important; font-weight: 700 !important; color: #000 !important; letter-spacing: 1px; margin-bottom: 2px; }
-  .sig-col .sig-title { font-family: 'Share Tech Mono', monospace !important; font-size: 8px !important; color: #555 !important; }
+  .sig-block .card-body { padding: 16px 20px !important; display: block !important; }
+  .sig-section { margin-bottom: 14px !important; display: block !important; }
+  .sig-label { display: block !important; font-family: 'Share Tech Mono', monospace !important; font-size: 10px !important; color: #1a4d8f !important; font-weight: 700 !important; margin-bottom: 6px !important; }
+  .sig-line { display: block !important; border-bottom: 1px solid #333 !important; margin-bottom: 6px !important; height: 30px !important; }
+  .sig-hint { display: block !important; font-family: 'Share Tech Mono', monospace !important; font-size: 7px !important; color: #666 !important; text-align: center !important; }
+  .sig-row-3, .sig-row-3.sig-row-3 { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 16px !important; margin: 18px 0 !important; }
+  .sig-row-2, .sig-row-2.sig-row-2 { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 24px !important; margin: 18px 0 !important; }
+  .sig-row-1, .sig-row-1.sig-row-1 { display: grid !important; grid-template-columns: 1fr !important; max-width: 60% !important; margin: 18px auto !important; }
+  .sig-col, .sig-row-3 .sig-col, .sig-row-2 .sig-col, .sig-row-1 .sig-col { display: block !important; text-align: center !important; }
+  .sig-col .sig-line { display: block !important; border-bottom: 1px solid #333 !important; margin-bottom: 14px !important; height: 32px !important; }
+  .sig-col .sig-name { display: block !important; font-family: 'Share Tech Mono', monospace !important; font-size: 12px !important; font-weight: 700 !important; color: #000 !important; letter-spacing: 1px !important; margin-bottom: 2px !important; }
+  .sig-col .sig-title { display: block !important; font-family: 'Share Tech Mono', monospace !important; font-size: 8px !important; color: #555 !important; }
   /* ── Print footer: anchored at end ── */
   .print-footer { display: flex !important; align-items: center; justify-content: center; gap: 6px; padding: 10px 0 0; margin-top: 12px; border-top: 1px solid #ccc; font-family: 'Share Tech Mono', monospace; }
   .print-footer img { width: 28px !important; height: 28px !important; border-radius: 50%; }
@@ -217,6 +220,6 @@ td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--t
 </div>
 <script src="opm-core.js"></script>
 <script src="dashboard.js?v=2"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a295d7a19d84afdd',t:'MTc4NjQzNjY0OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a29638ef1cbae903',t:'MTc4NjQ0MDYzNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
 </body>
 </html>
