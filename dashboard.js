@@ -52,7 +52,7 @@ function B(data,su,df,dt){
   if(all.length>0){h+=CL(all)}
   document.getElementById("content").innerHTML=h;
 
-  if(un.length>0){setTimeout(function(){var cv=document.getElementById("chart");if(cv){_chart=new Chart(cv,{type:"bar",data:{labels:un,datasets:[{label:"Photos",data:up,backgroundColor:CO.slice(0,un.length),borderWidth:0,borderRadius:3},{label:"Tasks",data:ut,backgroundColor:CO.slice(0,un.length).map(function(x){return x+"44"}),borderWidth:0,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#6a80b0",font:{family:"Share Tech Mono",size:10}}}},scales:{x:{ticks:{color:"#6a80b0",font:{size:9},maxRotation:45},grid:{color:"#1e326020"}},y:{ticks:{color:"#6a80b0",font:{size:9}},grid:{color:"#1e326030"},beginAtZero:true}}})}},300)}
+  if(un.length>0){setTimeout(function(){var cv=document.getElementById("chart");if(cv){_chart=new Chart(cv,{type:"bar",data:{labels:un,datasets:[{label:"Photos",data:up,backgroundColor:CO.slice(0,un.length),borderWidth:0,borderRadius:3},{label:"Tasks",data:ut,backgroundColor:CO.slice(0,un.length).map(function(x){return x+"44"}),borderWidth:0,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#6a80b0",font:{family:"Share Tech Mono",size:10}}}},scales:{x:{ticks:{color:"#6a80b0",font:{size:9},maxRotation:45},grid:{color:"#1e326020"}},y:{ticks:{color:"#6a80b0",font:{size:9}},grid:{color:"#1e326030"},beginAtZero:true}}}})}},300)}
   var nt=document.getElementById("nar-text");if(nt){_narOrig=nt.value;var key="nar_"+su.replace(/[^a-z0-9]/gi,"_")+"_"+(df||"any")+"_"+(dt||"any");var c3=OPM.getConfig();if(c3&&c3[key])nt.value=c3[key]}
 }
 
@@ -149,4 +149,3 @@ document.addEventListener("click",function(e){
 });
 
 document.addEventListener("DOMContentLoaded",function(){PU();var cfg=G();if(!cfg){document.getElementById("content").innerHTML='<div class="card"><div class="card-body empty">No backend configured. Open Admin page and save settings first.</div></div>';return}setTimeout(function(){T()},300)});
-}
