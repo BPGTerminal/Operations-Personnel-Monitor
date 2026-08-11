@@ -138,17 +138,21 @@ function IR(insp,df){
 
 function CL(all){var h='<div class="card"><div class="card-hdr">COMMUNICATIONS LOG ('+all.length+')</div><div class="card-body"><div class="msg-log">';all.slice().reverse().slice(0,80).forEach(function(m){h+='<div class="mr"><span class="mt">'+esc((m.time||"").substring(0,19))+'</span><span class="ms">'+esc(m.sender||"")+(m.team?" ["+esc(m.team)+"]":"")+'</span><span class="mb">'+esc((m.body||"").substring(0,130))+(m.photo?" [photo]":"")+'</span></div>'});h+='</div></div></div>';return h}
 
-function HU(n){var u=(n||"").toUpperCase();if(u.indexOf("UTILITY")>=0||u.indexOf("MAINTENANCE")>=0)return{name:"ALONSO S. PERALTA",title:"Utility & Maintenance Unit Head"};if(u.indexOf("OPERATIONS")>=0)return{name:"JOSHIEL D. BELEN",title:"Operations Unit Head"};if(u.indexOf("ADMIN")>=0)return{name:"CRISTIAN VICERA",title:"Administrative Unit Head"};if(u.indexOf("SAFETY")>=0||u.indexOf("SECURITY")>=0)return{name:"CRISTIAN VICERA",title:"Administrative Unit Head"};if(u.indexOf("TASK FORCE")>=0||u.indexOf("BPGT TASK")>=0)return{name:"JOSHIEL D. BELEN",title:"Operations Unit Head"};return null}
+function HU(n){var u=(n||"").toUpperCase();if(u.indexOf("UTILITY")>=0||u.indexOf("MAINTENANCE")>=0)return{name:"ALONSO S. PERALTA",title:"Utility &amp; Maintenance Unit Head"};if(u.indexOf("OPERATIONS")>=0)return{name:"JOSHIEL D. BELEN",title:"Operations Unit Head"};if(u.indexOf("ADMIN")>=0)return{name:"CRISTIAN VICERA",title:"Administrative Unit Head"};if(u.indexOf("SAFETY")>=0||u.indexOf("SECURITY")>=0)return{name:"CRISTIAN VICERA",title:"Administrative Unit Head"};if(u.indexOf("TASK FORCE")>=0||u.indexOf("BPGT TASK")>=0)return{name:"JOSHIEL D. BELEN",title:"Operations Unit Head"};return null}
 function SIG(su){
   var h='<div class="card sig-block"><div class="card-hdr">SIGNATURES</div><div class="card-body">';
-  h+='<div class="sig-row"><div class="sig-title">Prepared by:</div><div class="sig-blank"></div><div class="sig-sub">Signature over Printed Name / Date</div></div>';
+  h+='<div class="sig-section"><div class="sig-label">Prepared by:</div><div class="sig-line"></div><div class="sig-hint">Signature over Printed Name / Date</div></div>';
   if(su==="ALL UNITS"){
-    h+='<div class="sig-row sig-gap"><div class="sig-title">Reviewed by:</div><div class="sig-blank"></div><div class="sig-sub">ALONSO S. PERALTA, Utility &amp; Maintenance Unit Head</div></div>';
-    h+='<div class="sig-row"><div class="sig-title"></div><div class="sig-blank"></div><div class="sig-sub">JOSHIEL D. BELEN, Operations Unit Head</div></div>';
-    h+='<div class="sig-row"><div class="sig-title"></div><div class="sig-blank"></div><div class="sig-sub">CRISTIAN VICERA, Administrative Unit Head</div></div>';
-  }else{var hd=HU(su);if(hd){h+='<div class="sig-row sig-gap"><div class="sig-title">Reviewed by:</div><div class="sig-blank"></div><div class="sig-sub">'+hd.name+', '+hd.title+'</div></div>'}}
-  h+='<div class="sig-row sig-gap"><div class="sig-title">Noted by:</div><div class="sig-blank"></div><div class="sig-sub">JOEY SABENACIO HEREDERO, BPGT Administrator</div></div>';
-  if(su==="ALL UNITS")h+='<div class="sig-row"><div class="sig-title">Approved by:</div><div class="sig-blank"></div><div class="sig-sub">EDGAR P. LACANDAZO, Municipal Administrator</div></div>';
+    h+='<div class="sig-row-3">';
+    h+='<div class="sig-col"><div class="sig-line"></div><div class="sig-name">ALONSO S. PERALTA</div><div class="sig-title">Utility &amp; Maintenance Unit Head</div></div>';
+    h+='<div class="sig-col"><div class="sig-line"></div><div class="sig-name">JOSHIEL D. BELEN</div><div class="sig-title">Operations Unit Head</div></div>';
+    h+='<div class="sig-col"><div class="sig-line"></div><div class="sig-name">CRISTIAN VICERA</div><div class="sig-title">Administrative Unit Head</div></div>';
+    h+='</div>';
+  }else{var hd=HU(su);if(hd){h+='<div class="sig-row-1"><div class="sig-col"><div class="sig-line"></div><div class="sig-name">'+hd.name+'</div><div class="sig-title">'+hd.title+'</div></div></div>'}}
+  h+='<div class="sig-row-2">';
+  h+='<div class="sig-col"><div class="sig-label">Noted by:</div><div class="sig-line"></div><div class="sig-name">JOEY SABENACIO HEREDERO</div><div class="sig-title">BPGT Administrator</div></div>';
+  h+='<div class="sig-col"><div class="sig-label">Approved by:</div><div class="sig-line"></div><div class="sig-name">EDGAR P. LACANDAZO</div><div class="sig-title">Municipal Administrator</div></div>';
+  h+='</div>';
   h+='</div></div>';
   return h;
 }
