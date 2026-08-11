@@ -158,7 +158,7 @@ function SIG(su){
   h+='</div></div>';
   return h;
 }
-function PF(){return'<div class="print-footer"><img src="icon-192.png" style="width:14px;height:14px;border-radius:50%"><span class="pf-t">-=pagong=-</span><span class="pf-s">JOEY SABENACIO HEREDERO &middot; OPM &middot; &copy; 2026</span></div>'}
+function PF(){return'<div class="print-footer"><img src="icon-192.png" style="width:28px;height:28px;border-radius:50%"><span class="pf-t">-=pagong=-</span><span class="pf-s">JOEY SABENACIO HEREDERO &middot; OPM &middot; &copy; 2026</span></div>'}
 
 function SN(){var nt=document.getElementById("nar-text");if(!nt)return;var su2=document.getElementById("unit").value||"ALL UNITS",df2=document.getElementById("from").value||"any",dt2=document.getElementById("to").value||"any";var c4=OPM.getConfig();if(!c4)c4={};c4["nar_"+su2.replace(/[^a-z0-9]/gi,"_")+"_"+df2+"_"+dt2]=nt.value.trim();OPM.saveConfig(c4);var ok=document.getElementById("nar-ok");if(ok){ok.style.display="inline";setTimeout(function(){ok.style.display="none"},2000)}}
 function RN(){if(_narOrig)document.getElementById("nar-text").value=_narOrig}
