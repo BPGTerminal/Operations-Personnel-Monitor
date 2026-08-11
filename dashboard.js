@@ -141,7 +141,7 @@ function CL(all){var h='<div class="card"><div class="card-hdr">COMMUNICATIONS L
 function HU(n){var u=(n||"").toUpperCase();if(u.indexOf("UTILITY")>=0||u.indexOf("MAINTENANCE")>=0)return{name:"ALONSO S. PERALTA",title:"Utility &amp; Maintenance Unit Head"};if(u.indexOf("OPERATIONS")>=0)return{name:"JOSHIEL D. BELEN",title:"Operations Unit Head"};if(u.indexOf("ADMIN")>=0)return{name:"CRISTIAN VICERA",title:"Administrative Unit Head"};if(u.indexOf("SAFETY")>=0||u.indexOf("SECURITY")>=0)return{name:"CRISTIAN VICERA",title:"Administrative Unit Head"};if(u.indexOf("TASK FORCE")>=0||u.indexOf("BPGT TASK")>=0)return{name:"JOSHIEL D. BELEN",title:"Operations Unit Head"};return null}
 function SIG(su){
   var h='<div class="card sig-block"><div class="card-hdr">SIGNATURES</div><div class="card-body">';
-  h+='<div class="sig-section"><div class="sig-label">Prepared by:</div><div class="sig-line"></div><div class="sig-hint">Signature over Printed Name / Date</div></div>';
+  h+='<div class="sig-section"><div class="sig-label">Prepared by:</div><div class="sig-line"></div><div class="sig-name" style="font-size:12px;text-align:center;margin-top:4px">JULAIDA U. KENTONG / CRISTINE MAE A. JONTILANO</div><div class="sig-hint">Signature over Printed Name / Date</div></div>';
   if(su==="ALL UNITS"){
     h+='<div class="sig-section"><div class="sig-label">Reviewed by:</div>';
     h+='<div class="sig-row-3">';
