@@ -50,6 +50,7 @@ function handleRequest(e) {
       case 'approveUser':        result = approveUser(data);      break;
       case 'rejectUser':         result = rejectUser(data);       break;
       case 'clearEventData':     result = clearEventData();       break;
+      case 'purgeOldData':      result = purgeOldData(data);    break;
       case 'getEventVersion':    result = getEventVersion();      break;
       case 'logVideoCall':       result = logVideoCall(data);     break;
       case 'getDashboardData':   result = getDashboardData(data); break;
@@ -228,7 +229,8 @@ function uploadPhoto(data) {
     
     return {
       status: 'ok',
-      photoUrl: file.getUrl(),
+      photoUrl: 'https://drive.google.com/thumbnail?id=' + file.getId() + '&sz=w800-h600',
+      photoFullUrl: file.getUrl(),
       photoId: file.getId()
     };
   } catch(e) {
@@ -429,6 +431,36 @@ function isTask(body) {
 
 function isIncident(body) {
   return /(apprehend|violation|incident|report|issue|alert|emergency|accident|breach|unauthorized)/i.test(body||'');
+}
+
+function purgeOldData(data) {
+  var cutoffDate = (data.date || '').replace(/\D/g,'').substring(0,8);
+  if (!cutoffDate || cutoffDate.length < 8) return { status: 'error', message: 'Invalid date' };
+  
+  var mSheet = ensureSheet(SHEET_MESSAGES, ['Time','Sender','Team','Post','Body','Type','PhotoUrl','PhotoLat','PhotoLng','PhotoUrls','Target']);
+  var allRows = mSheet.getDataRange().getValues();
+  var keepRows = [allRows[0]]; // header
+  var removed = 0;
+  
+  for (var i = 1; i < allRows.length; i++) {
+    var val = allRows[i][0];
+    var rowDate = '';
+    if (val instanceof Date) {
+      rowDate = Utilities.formatDate(val, 'Asia/Manila', 'yyyyMMdd');
+    } else {
+      rowDate = String(val || '').replace(/\D/g,'').substring(0,8);
+    }
+    if (rowDate && rowDate >= cutoffDate) {
+      keepRows.push(allRows[i]);
+    } else {
+      removed++;
+    }
+  }
+  
+  mSheet.clear();
+  keepRows.forEach(function(row) { mSheet.appendRow(row); });
+  
+  return { status: 'purged', removed: removed, cutoff: data.date, kept: keepRows.length - 1 };
 }
 
 // ═══════════════ FIRST-RUN SETUP ═══════════════
