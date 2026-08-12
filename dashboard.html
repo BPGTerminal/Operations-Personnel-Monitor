@@ -74,6 +74,20 @@ td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--t
 .sig-col .sig-line{border-bottom:1px solid var(--text-dim);margin-bottom:18px;height:36px}
 .sig-col .sig-name{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);letter-spacing:1px;margin-bottom:2px}
 .sig-col .sig-title{font-family:var(--font-mono);font-size:9px;color:var(--text-dim);letter-spacing:.5px}
+/* ── Photo include checkbox ── */
+.photo-include-chk{width:14px;height:14px;accent-color:var(--accent);cursor:pointer;vertical-align:middle}
+/* ── Editable photo fields ── */
+.info-side [contenteditable]{outline:none;border:1px dashed transparent;border-radius:2px;padding:1px 3px;margin:-1px -3px;transition:border-color .2s}
+.info-side [contenteditable]:hover{border-color:var(--border-color)}
+.info-side [contenteditable]:focus{border-color:var(--accent);background:rgba(0,229,255,.06)}
+/* ── Inspection table ── */
+.inspect-tbl{width:100%;border-collapse:collapse;font-size:var(--font-xs)}
+.inspect-tbl th{background:rgba(0,0,0,.3);color:var(--accent);font-family:var(--font-mono);font-size:9px;letter-spacing:1px;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border-color);position:sticky;top:0}
+.inspect-tbl td{background:transparent!important;padding:10px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text-secondary);vertical-align:top}
+.inspect-tbl tr:hover td{background:rgba(255,255,255,.02)!important}
+.inspect-remark-cell{min-height:50px;line-height:1.6;outline:none;border:1px dashed transparent;border-radius:3px;padding:4px 6px;margin:-4px -6px;transition:border-color .2s}
+.inspect-remark-cell:hover{border-color:var(--border-color)}
+.inspect-remark-cell:focus{border-color:var(--accent);background:rgba(0,229,255,.04)}
 /* ── Print footer (screen) ── */
 .print-footer{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 0 0;margin-top:8px;opacity:.6}
 .print-footer img{width:28px;height:28px;border-radius:50%}
@@ -144,7 +158,14 @@ td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--t
   .info-side .fk { font-size: 6px !important; color: #1a4d8f !important; }
   .info-side .fv { color: #333 !important; }
   .info-side .fp { font-size: 8px !important; color: #333 !important; padding-top: 2px !important; border-top: 1px solid #eee !important; line-height: 1.2 !important; }
-  /* ── Inspections ── */
+  /* ── Photo include checkboxes: hidden in print, JS handles hide/show ── */
+  .photo-include-chk { display: none !important; }
+  /* ── Inspection table (print) ── */
+  .inspect-tbl { width: 100% !important; border-collapse: collapse !important; font-size: 8px !important; }
+  .inspect-tbl th { background: #e8ecf0 !important; color: #1a4d8f !important; padding: 4px 5px !important; font-size: 7px !important; border: 1px solid #999 !important; font-family: 'Share Tech Mono', monospace !important; }
+  .inspect-tbl td { padding: 3px 5px !important; border: 1px solid #ddd !important; font-size: 8px !important; vertical-align: top !important; background: #fff !important; color: #000 !important; }
+  .inspect-remark-cell { min-height: 30px !important; font-size: 7px !important; line-height: 1.4 !important; border: 1px solid #eee !important; padding: 2px 4px !important; background: #fff !important; color: #000 !important; }
+  .inspect-tbl .inspect-photos img { width: 50px !important; height: 38px !important; border: 1px solid #ddd !important; }
   .inspect-block { border: 1px solid #ddd !important; border-radius: 0 !important; margin-bottom: 3px !important; page-break-inside: avoid; }
   .inspect-hdr { padding: 3px 6px !important; background: #e8ecf0 !important; }
   .inspect-hdr span { color: #000 !important; }
@@ -206,6 +227,7 @@ td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--t
 <button class="btn btn-sm btn-warning" onclick="W()">WEEK</button>
 <span style="flex:1"></span>
 <button class="btn btn-sm" onclick="window.print()">PRINT</button>
+<button class="btn btn-success btn-sm" onclick="downloadWord()">📥 WORD</button>
 <button class="btn btn-primary btn-sm" onclick="R()">REFRESH</button>
 <a class="btn btn-sm" href="commander.html">COMMANDER</a>
 <a class="btn btn-sm" href="admin.html">ADMIN</a>
@@ -220,6 +242,6 @@ td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--t
 </div>
 <script src="opm-core.js"></script>
 <script src="dashboard.js?v=2"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a29638ef1cbae903',t:'MTc4NjQ0MDYzNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
-</body>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a29ba2a9fd567161',t:'MTc4NjQ5NzM5NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
